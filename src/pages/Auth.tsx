@@ -24,25 +24,24 @@ export default function Auth() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Get user role and redirect accordingly
-        const { data: roleData } = await supabase
+        // Get user roles and redirect accordingly (check for highest privilege first)
+        const { data: roles } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', session.user.id)
-          .single();
+          .eq('user_id', session.user.id);
         
-        if (roleData) {
-          switch (roleData.role) {
-            case 'admin':
-              navigate('/admin');
-              break;
-            case 'trainer':
-              navigate('/trainer/schedule');
-              break;
-            case 'member':
-            default:
-              navigate('/customer/bookings');
-              break;
+        if (roles && roles.length > 0) {
+          const roleList = roles.map(r => r.role);
+          
+          // Check for admin first (highest privilege)
+          if (roleList.includes('admin')) {
+            navigate('/admin');
+          } else if (roleList.includes('trainer')) {
+            navigate('/trainer/schedule');
+          } else if (roleList.includes('member')) {
+            navigate('/customer/bookings');
+          } else {
+            navigate('/');
           }
         } else {
           navigate('/');
@@ -81,29 +80,26 @@ export default function Auth() {
         });
         if (error) throw error;
         
-        // Get user role and redirect accordingly
+        // Get user roles and redirect accordingly
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          const { data: roleData } = await supabase
+          const { data: roles } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', session.user.id)
-            .single();
+            .eq('user_id', session.user.id);
           
           toast({ title: t('auth.welcomeBack') });
           
-          if (roleData) {
-            switch (roleData.role) {
-              case 'admin':
-                navigate('/admin');
-                break;
-              case 'trainer':
-                navigate('/trainer/schedule');
-                break;
-              case 'member':
-              default:
-                navigate('/customer/bookings');
-                break;
+          if (roles && roles.length > 0) {
+            const roleList = roles.map(r => r.role);
+            
+            // Check for admin first (highest privilege)
+            if (roleList.includes('admin')) {
+              navigate('/admin');
+            } else if (roleList.includes('trainer')) {
+              navigate('/trainer/schedule');
+            } else if (roleList.includes('member')) {
+              navigate('/customer/bookings');
             }
           }
         }
