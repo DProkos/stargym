@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Save, Trash2, Clock, Users, Calendar } from 'lucide-react';
+import { Loader2, Plus, Save, Trash2, Clock, Users, Calendar, XCircle, Pause } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface Class {
   id: string;
@@ -19,6 +20,7 @@ interface Class {
   day_of_week: number;
   duration_minutes: number;
   max_capacity: number;
+  status: 'active' | 'cancelled' | 'postponed';
 }
 
 interface TrainerClassManagerProps {
@@ -31,6 +33,10 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedClassForStatus, setSelectedClassForStatus] = useState<Class | null>(null);
+  const [statusChangeReason, setStatusChangeReason] = useState('');
+  const [trainerName, setTrainerName] = useState('');
   const { toast } = useToast();
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -47,7 +53,20 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
 
   useEffect(() => {
     loadClasses();
+    loadTrainerName();
   }, [trainerId]);
+
+  const loadTrainerName = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', trainerId)
+      .single();
+    
+    if (data?.full_name) {
+      setTrainerName(data.full_name);
+    }
+  };
 
   const loadClasses = async () => {
     try {
@@ -61,7 +80,12 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
       if (error) throw error;
 
       if (data) {
-        setClasses(data);
+        // Type assertion for status field
+        const typedClasses = data.map(cls => ({
+          ...cls,
+          status: cls.status as 'active' | 'cancelled' | 'postponed'
+        }));
+        setClasses(typedClasses);
       }
     } catch (error: any) {
       toast({
@@ -149,6 +173,73 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
     } catch (error: any) {
       toast({
         title: 'Error updating class',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangeClassStatus = async (classItem: Class, newStatus: 'cancelled' | 'postponed') => {
+    setSaving(true);
+    try {
+      const oldStatus = classItem.status;
+
+      // Update class status
+      const { error: updateError } = await supabase
+        .from('classes')
+        .update({ status: newStatus })
+        .eq('id', classItem.id);
+
+      if (updateError) throw updateError;
+
+      // Record status change
+      const { error: logError } = await supabase
+        .from('class_status_changes')
+        .insert({
+          class_id: classItem.id,
+          changed_by: trainerId,
+          old_status: oldStatus,
+          new_status: newStatus,
+          reason: statusChangeReason || null,
+        });
+
+      if (logError) throw logError;
+
+      // Send notifications to all enrolled users
+      const { error: notifyError } = await supabase.functions.invoke('notify-class-status-change', {
+        body: {
+          classId: classItem.id,
+          className: classItem.name,
+          status: newStatus,
+          reason: statusChangeReason,
+          trainerName: trainerName || 'Your trainer',
+        },
+      });
+
+      if (notifyError) {
+        console.error('Error sending notifications:', notifyError);
+        toast({
+          title: 'Status updated',
+          description: 'Status updated but failed to send some notifications',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Status updated',
+          description: `Class ${newStatus} and all enrolled members have been notified`,
+        });
+      }
+
+      setStatusDialogOpen(false);
+      setSelectedClassForStatus(null);
+      setStatusChangeReason('');
+      loadClasses();
+      if (onClassesChange) onClassesChange();
+    } catch (error: any) {
+      toast({
+        title: 'Error updating status',
         description: error.message,
         variant: 'destructive',
       });
@@ -320,11 +411,25 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-1 flex-1">
-                  <Input
-                    value={classItem.name}
-                    onChange={(e) => updateClassField(classItem.id, 'name', e.target.value)}
-                    className="text-xl font-bold h-auto border-0 p-0 bg-transparent focus-visible:ring-0"
-                  />
+                  <div className="flex items-center gap-3">
+                    <Input
+                      value={classItem.name}
+                      onChange={(e) => updateClassField(classItem.id, 'name', e.target.value)}
+                      className="text-xl font-bold h-auto border-0 p-0 bg-transparent focus-visible:ring-0"
+                    />
+                    {classItem.status !== 'active' && (
+                      <Badge 
+                        variant="outline" 
+                        className={
+                          classItem.status === 'cancelled' 
+                            ? 'bg-destructive/20 text-destructive border-destructive' 
+                            : 'bg-yellow-500/20 text-yellow-600 border-yellow-500'
+                        }
+                      >
+                        {classItem.status === 'cancelled' ? 'Ακυρώθηκε' : 'Αναβλήθηκε'}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex gap-2 flex-wrap">
                     <Badge variant="outline" className="bg-primary/20 text-primary border-primary">
                       <Calendar className="h-3 w-3 mr-1" />
@@ -343,14 +448,44 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                     </Badge>
                   </div>
                 </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteClass(classItem.id)}
-                  disabled={saving}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  {classItem.status === 'active' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedClassForStatus(classItem);
+                          setStatusDialogOpen(true);
+                        }}
+                        disabled={saving}
+                      >
+                        <Pause className="h-4 w-4 mr-1" />
+                        Αναβολή
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedClassForStatus(classItem);
+                          setStatusDialogOpen(true);
+                        }}
+                        disabled={saving}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" />
+                        Ακύρωση
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteClass(classItem.id)}
+                    disabled={saving}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -440,6 +575,72 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
           </Card>
         )}
       </div>
+
+      {/* Status Change Dialog */}
+      <AlertDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedClassForStatus?.status === 'active' ? 'Αλλαγή Κατάστασης Μαθήματος' : 'Ενημέρωση'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedClassForStatus && (
+                <div className="space-y-4 pt-4">
+                  <p>
+                    Θέλετε να αλλάξετε την κατάσταση του μαθήματος{' '}
+                    <strong>{selectedClassForStatus.name}</strong>;
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="reason">Λόγος (προαιρετικός)</Label>
+                    <Textarea
+                      id="reason"
+                      value={statusChangeReason}
+                      onChange={(e) => setStatusChangeReason(e.target.value)}
+                      placeholder="π.χ. Ασθένεια γυμναστή, τεχνικά προβλήματα..."
+                      rows={3}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Όλοι οι εγγεγραμμένοι θα ειδοποιηθούν αυτόματα μέσω email.
+                  </p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setStatusChangeReason('');
+              setSelectedClassForStatus(null);
+            }}>
+              Ακύρωση
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedClassForStatus) {
+                  handleChangeClassStatus(selectedClassForStatus, 'postponed');
+                }
+              }}
+              disabled={saving}
+            >
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Pause className="h-4 w-4 mr-2" />}
+              Αναβολή
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedClassForStatus) {
+                  handleChangeClassStatus(selectedClassForStatus, 'cancelled');
+                }
+              }}
+              disabled={saving}
+            >
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+              Ακύρωση Μαθήματος
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
