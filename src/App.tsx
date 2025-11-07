@@ -19,6 +19,7 @@ import TrainerManager from "./pages/admin/TrainerManager";
 import ClassEditor from "./pages/admin/ClassEditor";
 import Settings from "./pages/admin/Settings";
 import Memberships from "./pages/Memberships";
+import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/classes" element={<Classes />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />

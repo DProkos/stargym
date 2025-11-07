@@ -108,7 +108,7 @@ export default function Auth() {
           }
         }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -117,8 +117,44 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast({ title: t('auth.createAccount') });
-        navigate('/customer/bookings');
+        
+        if (data.user) {
+          // Generate verification code
+          const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+          const expiresAt = new Date();
+          expiresAt.setHours(expiresAt.getHours() + 24);
+
+          // Store verification code
+          await supabase.from('email_verification_codes').insert({
+            user_id: data.user.id,
+            code,
+            email,
+            expires_at: expiresAt.toISOString(),
+          });
+
+          // Send verification email
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: email,
+              subject: 'Email Verification Code',
+              html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+                  <h1 style="color: #6366f1;">Verify Your Email</h1>
+                  <p>Welcome ${fullName}! Your verification code is:</p>
+                  <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
+                    ${code}
+                  </div>
+                  <p>This code will expire in 24 hours.</p>
+                  <p>If you didn't create this account, please ignore this email.</p>
+                </div>
+              `,
+              text: `Welcome ${fullName}! Your verification code is: ${code}. This code will expire in 24 hours.`,
+            },
+          });
+
+          toast({ title: 'Check your email for verification code' });
+          navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+        }
       }
     } catch (error: any) {
       toast({

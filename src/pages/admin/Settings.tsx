@@ -60,6 +60,16 @@ export default function Settings() {
     siteKey: '',
     secretKey: '',
   });
+  const [smtpSettings, setSmtpSettings] = useState({
+    host: '',
+    port: '587',
+    secure: false,
+    user: '',
+    password: '',
+    fromEmail: '',
+    fromName: 'My Gym',
+  });
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -81,6 +91,8 @@ export default function Settings() {
       loadTiers();
       loadSubscriptions();
       loadRecaptchaSettings();
+      loadSmtpSettings();
+      loadNewsletterSubscribers();
     }
   }, [isAdmin]);
 
@@ -172,6 +184,52 @@ export default function Settings() {
     setRecaptchaSettings(settings);
   };
 
+  const loadSmtpSettings = async () => {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'smtp_host',
+        'smtp_port',
+        'smtp_secure',
+        'smtp_user',
+        'smtp_password',
+        'smtp_from_email',
+        'smtp_from_name',
+      ]);
+
+    if (error) {
+      console.error('Failed to load SMTP settings:', error);
+      return;
+    }
+
+    const settings = {
+      host: data?.find((s) => s.setting_key === 'smtp_host')?.setting_value || '',
+      port: data?.find((s) => s.setting_key === 'smtp_port')?.setting_value || '587',
+      secure: data?.find((s) => s.setting_key === 'smtp_secure')?.setting_value === 'true',
+      user: data?.find((s) => s.setting_key === 'smtp_user')?.setting_value || '',
+      password: data?.find((s) => s.setting_key === 'smtp_password')?.setting_value || '',
+      fromEmail: data?.find((s) => s.setting_key === 'smtp_from_email')?.setting_value || '',
+      fromName: data?.find((s) => s.setting_key === 'smtp_from_name')?.setting_value || 'My Gym',
+    };
+
+    setSmtpSettings(settings);
+  };
+
+  const loadNewsletterSubscribers = async () => {
+    const { data, error } = await supabase
+      .from('newsletter_subscribers')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load newsletter subscribers:', error);
+      return;
+    }
+
+    setNewsletterSubscribers(data || []);
+  };
+
   const handleSaveRecaptchaSettings = async () => {
     try {
       const updates = [
@@ -198,6 +256,34 @@ export default function Settings() {
     } catch (error) {
       console.error('Failed to save reCAPTCHA settings:', error);
       toast.error('Failed to save reCAPTCHA settings');
+    }
+  };
+
+  const handleSaveSmtpSettings = async () => {
+    try {
+      const updates = [
+        { setting_key: 'smtp_host', setting_value: smtpSettings.host },
+        { setting_key: 'smtp_port', setting_value: smtpSettings.port },
+        { setting_key: 'smtp_secure', setting_value: smtpSettings.secure.toString() },
+        { setting_key: 'smtp_user', setting_value: smtpSettings.user },
+        { setting_key: 'smtp_password', setting_value: smtpSettings.password },
+        { setting_key: 'smtp_from_email', setting_value: smtpSettings.fromEmail },
+        { setting_key: 'smtp_from_name', setting_value: smtpSettings.fromName },
+      ];
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('app_settings')
+          .update({ setting_value: update.setting_value })
+          .eq('setting_key', update.setting_key);
+
+        if (error) throw error;
+      }
+
+      toast.success('SMTP settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save SMTP settings:', error);
+      toast.error('Failed to save SMTP settings');
     }
   };
 
@@ -310,6 +396,8 @@ export default function Settings() {
                 <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
                 <TabsTrigger value="stripe">Stripe Settings</TabsTrigger>
                 <TabsTrigger value="recaptcha">reCAPTCHA Settings</TabsTrigger>
+                <TabsTrigger value="smtp">SMTP Settings</TabsTrigger>
+                <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
               </TabsList>
 
               <TabsContent value="memberships" className="space-y-4">
@@ -505,6 +593,124 @@ export default function Settings() {
                       </p>
                     </div>
                     <Button onClick={handleSaveRecaptchaSettings}>Save reCAPTCHA Settings</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="smtp" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>SMTP Configuration</CardTitle>
+                    <CardDescription>
+                      Configure SMTP server for sending emails (verification codes, newsletters, etc.)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>SMTP Host</Label>
+                        <Input
+                          placeholder="smtp.gmail.com"
+                          value={smtpSettings.host}
+                          onChange={(e) => setSmtpSettings({ ...smtpSettings, host: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>SMTP Port</Label>
+                        <Input
+                          placeholder="587"
+                          value={smtpSettings.port}
+                          onChange={(e) => setSmtpSettings({ ...smtpSettings, port: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>SMTP Username</Label>
+                      <Input
+                        placeholder="your-email@gmail.com"
+                        value={smtpSettings.user}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, user: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>SMTP Password</Label>
+                      <Input
+                        type="password"
+                        placeholder="App password or SMTP password"
+                        value={smtpSettings.password}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, password: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>From Email</Label>
+                        <Input
+                          placeholder="noreply@yourgym.com"
+                          value={smtpSettings.fromEmail}
+                          onChange={(e) => setSmtpSettings({ ...smtpSettings, fromEmail: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>From Name</Label>
+                        <Input
+                          placeholder="My Gym"
+                          value={smtpSettings.fromName}
+                          onChange={(e) => setSmtpSettings({ ...smtpSettings, fromName: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={smtpSettings.secure}
+                        onCheckedChange={(checked) => setSmtpSettings({ ...smtpSettings, secure: checked })}
+                      />
+                      <Label>Use TLS/SSL</Label>
+                    </div>
+                    <Button onClick={handleSaveSmtpSettings}>Save SMTP Settings</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="newsletter" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Newsletter Subscribers</CardTitle>
+                    <CardDescription>
+                      Manage newsletter subscribers and send campaigns
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        Total subscribers: <span className="font-bold">{newsletterSubscribers.length}</span>
+                      </p>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Subscribed</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {newsletterSubscribers.map((subscriber) => (
+                          <TableRow key={subscriber.id}>
+                            <TableCell>{subscriber.email}</TableCell>
+                            <TableCell>{subscriber.name || 'N/A'}</TableCell>
+                            <TableCell>
+                              <span className={subscriber.subscribed ? 'text-green-600' : 'text-red-600'}>
+                                {subscriber.subscribed ? 'Yes' : 'No'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(subscriber.created_at).toLocaleDateString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </CardContent>
                 </Card>
               </TabsContent>
