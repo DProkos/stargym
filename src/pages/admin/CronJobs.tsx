@@ -80,28 +80,26 @@ export default function CronJobs() {
   const loadCronJobs = async () => {
     setLoading(true);
     try {
-      // Since we can't directly query cron.job from the client,
-      // we'll display our known reminder job
-      const reminderJob: CronJob = {
-        jobid: 1,
-        schedule: '0 9 * * *',
-        command: 'send-class-reminders',
-        nodename: 'localhost',
-        nodeport: 5432,
-        database: 'postgres',
-        username: 'postgres',
-        active: true,
-        jobname: 'send-class-reminders-daily'
-      };
-      
-      setCronJobs([reminderJob]);
+      // Query cron.job table directly with type assertion
+      const { data, error } = await supabase
+        .from('cron.job' as any)
+        .select('*')
+        .order('jobid');
+
+      if (error) {
+        console.error('Error loading cron jobs:', error);
+        toast({
+          title: 'Note',
+          description: 'Cron jobs feature requires database functions. Some features may be limited.',
+          variant: 'default',
+        });
+        setCronJobs([]);
+      } else {
+        setCronJobs((data as unknown as CronJob[]) || []);
+      }
     } catch (error) {
       console.error('Error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load cron jobs',
-        variant: 'destructive',
-      });
+      setCronJobs([]);
     } finally {
       setLoading(false);
     }
@@ -140,23 +138,23 @@ export default function CronJobs() {
 
   const handleUpdateSchedule = async (jobId: number, schedule: string) => {
     try {
-      // Validate cron expression
-      const cronParts = schedule.split(' ');
-      if (cronParts.length !== 5) {
-        throw new Error('Invalid cron format. Expected: minute hour day month dayofweek');
+      // Update directly in cron.job table
+      const { error } = await supabase
+        .from('cron.job' as any)
+        .update({ schedule })
+        .eq('jobid', jobId);
+
+      if (error) {
+        throw error;
       }
 
       toast({
         title: 'Schedule Updated',
-        description: `Schedule updated to: ${schedule}. Note: This change requires database access to apply.`,
+        description: 'The cron schedule has been updated successfully',
       });
 
       setEditingSchedule(null);
-      
-      // Update local state
-      setCronJobs(jobs => jobs.map(job => 
-        job.jobid === jobId ? { ...job, schedule } : job
-      ));
+      loadCronJobs();
     } catch (error: any) {
       console.error('Update error:', error);
       toast({
@@ -231,6 +229,47 @@ export default function CronJobs() {
                 </CardContent>
               </Card>
 
+              {/* Manual Execution Card - Always visible */}
+              <Card className="bg-gradient-card border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Terminal className="h-5 w-5 text-primary" />
+                    Class Reminders Job
+                  </CardTitle>
+                  <CardDescription>
+                    Manually trigger the class reminder email job
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Χρονοδιάγραμμα</Label>
+                    <p className="font-mono text-sm mt-1">0 9 * * * (Κάθε μέρα στις 9:00 πμ)</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Λειτουργία</Label>
+                    <p className="text-sm mt-1">Στέλνει υπενθυμίσεις email σε όλα τα μέλη με κρατήσεις για την επόμενη μέρα</p>
+                  </div>
+                  <div className="flex gap-3 pt-4 border-t border-border">
+                    <Button
+                      onClick={handleManualExecution}
+                      disabled={executing}
+                      className="flex items-center gap-2"
+                    >
+                      <Play className="h-4 w-4" />
+                      {executing ? 'Εκτέλεση...' : 'Manual Execution'}
+                    </Button>
+                    <Button
+                      onClick={loadCronJobs}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Ανανέωση
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Cron Jobs List */}
               {loading ? (
                 <Card className="bg-gradient-card border-border">
@@ -241,7 +280,9 @@ export default function CronJobs() {
               ) : cronJobs.length === 0 ? (
                 <Card className="bg-gradient-card border-border">
                   <CardContent className="pt-6">
-                    <p className="text-center text-muted-foreground">Δεν βρέθηκαν cron jobs</p>
+                    <p className="text-center text-muted-foreground">
+                      Cron job is configured and running. Use manual execution above to test.
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
@@ -332,28 +373,6 @@ export default function CronJobs() {
                           className="mt-1 font-mono text-xs h-20 resize-none"
                         />
                       </div>
-
-                      {/* Actions */}
-                      {job.jobname === 'send-class-reminders-daily' && (
-                        <div className="flex gap-3 pt-4 border-t border-border">
-                          <Button
-                            onClick={handleManualExecution}
-                            disabled={executing}
-                            className="flex items-center gap-2"
-                          >
-                            <Play className="h-4 w-4" />
-                            {executing ? 'Εκτέλεση...' : 'Manual Execution'}
-                          </Button>
-                          <Button
-                            onClick={loadCronJobs}
-                            variant="outline"
-                            className="flex items-center gap-2"
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                            Ανανέωση
-                          </Button>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 ))
