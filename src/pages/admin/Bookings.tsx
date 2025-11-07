@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, Filter, Trash2, TrendingUp, Users, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, Filter, Trash2, TrendingUp, Users, BarChart3, CalendarDays } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -19,6 +19,10 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { cn } from '@/lib/utils';
 import BookingCalendar from '@/components/BookingCalendar';
 
 interface Booking {
@@ -51,6 +55,11 @@ export default function AdminBookings() {
   const [selectedBookings, setSelectedBookings] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [dateRangePreset, setDateRangePreset] = useState<string>('all');
+  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
   const [stats, setStats] = useState({
     total: 0,
     upcoming: 0,
@@ -67,7 +76,7 @@ export default function AdminBookings() {
   useEffect(() => {
     filterBookings();
     calculateStats();
-  }, [bookings, searchQuery, statusFilter]);
+  }, [bookings, searchQuery, statusFilter, dateRangePreset, customDateRange]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -144,6 +153,15 @@ export default function AdminBookings() {
   const filterBookings = () => {
     let filtered = [...bookings];
 
+    // Filter by date range
+    const dateRange = getDateRange();
+    if (dateRange) {
+      filtered = filtered.filter(booking => {
+        const bookingDate = new Date(booking.booking_date);
+        return isWithinInterval(bookingDate, { start: dateRange.from, end: dateRange.to });
+      });
+    }
+
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(booking => 
@@ -161,27 +179,57 @@ export default function AdminBookings() {
     setFilteredBookings(filtered);
   };
 
+  const getDateRange = (): { from: Date; to: Date } | null => {
+    const now = new Date();
+    
+    switch (dateRangePreset) {
+      case 'this_week':
+        return {
+          from: startOfWeek(now, { weekStartsOn: 1 }), // Monday
+          to: endOfWeek(now, { weekStartsOn: 1 }),
+        };
+      case 'this_month':
+        return {
+          from: startOfMonth(now),
+          to: endOfMonth(now),
+        };
+      case 'custom':
+        if (customDateRange.from && customDateRange.to) {
+          return {
+            from: customDateRange.from,
+            to: customDateRange.to,
+          };
+        }
+        return null;
+      case 'all':
+      default:
+        return null;
+    }
+  };
+
   const calculateStats = () => {
-    const total = bookings.length;
+    // Use filtered bookings for stats if date range is applied
+    const dataToAnalyze = dateRangePreset !== 'all' ? filteredBookings : bookings;
+    const total = dataToAnalyze.length;
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
     // Count upcoming bookings (today and future)
-    const upcoming = bookings.filter(booking => {
+    const upcoming = dataToAnalyze.filter(booking => {
       const bookingDate = new Date(booking.booking_date);
       bookingDate.setHours(0, 0, 0, 0);
       return bookingDate >= now && booking.status !== 'cancelled';
     }).length;
 
     // Count cancelled bookings
-    const cancelled = bookings.filter(b => b.status === 'cancelled').length;
+    const cancelled = dataToAnalyze.filter(b => b.status === 'cancelled').length;
 
     // Calculate cancellation rate
     const cancellationRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
 
     // Calculate most popular classes
     const classCount = new Map<string, number>();
-    bookings.forEach(booking => {
+    dataToAnalyze.forEach(booking => {
       if (booking.status !== 'cancelled') {
         const className = booking.class.name;
         classCount.set(className, (classCount.get(className) || 0) + 1);
@@ -613,6 +661,87 @@ export default function AdminBookings() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Date Range</label>
+                    <Select value={dateRangePreset} onValueChange={(value) => {
+                      setDateRangePreset(value);
+                      if (value !== 'custom') {
+                        setCustomDateRange({ from: undefined, to: undefined });
+                      }
+                    }}>
+                      <SelectTrigger className="bg-secondary border-border">
+                        <SelectValue placeholder="Select date range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="this_week">This Week</SelectItem>
+                        <SelectItem value="this_month">This Month</SelectItem>
+                        <SelectItem value="custom">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {dateRangePreset === 'custom' && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">From Date</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal bg-secondary border-border",
+                                !customDateRange.from && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarDays className="mr-2 h-4 w-4" />
+                              {customDateRange.from ? format(customDateRange.from, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={customDateRange.from}
+                              onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">To Date</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal bg-secondary border-border",
+                                !customDateRange.to && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarDays className="mr-2 h-4 w-4" />
+                              {customDateRange.to ? format(customDateRange.to, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={customDateRange.to}
+                              onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                              disabled={(date) => customDateRange.from ? date < customDateRange.from : false}
+                              initialFocus
+                              className="pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -651,6 +780,15 @@ export default function AdminBookings() {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Showing {filteredBookings.length} of {bookings.length} bookings
+                  {dateRangePreset !== 'all' && (
+                    <span className="ml-2 text-primary">
+                      ({dateRangePreset === 'custom' && customDateRange.from && customDateRange.to
+                        ? `${format(customDateRange.from, 'PP')} - ${format(customDateRange.to, 'PP')}`
+                        : dateRangePreset === 'this_week' 
+                        ? 'This Week' 
+                        : 'This Month'})
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
