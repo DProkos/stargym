@@ -19,6 +19,7 @@ import TrainerManager from "./pages/admin/TrainerManager";
 import ClassEditor from "./pages/admin/ClassEditor";
 import Settings from "./pages/admin/Settings";
 import NewsletterComposer from "./pages/admin/NewsletterComposer";
+import TemplateBuilder from "./pages/admin/TemplateBuilder";
 import EmailTemplates from "./pages/admin/EmailTemplates";
 import Memberships from "./pages/Memberships";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -81,6 +82,11 @@ const App = () => (
             <Route path="/admin/email-templates" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <EmailTemplates />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/template-builder" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TemplateBuilder />
               </ProtectedRoute>
             } />
             <Route path="/admin/trainers" element={

@@ -144,10 +144,14 @@ export default function EmailTemplates() {
           </div>
 
           <div className="p-6">
-            <div className="mb-6">
+            <div className="mb-6 flex gap-2">
               <Button onClick={() => navigate('/admin/newsletter')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Blank Newsletter
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/admin/template-builder')}>
+                <Plus className="h-4 w-4 mr-2" />
+                Build Custom Template
               </Button>
             </div>
 

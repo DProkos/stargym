@@ -10,9 +10,10 @@ interface ImageUploadProps {
   currentImageUrl?: string;
   onImageUploaded: (url: string) => void;
   folder?: string;
+  bucket?: string;
 }
 
-export default function ImageUpload({ currentImageUrl, onImageUploaded, folder = 'general' }: ImageUploadProps) {
+export default function ImageUpload({ currentImageUrl, onImageUploaded, folder = 'general', bucket = 'cms-images' }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const { toast } = useToast();
@@ -56,7 +57,7 @@ export default function ImageUpload({ currentImageUrl, onImageUploaded, folder =
       const fileName = `${folder}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError, data } = await supabase.storage
-        .from('cms-images')
+        .from(bucket)
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
@@ -68,7 +69,7 @@ export default function ImageUpload({ currentImageUrl, onImageUploaded, folder =
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('cms-images')
+        .from(bucket)
         .getPublicUrl(fileName);
 
       onImageUploaded(publicUrl);
