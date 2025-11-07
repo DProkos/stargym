@@ -12,6 +12,7 @@ import { Navigation } from '@/components/Navigation';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -66,6 +67,33 @@ export default function Auth() {
     };
     checkUser();
   }, [navigate]);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Check your email',
+        description: 'Password reset link has been sent to your email address',
+      });
+      setIsForgotPassword(false);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,13 +225,40 @@ export default function Auth() {
         <Card className="w-full max-w-md bg-card border-border">
         <CardHeader>
           <CardTitle className="text-2xl">
-            {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
+            {isForgotPassword ? 'Reset Password' : isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
           </CardTitle>
           <CardDescription>
-            {isLogin ? t('auth.signIn') : t('auth.signUp')}
+            {isForgotPassword ? 'Enter your email to receive a password reset link' : isLogin ? t('auth.signIn') : t('auth.signUp')}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">{t('auth.email')}</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-secondary border-border"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? '...' : 'Send Reset Link'}
+              </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsForgotPassword(false)}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </form>
+          ) : (
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
@@ -239,11 +294,23 @@ export default function Auth() {
                 required
                 className="bg-secondary border-border"
               />
+              {isLogin && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? '...' : isLogin ? t('auth.signIn') : t('auth.signUp')}
             </Button>
           </form>
+          )}
           {signupEnabled && (
             <div className="mt-4 text-center">
               <button
