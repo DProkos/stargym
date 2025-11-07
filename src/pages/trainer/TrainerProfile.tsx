@@ -5,27 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, Lock, User as UserIcon, Mail, Phone } from 'lucide-react';
+import { Loader2, Save, User as UserIcon, Mail, Phone } from 'lucide-react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarTrainer } from "@/components/app-sidebar-trainer";
 import { Separator } from '@/components/ui/separator';
+import { PasswordChangeWithVerification } from '@/components/PasswordChangeWithVerification';
 
 export default function TrainerProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
   const { toast } = useToast();
 
   const [profile, setProfile] = useState({
     full_name: '',
     email: '',
     phone: '',
-  });
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
   });
 
   useEffect(() => {
@@ -94,53 +88,6 @@ export default function TrainerProfile() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({
-        title: 'Passwords do not match',
-        description: 'Please make sure both passwords are the same',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      toast({
-        title: 'Password too short',
-        description: 'Password must be at least 6 characters',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setChangingPassword(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Password changed',
-        description: 'Your password has been updated successfully',
-      });
-
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error changing password',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setChangingPassword(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -224,52 +171,8 @@ export default function TrainerProfile() {
 
               <Separator />
 
-              {/* Change Password */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lock className="h-5 w-5" />
-                    Change Password
-                  </CardTitle>
-                  <CardDescription>Update your password to keep your account secure</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      placeholder="Enter new password"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      placeholder="Confirm new password"
-                    />
-                  </div>
-
-                  <Button
-                    onClick={handleChangePassword}
-                    disabled={changingPassword || !passwordData.newPassword}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {changingPassword ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Changing...</>
-                    ) : (
-                      <><Lock className="h-4 w-4 mr-2" /> Change Password</>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Change Password with Email Verification */}
+              <PasswordChangeWithVerification />
             </div>
           </main>
         </div>
