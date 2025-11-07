@@ -31,6 +31,7 @@ import NotFound from "./pages/NotFound";
 import CronJobs from "./pages/admin/CronJobs";
 import TrainerProfile from "./pages/trainer/TrainerProfile";
 import CustomerProfile from "./pages/customer/CustomerProfile";
+import TrainerClasses from "./pages/trainer/TrainerClasses";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,11 @@ const App = () => (
             <Route path="/trainer/schedule" element={
               <ProtectedRoute allowedRoles={['trainer']}>
                 <TrainerPortal />
+              </ProtectedRoute>
+            } />
+            <Route path="/trainer/classes" element={
+              <ProtectedRoute allowedRoles={['trainer']}>
+                <TrainerClasses />
               </ProtectedRoute>
             } />
             <Route path="/trainer/profile" element={
