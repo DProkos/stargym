@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Users, CheckCircle, XCircle } from 'lucide-react';
 import { z } from 'zod';
 
 const bookingSchema = z.object({
@@ -25,12 +27,75 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
+  const [availability, setAvailability] = useState<{
+    booked: number;
+    available: number;
+    isFull: boolean;
+  } | null>(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && selectedDate) {
+      checkAvailability(selectedDate);
+    }
+  }, [isOpen]);
+
+  const checkAvailability = async (date: Date) => {
+    if (!date || !classItem?.id) return;
+    
+    setCheckingAvailability(true);
+    try {
+      const dateString = date.toISOString().split('T')[0];
+      
+      // Count existing bookings for this class on this date
+      const { data, error, count } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: false })
+        .eq('class_id', classItem.id)
+        .eq('booking_date', dateString)
+        .eq('status', 'confirmed');
+
+      if (error) throw error;
+
+      const bookedCount = count || 0;
+      const maxCapacity = classItem.max_capacity || 20;
+      const availableCount = maxCapacity - bookedCount;
+
+      setAvailability({
+        booked: bookedCount,
+        available: availableCount,
+        isFull: bookedCount >= maxCapacity,
+      });
+    } catch (error) {
+      console.error('Failed to check availability:', error);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
+
+  const handleDateSelect = async (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      await checkAvailability(date);
+    } else {
+      setAvailability(null);
+    }
+  };
 
   const handleConfirmBooking = async () => {
     if (!selectedDate) {
       toast({
         title: 'Validation Error',
         description: 'Please select a date',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (availability?.isFull) {
+      toast({
+        title: 'Class Full',
+        description: 'This class is fully booked for the selected date',
         variant: 'destructive',
       });
       return;
@@ -111,16 +176,55 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={handleDateSelect}
             disabled={(date) => date < new Date()}
-            className="rounded-md border border-border"
+            className="rounded-md border border-border pointer-events-auto"
           />
+          
+          {/* Availability Information */}
+          {checkingAvailability && (
+            <Alert className="w-full">
+              <AlertDescription className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                Checking availability...
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!checkingAvailability && availability && selectedDate && (
+            <Alert className={availability.isFull ? "border-destructive" : "border-green-500"}>
+              <AlertDescription className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className={`h-5 w-5 ${availability.isFull ? 'text-destructive' : 'text-green-500'}`} />
+                  <div>
+                    <p className="font-semibold">
+                      {availability.isFull ? (
+                        <span className="text-destructive flex items-center gap-1">
+                          <XCircle className="h-4 w-4" />
+                          Πλήρης - Δεν υπάρχουν διαθέσιμες θέσεις
+                        </span>
+                      ) : (
+                        <span className="text-green-500 flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4" />
+                          {availability.available} {availability.available === 1 ? 'θέση διαθέσιμη' : 'θέσεις διαθέσιμες'}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {availability.booked}/{classItem.max_capacity} κρατήσεις
+                    </p>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button 
             onClick={handleConfirmBooking} 
-            disabled={!selectedDate || loading}
+            disabled={!selectedDate || loading || availability?.isFull || checkingAvailability}
             className="w-full"
           >
-            {loading ? '...' : t('booking.confirm')}
+            {loading ? '...' : availability?.isFull ? 'Πλήρης' : t('booking.confirm')}
           </Button>
         </div>
       </DialogContent>
