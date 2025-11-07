@@ -29,23 +29,32 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
         .eq('user_id', session.user.id);
 
       if (roleData && roleData.length > 0) {
-        // If user has multiple roles, check if any match allowed roles
         const roles = roleData.map(r => r.role);
+        
         if (allowedRoles) {
+          // Check if user has at least one allowed role
           const hasAllowedRole = roles.some(role => allowedRoles.includes(role));
           if (hasAllowedRole) {
-            setUserRole(roles[0]); // Set first matching role
+            // Find and set the first matching allowed role
+            const matchingRole = roles.find(role => allowedRoles.includes(role));
+            setUserRole(matchingRole || null);
+          } else {
+            // User has roles but none match - they should be redirected
+            setUserRole('no_access');
           }
         } else {
           setUserRole(roles[0]);
         }
+      } else {
+        // User has no roles at all
+        setUserRole('no_access');
       }
       
       setLoading(false);
     };
 
     checkAuth();
-  }, []);
+  }, [allowedRoles]);
 
   if (loading) {
     return (
@@ -62,7 +71,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     return <Navigate to="/auth" replace />;
   }
 
-  if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
+  // If specific roles are required and user doesn't have any of them, redirect
+  if (allowedRoles && (!userRole || userRole === 'no_access')) {
     return <Navigate to="/" replace />;
   }
 
