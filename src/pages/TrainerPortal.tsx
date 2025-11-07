@@ -3,9 +3,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users } from 'lucide-react';
+import { Calendar, Clock, Users, List, CalendarDays } from 'lucide-react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarTrainer } from "@/components/app-sidebar-trainer";
+import BookingCalendar from '@/components/BookingCalendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Class {
   id: string;
@@ -27,6 +29,7 @@ export default function TrainerPortal() {
   const [user, setUser] = useState<any>(null);
   const [classes, setClasses] = useState<Class[]>([]);
   const [bookingCounts, setBookingCounts] = useState<Record<string, number>>({});
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -68,6 +71,36 @@ export default function TrainerPortal() {
     }
   };
 
+  // Generate calendar events from classes (recurring weekly events)
+  const calendarEvents = classes.flatMap(cls => {
+    const events = [];
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 30); // Show 30 days back
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 90); // Show 90 days forward
+
+    // Generate events for each week
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      if (d.getDay() === cls.day_of_week) {
+        const [hours, minutes] = cls.time.split(':').map(Number);
+        const eventStart = new Date(d);
+        eventStart.setHours(hours, minutes, 0);
+        const eventEnd = new Date(eventStart);
+        eventEnd.setMinutes(eventEnd.getMinutes() + cls.duration_minutes);
+
+        events.push({
+          id: `${cls.id}-${d.toISOString()}`,
+          title: cls.name,
+          start: eventStart,
+          end: eventEnd,
+          resource: cls,
+        });
+      }
+    }
+    return events;
+  });
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -88,7 +121,64 @@ export default function TrainerPortal() {
                 </CardHeader>
               </Card>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <Tabs defaultValue="calendar" className="space-y-4">
+                <TabsList className="grid w-full max-w-md grid-cols-2">
+                  <TabsTrigger value="calendar" className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    Calendar View
+                  </TabsTrigger>
+                  <TabsTrigger value="list" className="flex items-center gap-2">
+                    <List className="h-4 w-4" />
+                    Class List
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="calendar" className="space-y-4">
+                  <BookingCalendar 
+                    events={calendarEvents}
+                    onSelectEvent={(event) => setSelectedClass(event.resource)}
+                    defaultView="week"
+                  />
+                  
+                  {selectedClass && (
+                    <Card className="bg-gradient-card border-border">
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span>{selectedClass.name}</span>
+                          <Badge variant="outline" className="bg-primary/20 text-primary border-primary">
+                            {daysOfWeek[selectedClass.day_of_week]}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          <div className="flex flex-col gap-2 mt-2">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-primary" />
+                              <span>{selectedClass.time} ({selectedClass.duration_minutes} min)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-primary" />
+                              <span>{bookingCounts[selectedClass.id] || 0} / {selectedClass.max_capacity} booked</span>
+                            </div>
+                          </div>
+                        </CardDescription>
+                      </CardHeader>
+                      {selectedClass.description && (
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground mb-4">{selectedClass.description}</p>
+                          <button 
+                            onClick={() => setSelectedClass(null)}
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Close
+                          </button>
+                        </CardContent>
+                      )}
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="list" className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {classes.length === 0 ? (
                   <Card className="bg-gradient-card border-border col-span-full">
                     <CardContent className="pt-6">
@@ -127,6 +217,8 @@ export default function TrainerPortal() {
                   ))
                 )}
               </div>
+            </TabsContent>
+          </Tabs>
             </div>
           </main>
         </div>

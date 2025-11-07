@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Calendar, BookOpen } from 'lucide-react';
+import { Users, Calendar, BookOpen, CalendarDays } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
+import BookingCalendar from '@/components/BookingCalendar';
 
 export default function Admin() {
   const { t } = useLanguage();
@@ -73,6 +74,26 @@ export default function Admin() {
     }
   };
 
+  // Calendar events from bookings
+  const calendarEvents = bookings.map(booking => {
+    const bookingDate = new Date(booking.booking_date);
+    const classTime = booking.class?.time || '09:00';
+    const [hours, minutes] = classTime.split(':').map(Number);
+    const startTime = new Date(bookingDate);
+    startTime.setHours(hours, minutes, 0);
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + 60); // Default 60 min if no duration
+
+    return {
+      id: booking.id,
+      title: `${booking.class?.name || 'Class'} - ${booking.user?.full_name || 'User'}`,
+      start: startTime,
+      end: endTime,
+      resource: booking,
+      status: booking.status,
+    };
+  });
+
   if (!isAdmin) {
     return null;
   }
@@ -129,11 +150,57 @@ export default function Admin() {
           </div>
 
           <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full md:w-auto grid-cols-3">
+            <TabsList className="grid w-full md:w-auto grid-cols-4">
+              <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Calendar
+              </TabsTrigger>
               <TabsTrigger value="members">{t('dashboard.members')}</TabsTrigger>
               <TabsTrigger value="classes">{t('dashboard.classes')}</TabsTrigger>
               <TabsTrigger value="bookings">{t('dashboard.bookings')}</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="overview" className="mt-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                <Card className="bg-gradient-card border-border">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">{t('dashboard.members')}</CardTitle>
+                    <Users className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.members}</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-card border-border">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">{t('dashboard.classes')}</CardTitle>
+                    <Calendar className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.classes}</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-card border-border">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">{t('dashboard.bookings')}</CardTitle>
+                    <BookOpen className="h-4 w-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.bookings}</div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="calendar" className="mt-6">
+              <BookingCalendar 
+                events={calendarEvents}
+                defaultView="month"
+              />
+            </TabsContent>
 
             <TabsContent value="members" className="mt-6">
               <Card className="bg-gradient-card border-border">

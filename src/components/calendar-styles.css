@@ -1,0 +1,254 @@
+/* React Big Calendar Custom Styles for Gym Theme */
+
+.rbc-calendar {
+  font-family: inherit;
+  color: hsl(var(--foreground));
+}
+
+.rbc-header {
+  padding: 12px 8px;
+  font-weight: 600;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.3);
+  color: hsl(var(--foreground));
+}
+
+.rbc-month-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+  background: hsl(var(--background));
+}
+
+.rbc-day-bg {
+  background: hsl(var(--background));
+  border-left: 1px solid hsl(var(--border));
+}
+
+.rbc-off-range-bg {
+  background: hsl(var(--muted) / 0.2);
+}
+
+.rbc-today {
+  background: hsl(var(--primary) / 0.1);
+}
+
+.rbc-date-cell {
+  padding: 8px;
+  text-align: right;
+  color: hsl(var(--foreground));
+}
+
+.rbc-off-range {
+  color: hsl(var(--muted-foreground));
+}
+
+.rbc-current {
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+
+.rbc-event {
+  padding: 4px 8px;
+  background: hsl(var(--primary));
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.rbc-event:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+}
+
+.rbc-event-label {
+  display: none;
+}
+
+.rbc-event-content {
+  font-weight: 500;
+}
+
+.rbc-selected {
+  background: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3);
+}
+
+.rbc-toolbar {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rbc-toolbar button {
+  padding: 8px 16px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.rbc-toolbar button:hover {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+.rbc-toolbar-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  text-align: center;
+  flex-grow: 1;
+}
+
+.rbc-btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.rbc-btn-group button {
+  margin: 0;
+}
+
+.rbc-btn-group button:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.rbc-btn-group button:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.rbc-btn-group button:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.rbc-time-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-time-header {
+  background: hsl(var(--muted) / 0.3);
+}
+
+.rbc-time-content {
+  background: hsl(var(--background));
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-timeslot-group {
+  border-left: 1px solid hsl(var(--border));
+  min-height: 60px;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+  color: hsl(var(--muted-foreground));
+}
+
+.rbc-current-time-indicator {
+  background-color: hsl(var(--primary));
+  height: 2px;
+}
+
+.rbc-agenda-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+  background: hsl(var(--background));
+}
+
+.rbc-agenda-table {
+  border: 0;
+}
+
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell {
+  padding: 12px;
+  color: hsl(var(--foreground));
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-agenda-event-cell {
+  padding: 12px;
+  border-top: 1px solid hsl(var(--border));
+}
+
+.rbc-show-more {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  padding: 4px 8px;
+  margin: 2px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rbc-show-more:hover {
+  background: hsl(var(--primary));
+  color: white;
+}
+
+.rbc-overlay {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 10px 40px hsl(var(--foreground) / 0.2);
+  padding: 12px;
+}
+
+.rbc-overlay-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 8px 12px;
+  margin: -12px -12px 12px -12px;
+  background: hsl(var(--muted) / 0.3);
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  border-radius: 8px 8px 0 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+  }
+  
+  .rbc-toolbar-label {
+    order: -1;
+    margin-bottom: 8px;
+  }
+  
+  .rbc-btn-group {
+    width: 100%;
+  }
+  
+  .rbc-btn-group button {
+    flex: 1;
+  }
+}
