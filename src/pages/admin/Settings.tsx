@@ -76,6 +76,7 @@ export default function Settings() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [showTemplatePreview, setShowTemplatePreview] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -376,10 +377,37 @@ export default function Settings() {
       toast.success('Email template updated successfully');
       loadEmailTemplates();
       setEditingTemplate(null);
+      setShowTemplatePreview(false);
     } catch (error: any) {
       console.error('Error saving email template:', error);
       toast.error('Failed to save email template: ' + error.message);
     }
+  };
+
+  const getPreviewHtml = () => {
+    if (!editingTemplate) return '';
+    
+    // Sample data for preview
+    const sampleData = {
+      title: 'Ακύρωση 2 Τάξεων',
+      intro_text: 'Σας ενημερώνουμε ότι οι παρακάτω τάξεις έχουν ακυρωθεί:',
+      class_list: `
+        <li style="color: #333; font-size: 15px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+          <strong>Yoga για Αρχάριους</strong> - Δευτέρα στις 10:00 (15/01/2025)
+        </li>
+        <li style="color: #333; font-size: 15px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+          <strong>HIIT Training</strong> - Τετάρτη στις 18:30 (17/01/2025)
+        </li>
+      `
+    };
+
+    let html = editingTemplate.html_template;
+    Object.entries(sampleData).forEach(([key, value]) => {
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      html = html.replace(regex, value);
+    });
+
+    return html;
   };
 
   const handleOpenDialog = (tier?: MembershipTier) => {
@@ -836,49 +864,79 @@ export default function Settings() {
                     </Table>
 
                     {editingTemplate && (
-                      <Card className="mt-6">
-                        <CardHeader>
-                          <CardTitle>Edit Template: {editingTemplate.name}</CardTitle>
-                          <CardDescription>
-                            Use the following variables: {'{{title}}'}, {'{{intro_text}}'}, {'{{class_list}}'}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Input
-                              value={editingTemplate.description || ''}
-                              onChange={(e) => setEditingTemplate({
-                                ...editingTemplate,
-                                description: e.target.value
-                              })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>HTML Template</Label>
-                            <Textarea
-                              value={editingTemplate.html_template || ''}
-                              onChange={(e) => setEditingTemplate({
-                                ...editingTemplate,
-                                html_template: e.target.value
-                              })}
-                              rows={20}
-                              className="font-mono text-sm"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <Button onClick={handleSaveEmailTemplate}>
-                              Save Template
-                            </Button>
-                            <Button 
-                              variant="outline"
-                              onClick={() => setEditingTemplate(null)}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Edit Template: {editingTemplate.name}</CardTitle>
+                            <CardDescription>
+                              Use the following variables: {'{{title}}'}, {'{{intro_text}}'}, {'{{class_list}}'}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>Description</Label>
+                              <Input
+                                value={editingTemplate.description || ''}
+                                onChange={(e) => setEditingTemplate({
+                                  ...editingTemplate,
+                                  description: e.target.value
+                                })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>HTML Template</Label>
+                              <Textarea
+                                value={editingTemplate.html_template || ''}
+                                onChange={(e) => setEditingTemplate({
+                                  ...editingTemplate,
+                                  html_template: e.target.value
+                                })}
+                                rows={20}
+                                className="font-mono text-sm"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button onClick={handleSaveEmailTemplate}>
+                                Save Template
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                onClick={() => setShowTemplatePreview(!showTemplatePreview)}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                {showTemplatePreview ? 'Hide Preview' : 'Show Preview'}
+                              </Button>
+                              <Button 
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingTemplate(null);
+                                  setShowTemplatePreview(false);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {showTemplatePreview && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Email Preview</CardTitle>
+                              <CardDescription>
+                                Προεπισκόπηση του email με δείγματα δεδομένων
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="border rounded-lg p-4 bg-gray-50 overflow-auto max-h-[600px]">
+                                <div 
+                                  dangerouslySetInnerHTML={{ __html: getPreviewHtml() }}
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
