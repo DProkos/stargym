@@ -14,6 +14,9 @@ import Admin from "./pages/Admin";
 import CustomerPortal from "./pages/CustomerPortal";
 import TrainerPortal from "./pages/TrainerPortal";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ContentEditor from "./pages/admin/ContentEditor";
+import TrainerManager from "./pages/admin/TrainerManager";
+import ClassEditor from "./pages/admin/ClassEditor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,9 +51,24 @@ const App = () => (
             } />
             
             {/* Admin routes */}
-            <Route path="/admin/*" element={
+            <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <Admin />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/content" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ContentEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/trainers" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TrainerManager />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/classes" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ClassEditor />
               </ProtectedRoute>
             } />
             
