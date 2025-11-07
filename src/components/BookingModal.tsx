@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { useConfetti } from '@/hooks/useConfetti';
 
 const bookingSchema = z.object({
   booking_date: z.date({ required_error: 'Please select a date' }),
@@ -29,6 +30,7 @@ interface BookingModalProps {
 export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDate }: BookingModalProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { fireConfetti } = useConfetti();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(preSelectedDate || new Date());
   const [loading, setLoading] = useState(false);
   const [availability, setAvailability] = useState<{
@@ -314,11 +316,18 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
         ? `Επιτυχής κράτηση για ${weeks} εβδομάδες!`
         : 'Your booking has been confirmed successfully';
 
+      // Fire confetti celebration
+      fireConfetti();
+
       toast({ 
         title: t('booking.success'),
         description: successMessage,
       });
-      onClose();
+      
+      // Close modal after a short delay to show confetti
+      setTimeout(() => {
+        onClose();
+      }, 500);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({

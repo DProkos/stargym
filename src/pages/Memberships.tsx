@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { Navigation } from '@/components/Navigation';
+import { useConfetti } from '@/hooks/useConfetti';
 
 interface MembershipTier {
   id: string;
@@ -23,6 +24,7 @@ interface MembershipTier {
 export default function Memberships() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { fireCelebration } = useConfetti();
   const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSubscription, setCurrentSubscription] = useState<string | null>(null);
@@ -100,9 +102,12 @@ export default function Memberships() {
     }
 
     // TODO: Integrate with Stripe Checkout
+    // Fire celebration confetti for demo
+    fireCelebration();
     toast.info(t('memberships.comingSoon'));
     
     // Placeholder for Stripe integration
+    // When real subscription succeeds, call fireCelebration() here
     // const response = await fetch('/api/create-checkout-session', {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
