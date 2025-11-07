@@ -598,6 +598,20 @@ export type Database = {
       }
     }
     Functions: {
+      get_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          command: string
+          database: string
+          jobid: number
+          jobname: string
+          nodename: string
+          nodeport: number
+          schedule: string
+          username: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -606,6 +620,10 @@ export type Database = {
         Returns: boolean
       }
       refresh_campaign_analytics: { Args: never; Returns: undefined }
+      update_cron_schedule: {
+        Args: { job_id: number; new_schedule: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "member" | "trainer"

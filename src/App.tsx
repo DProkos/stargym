@@ -28,6 +28,7 @@ import Bookings from "./pages/admin/Bookings";
 import Memberships from "./pages/Memberships";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
+import CronJobs from "./pages/admin/CronJobs";
 
 const queryClient = new QueryClient();
 
@@ -121,6 +122,11 @@ const App = () => (
             <Route path="/admin/bookings" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <Bookings />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/cron-jobs" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <CronJobs />
               </ProtectedRoute>
             } />
             
