@@ -35,11 +35,10 @@ export default function Admin() {
       const { data } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', session.user.id)
-        .eq('role', 'admin')
-        .single();
+        .eq('user_id', session.user.id);
 
-      if (!data) {
+      const hasAdminRole = data?.some(r => r.role === 'admin');
+      if (!hasAdminRole) {
         navigate('/');
         return;
       }
