@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { Navigation } from '@/components/Navigation';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -190,8 +191,10 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-hero">
-      <Card className="w-full max-w-md bg-card border-border">
+    <>
+      <Navigation user={null} isAdmin={false} />
+      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-hero pt-16">
+        <Card className="w-full max-w-md bg-card border-border">
         <CardHeader>
           <CardTitle className="text-2xl">
             {isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
@@ -268,6 +271,7 @@ export default function Auth() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }

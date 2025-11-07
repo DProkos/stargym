@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
+import { Navigation } from '@/components/Navigation';
 
 export default function VerifyEmail() {
   const [code, setCode] = useState('');
@@ -124,8 +125,10 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-hero">
-      <Card className="w-full max-w-md bg-card border-border">
+    <>
+      <Navigation user={null} isAdmin={false} />
+      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-hero pt-16">
+        <Card className="w-full max-w-md bg-card border-border">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Mail className="w-6 h-6 text-primary" />
@@ -163,6 +166,7 @@ export default function VerifyEmail() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
