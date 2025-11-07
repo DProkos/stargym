@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, Filter } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, Filter, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import BookingCalendar from '@/components/BookingCalendar';
 
 interface Booking {
@@ -45,6 +48,9 @@ export default function AdminBookings() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedBookings, setSelectedBookings] = useState<Set<string>>(new Set());
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     checkAuth();
@@ -181,6 +187,130 @@ export default function AdminBookings() {
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedBookings(new Set(filteredBookings.map(b => b.id)));
+    } else {
+      setSelectedBookings(new Set());
+    }
+  };
+
+  const handleSelectBooking = (bookingId: string, checked: boolean) => {
+    const newSelected = new Set(selectedBookings);
+    if (checked) {
+      newSelected.add(bookingId);
+    } else {
+      newSelected.delete(bookingId);
+    }
+    setSelectedBookings(newSelected);
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (selectedBookings.size === 0) {
+      toast.error('Please select at least one booking');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to ${newStatus === 'cancelled' ? 'cancel' : 'confirm'} ${selectedBookings.size} booking(s)?`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setProcessing(true);
+    setProgress(0);
+
+    const selectedIds = Array.from(selectedBookings);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < selectedIds.length; i++) {
+      const bookingId = selectedIds[i];
+      
+      try {
+        const { error } = await supabase
+          .from('bookings')
+          .update({ status: newStatus })
+          .eq('id', bookingId);
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to update booking ${bookingId}:`, error);
+        errorCount++;
+      }
+
+      setProgress(((i + 1) / selectedIds.length) * 100);
+    }
+
+    setProcessing(false);
+    setProgress(0);
+    setSelectedBookings(new Set());
+
+    if (successCount > 0) {
+      toast.success(`Successfully updated ${successCount} booking(s)`);
+    }
+
+    if (errorCount > 0) {
+      toast.error(`Failed to update ${errorCount} booking(s)`);
+    }
+
+    loadBookings();
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBookings.size === 0) {
+      toast.error('Please select at least one booking');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to delete ${selectedBookings.size} booking(s)? This action cannot be undone.`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setProcessing(true);
+    setProgress(0);
+
+    const selectedIds = Array.from(selectedBookings);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < selectedIds.length; i++) {
+      const bookingId = selectedIds[i];
+      
+      try {
+        const { error } = await supabase
+          .from('bookings')
+          .delete()
+          .eq('id', bookingId);
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to delete booking ${bookingId}:`, error);
+        errorCount++;
+      }
+
+      setProgress(((i + 1) / selectedIds.length) * 100);
+    }
+
+    setProcessing(false);
+    setProgress(0);
+    setSelectedBookings(new Set());
+
+    if (successCount > 0) {
+      toast.success(`Successfully deleted ${successCount} booking(s)`);
+    }
+
+    if (errorCount > 0) {
+      toast.error(`Failed to delete ${errorCount} booking(s)`);
+    }
+
+    loadBookings();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -260,6 +390,66 @@ export default function AdminBookings() {
           </div>
 
           <div className="p-6 space-y-6">
+            {/* Bulk Actions */}
+            {viewMode === 'list' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    Bulk Actions
+                  </CardTitle>
+                  <CardDescription>
+                    Select multiple bookings and perform actions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <Button
+                      onClick={() => handleBulkStatusChange('confirmed')}
+                      disabled={processing || selectedBookings.size === 0}
+                      className="flex-1"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirm Selected ({selectedBookings.size})
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleBulkStatusChange('cancelled')}
+                      disabled={processing || selectedBookings.size === 0}
+                      className="flex-1"
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Cancel Selected ({selectedBookings.size})
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={handleBulkDelete}
+                      disabled={processing || selectedBookings.size === 0}
+                      className="flex-1"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Selected ({selectedBookings.size})
+                    </Button>
+                  </div>
+
+                  {processing && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Processing...</p>
+                      <Progress value={progress} className="w-full" />
+                    </div>
+                  )}
+
+                  {selectedBookings.size > 0 && (
+                    <Alert>
+                      <AlertDescription>
+                        {selectedBookings.size} booking(s) selected
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Filters */}
             <Card>
               <CardHeader>
@@ -270,8 +460,19 @@ export default function AdminBookings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Search</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium">Search</label>
+                      {viewMode === 'list' && (
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={selectedBookings.size === filteredBookings.length && filteredBookings.length > 0}
+                            onCheckedChange={handleSelectAll}
+                          />
+                          <span className="text-xs text-muted-foreground">Select All</span>
+                        </div>
+                      )}
+                    </div>
                     <Input
                       type="text"
                       placeholder="Search by user, email, or class..."
@@ -322,8 +523,12 @@ export default function AdminBookings() {
                     {filteredBookings.map((booking) => (
                       <div
                         key={booking.id}
-                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-secondary/50 transition-colors"
+                        className="flex items-center gap-3 p-4 border border-border rounded-lg hover:bg-secondary/50 transition-colors"
                       >
+                        <Checkbox
+                          checked={selectedBookings.has(booking.id)}
+                          onCheckedChange={(checked) => handleSelectBooking(booking.id, checked as boolean)}
+                        />
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-3">
                             <h3 className="font-semibold">{booking.class.name}</h3>
