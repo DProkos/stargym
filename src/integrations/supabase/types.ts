@@ -159,6 +159,48 @@ export type Database = {
         }
         Relationships: []
       }
+      email_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          subscriber_email: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          subscriber_email: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          subscriber_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_analytics"
+            referencedColumns: ["campaign_id"]
+          },
+          {
+            foreignKeyName: "email_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           category: string
@@ -285,6 +327,7 @@ export type Database = {
           subject: string
           text_content: string | null
           title: string
+          tracking_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -298,6 +341,7 @@ export type Database = {
           subject: string
           text_content?: string | null
           title: string
+          tracking_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -311,6 +355,7 @@ export type Database = {
           subject?: string
           text_content?: string | null
           title?: string
+          tracking_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -469,7 +514,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      campaign_analytics: {
+        Row: {
+          bounces: number | null
+          campaign_id: string | null
+          click_through_rate: number | null
+          open_rate: number | null
+          sent_at: string | null
+          sent_count: number | null
+          title: string | null
+          total_clicks: number | null
+          total_opens: number | null
+          unique_clicks: number | null
+          unique_opens: number | null
+          unsubscribes: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
@@ -479,6 +540,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_campaign_analytics: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "member" | "trainer"
