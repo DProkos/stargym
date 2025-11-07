@@ -103,3 +103,29 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* React Quill custom styles */
+.ql-toolbar {
+  @apply bg-secondary border-border rounded-t-md;
+}
+
+.ql-container {
+  @apply bg-background border-border rounded-b-md;
+}
+
+.ql-editor {
+  @apply min-h-[300px] text-foreground;
+}
+
+.ql-snow .ql-stroke {
+  @apply stroke-foreground;
+}
+
+.ql-snow .ql-fill {
+  @apply fill-foreground;
+}
+
+.ql-snow .ql-picker-label {
+  @apply text-foreground;
+}
+

@@ -234,6 +234,48 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_campaigns: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          html_content: string
+          id: string
+          sent_at: string | null
+          sent_count: number | null
+          status: string
+          subject: string
+          text_content: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          html_content: string
+          id?: string
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject: string
+          text_content?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          html_content?: string
+          id?: string
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject?: string
+          text_content?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string | null

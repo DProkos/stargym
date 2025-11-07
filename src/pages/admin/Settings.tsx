@@ -70,6 +70,7 @@ export default function Settings() {
     fromName: 'My Gym',
   });
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -93,6 +94,7 @@ export default function Settings() {
       loadRecaptchaSettings();
       loadSmtpSettings();
       loadNewsletterSubscribers();
+      loadCampaigns();
     }
   }, [isAdmin]);
 
@@ -228,6 +230,20 @@ export default function Settings() {
     }
 
     setNewsletterSubscribers(data || []);
+  };
+
+  const loadCampaigns = async () => {
+    const { data, error } = await supabase
+      .from('newsletter_campaigns')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load campaigns:', error);
+      return;
+    }
+
+    setCampaigns(data || []);
   };
 
   const handleSaveRecaptchaSettings = async () => {
@@ -672,11 +688,61 @@ export default function Settings() {
               </TabsContent>
 
               <TabsContent value="newsletter" className="space-y-4">
+                <div className="mb-4">
+                  <Button onClick={() => navigate('/admin/newsletter')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New Campaign
+                  </Button>
+                </div>
+
                 <Card>
+                  <CardHeader>
+                    <CardTitle>Newsletter Campaigns</CardTitle>
+                    <CardDescription>
+                      View and manage newsletter campaigns
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Subject</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Sent Count</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {campaigns.map((campaign) => (
+                          <TableRow key={campaign.id}>
+                            <TableCell className="font-medium">{campaign.title}</TableCell>
+                            <TableCell>{campaign.subject}</TableCell>
+                            <TableCell>
+                              <span className={
+                                campaign.status === 'sent' ? 'text-green-600' :
+                                campaign.status === 'sending' ? 'text-yellow-600' :
+                                'text-muted-foreground'
+                              }>
+                                {campaign.status}
+                              </span>
+                            </TableCell>
+                            <TableCell>{campaign.sent_count || 0}</TableCell>
+                            <TableCell>
+                              {new Date(campaign.created_at).toLocaleDateString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="mt-4">
                   <CardHeader>
                     <CardTitle>Newsletter Subscribers</CardTitle>
                     <CardDescription>
-                      Manage newsletter subscribers and send campaigns
+                      Manage newsletter subscribers
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
