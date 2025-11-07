@@ -3,6 +3,8 @@ import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { useState, useEffect } from "react";
 
 import {
   Sidebar,
@@ -20,6 +22,17 @@ export function AppSidebarAdmin() {
   const { state } = useSidebar();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -41,6 +54,11 @@ export function AppSidebarAdmin() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+        {userId && state === "expanded" && (
+          <div className="p-4 border-b border-border">
+            <RoleSwitcher userId={userId} variant="outline" size="sm" />
+          </div>
+        )}
         <SidebarGroup>
           <SidebarGroupLabel>{t('nav.admin')}</SidebarGroupLabel>
           <SidebarGroupContent>

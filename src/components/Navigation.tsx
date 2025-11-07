@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, Menu, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
 
 interface NavigationProps {
   user: any;
@@ -20,25 +21,7 @@ interface NavigationProps {
 export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const getUserRole = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (data) {
-          setUserRole(data.role);
-        }
-      }
-    };
-    getUserRole();
-  }, [user]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -92,21 +75,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             
             {user ? (
               <>
-                {userRole === 'admin' && (
-                  <Button variant="secondary" asChild>
-                    <Link to="/admin">{t('nav.admin')}</Link>
-                  </Button>
-                )}
-                {userRole === 'trainer' && (
-                  <Button variant="secondary" asChild>
-                    <Link to="/trainer/schedule">{t('nav.trainer')}</Link>
-                  </Button>
-                )}
-                {userRole === 'member' && (
-                  <Button variant="secondary" asChild>
-                    <Link to="/customer/bookings">{t('nav.customer')}</Link>
-                  </Button>
-                )}
+                <RoleSwitcher userId={user.id} />
                 <Button variant="outline" onClick={handleLogout}>
                   {t('nav.logout')}
                 </Button>
@@ -164,21 +133,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             </DropdownMenu>
             {user ? (
               <>
-                {userRole === 'admin' && (
-                  <Button variant="secondary" asChild onClick={() => setMobileMenuOpen(false)}>
-                    <Link to="/admin">{t('nav.admin')}</Link>
-                  </Button>
-                )}
-                {userRole === 'trainer' && (
-                  <Button variant="secondary" asChild onClick={() => setMobileMenuOpen(false)}>
-                    <Link to="/trainer/schedule">{t('nav.trainer')}</Link>
-                  </Button>
-                )}
-                {userRole === 'member' && (
-                  <Button variant="secondary" asChild onClick={() => setMobileMenuOpen(false)}>
-                    <Link to="/customer/bookings">{t('nav.customer')}</Link>
-                  </Button>
-                )}
+                <RoleSwitcher userId={user.id} variant="secondary" />
                 <Button variant="outline" onClick={() => { handleLogout(); setMobileMenuOpen(false); }}>
                   {t('nav.logout')}
                 </Button>
