@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
 import BookingCalendar from '@/components/BookingCalendar';
+import { MemberRow } from '@/components/MemberRow';
 
 export default function Admin() {
   const { t } = useLanguage();
@@ -206,17 +207,12 @@ export default function Admin() {
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
                   <CardTitle>{t('dashboard.manageMembers')}</CardTitle>
-                  <CardDescription>View and manage all gym members</CardDescription>
+                  <CardDescription>View and manage all gym members and their roles</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     {members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                        <div>
-                          <p className="font-semibold">{member.full_name || 'No name'}</p>
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
-                        </div>
-                      </div>
+                      <MemberRow key={member.id} member={member} onRoleUpdate={loadData} />
                     ))}
                   </div>
                 </CardContent>

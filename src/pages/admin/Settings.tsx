@@ -69,6 +69,9 @@ export default function Settings() {
     fromEmail: '',
     fromName: 'My Gym',
   });
+  const [authSettings, setAuthSettings] = useState({
+    signupEnabled: true,
+  });
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -93,6 +96,7 @@ export default function Settings() {
       loadSubscriptions();
       loadRecaptchaSettings();
       loadSmtpSettings();
+      loadAuthSettings();
       loadNewsletterSubscribers();
       loadCampaigns();
     }
@@ -218,6 +222,23 @@ export default function Settings() {
     setSmtpSettings(settings);
   };
 
+  const loadAuthSettings = async () => {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .eq('setting_key', 'signup_enabled')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to load auth settings:', error);
+      return;
+    }
+
+    setAuthSettings({
+      signupEnabled: data?.setting_value !== 'false',
+    });
+  };
+
   const loadNewsletterSubscribers = async () => {
     const { data, error } = await supabase
       .from('newsletter_subscribers')
@@ -300,6 +321,22 @@ export default function Settings() {
     } catch (error) {
       console.error('Failed to save SMTP settings:', error);
       toast.error('Failed to save SMTP settings');
+    }
+  };
+
+  const handleSaveAuthSettings = async () => {
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ setting_value: authSettings.signupEnabled.toString() })
+        .eq('setting_key', 'signup_enabled');
+
+      if (error) throw error;
+
+      toast.success('Authentication settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save auth settings:', error);
+      toast.error('Failed to save authentication settings');
     }
   };
 
@@ -413,6 +450,7 @@ export default function Settings() {
                 <TabsTrigger value="stripe">Stripe Settings</TabsTrigger>
                 <TabsTrigger value="recaptcha">reCAPTCHA Settings</TabsTrigger>
                 <TabsTrigger value="smtp">SMTP Settings</TabsTrigger>
+                <TabsTrigger value="auth">Authentication</TabsTrigger>
                 <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
               </TabsList>
 
@@ -683,6 +721,34 @@ export default function Settings() {
                       <Label>Use TLS/SSL</Label>
                     </div>
                     <Button onClick={handleSaveSmtpSettings}>Save SMTP Settings</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="auth" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Authentication Settings</CardTitle>
+                    <CardDescription>
+                      Configure authentication and user registration options
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between space-x-4 p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">Enable User Registration</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Allow new users to create accounts. Disable to restrict registration.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={authSettings.signupEnabled}
+                        onCheckedChange={(checked) => 
+                          setAuthSettings({ ...authSettings, signupEnabled: checked })
+                        }
+                      />
+                    </div>
+                    <Button onClick={handleSaveAuthSettings}>Save Authentication Settings</Button>
                   </CardContent>
                 </Card>
               </TabsContent>

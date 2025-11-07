@@ -15,10 +15,25 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [signupEnabled, setSignupEnabled] = useState(true);
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { executeRecaptcha, verifyRecaptcha } = useRecaptcha();
+
+  useEffect(() => {
+    checkSignupEnabled();
+  }, []);
+
+  const checkSignupEnabled = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('setting_value')
+      .eq('setting_key', 'signup_enabled')
+      .maybeSingle();
+
+    setSignupEnabled(data?.setting_value !== 'false');
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -104,6 +119,17 @@ export default function Auth() {
           }
         }
       } else {
+        // Check if signup is enabled
+        if (!signupEnabled) {
+          toast({
+            title: 'Registration Disabled',
+            description: 'New user registration is currently disabled. Please contact support.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -215,15 +241,31 @@ export default function Auth() {
               {loading ? '...' : isLogin ? t('auth.signIn') : t('auth.signUp')}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
-            </button>
-          </div>
+          {signupEnabled && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
+              </button>
+            </div>
+          )}
+          {!signupEnabled && !isLogin && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Registration is currently disabled
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsLogin(true)}
+                className="text-sm text-primary hover:underline mt-2"
+              >
+                Back to Login
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
