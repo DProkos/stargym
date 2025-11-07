@@ -9,6 +9,27 @@ import { Label } from '@/components/ui/label';
 import { MapPin, Phone, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+const contactSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(2, { message: 'Name must be at least 2 characters' })
+    .max(100, { message: 'Name must be less than 100 characters' }),
+  email: z.string()
+    .trim()
+    .email({ message: 'Invalid email address' })
+    .max(255, { message: 'Email must be less than 255 characters' }),
+  phone: z.string()
+    .trim()
+    .max(20, { message: 'Phone must be less than 20 characters' })
+    .optional()
+    .or(z.literal('')),
+  message: z.string()
+    .trim()
+    .min(10, { message: 'Message must be at least 10 characters' })
+    .max(1000, { message: 'Message must be less than 1000 characters' }),
+});
 
 export default function Contact() {
   const { t } = useLanguage();
@@ -52,12 +73,38 @@ export default function Contact() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate form submission
-    setTimeout(() => {
-      toast({ title: 'Message sent successfully!' });
+    try {
+      // Validate input data
+      const validatedData = contactSchema.parse(formData);
+
+      // Sanitize data for external use
+      const sanitizedMessage = encodeURIComponent(validatedData.message);
+      const sanitizedName = encodeURIComponent(validatedData.name);
+
+      // Here you could send to an API endpoint or service
+      // For now, we'll just show success
+      toast({ 
+        title: 'Message sent successfully!',
+        description: 'We will get back to you soon.',
+      });
       setFormData({ name: '', email: '', phone: '', message: '' });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: 'Validation Error',
+          description: error.errors[0].message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to send message. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

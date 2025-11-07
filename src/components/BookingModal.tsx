@@ -5,6 +5,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const bookingSchema = z.object({
+  booking_date: z.date({ required_error: 'Please select a date' }),
+  class_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+});
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -20,29 +27,74 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
   const [loading, setLoading] = useState(false);
 
   const handleConfirmBooking = async () => {
-    if (!selectedDate) return;
+    if (!selectedDate) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a date',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setLoading(true);
     try {
+      // Validate input
+      const validatedData = bookingSchema.parse({
+        booking_date: selectedDate,
+        class_id: classItem.id,
+        user_id: userId,
+      });
+
+      // Check if booking already exists
+      const { data: existingBooking } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('class_id', classItem.id)
+        .eq('booking_date', selectedDate.toISOString().split('T')[0])
+        .eq('status', 'confirmed')
+        .maybeSingle();
+
+      if (existingBooking) {
+        toast({
+          title: 'Already Booked',
+          description: 'You already have a booking for this class on this date',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('bookings')
         .insert({
-          user_id: userId,
-          class_id: classItem.id,
-          booking_date: selectedDate.toISOString().split('T')[0],
+          user_id: validatedData.user_id,
+          class_id: validatedData.class_id,
+          booking_date: validatedData.booking_date.toISOString().split('T')[0],
           status: 'confirmed',
         });
 
       if (error) throw error;
 
-      toast({ title: t('booking.success') });
+      toast({ 
+        title: t('booking.success'),
+        description: 'Your booking has been confirmed successfully',
+      });
       onClose();
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: 'Validation Error',
+          description: error.errors[0].message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to create booking',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }

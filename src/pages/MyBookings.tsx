@@ -6,7 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, CalendarDays, List } from 'lucide-react';
+import BookingCalendar from '@/components/BookingCalendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Booking {
   id: string;
@@ -26,6 +28,7 @@ export default function MyBookings() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -79,66 +82,151 @@ export default function MyBookings() {
     }
   };
 
+  const calendarEvents = bookings.map(booking => {
+    const bookingDate = new Date(booking.booking_date);
+    const [hours, minutes] = booking.class.time.split(':').map(Number);
+    const startTime = new Date(bookingDate);
+    startTime.setHours(hours, minutes, 0);
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + booking.class.duration_minutes);
+
+    return {
+      id: booking.id,
+      title: booking.class.name,
+      start: startTime,
+      end: endTime,
+      resource: booking,
+      status: booking.status,
+    };
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
       
       <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('booking.myBookings')}
             </h1>
           </div>
 
-          <div className="space-y-4">
-            {bookings.length === 0 ? (
-              <Card className="bg-gradient-card border-border">
-                <CardContent className="pt-6">
-                  <p className="text-center text-muted-foreground">No bookings yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              bookings.map((booking) => (
-                <Card key={booking.id} className="bg-gradient-card border-border">
+          <Tabs defaultValue="calendar" className="space-y-4">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Calendar View
+              </TabsTrigger>
+              <TabsTrigger value="list" className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                List View
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="calendar" className="space-y-4">
+              <BookingCalendar 
+                events={calendarEvents}
+                onSelectEvent={(event) => setSelectedBooking(event.resource)}
+              />
+              
+              {selectedBooking && (
+                <Card className="bg-gradient-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span>{booking.class.name}</span>
+                      <span>{selectedBooking.class.name}</span>
                       <span className={`text-sm px-3 py-1 rounded-full ${
-                        booking.status === 'confirmed' 
+                        selectedBooking.status === 'confirmed' 
                           ? 'bg-primary/20 text-primary' 
                           : 'bg-destructive/20 text-destructive'
                       }`}>
-                        {booking.status}
+                        {selectedBooking.status}
                       </span>
                     </CardTitle>
                     <CardDescription>
                       <div className="flex flex-col gap-2 mt-2">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-primary" />
-                          <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
+                          <span>{new Date(selectedBooking.booking_date).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-primary" />
-                          <span>{booking.class.time} ({booking.class.duration_minutes} min)</span>
+                          <span>{selectedBooking.class.time} ({selectedBooking.class.duration_minutes} min)</span>
                         </div>
                       </div>
                     </CardDescription>
                   </CardHeader>
-                  {booking.status === 'confirmed' && (
+                  {selectedBooking.status === 'confirmed' && (
                     <CardContent>
-                      <Button 
-                        variant="destructive" 
-                        onClick={() => handleCancelBooking(booking.id)}
-                      >
-                        {t('booking.cancel')}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => handleCancelBooking(selectedBooking.id)}
+                        >
+                          {t('booking.cancel')}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setSelectedBooking(null)}
+                        >
+                          Close
+                        </Button>
+                      </div>
                     </CardContent>
                   )}
                 </Card>
-              ))
-            )}
-          </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="list" className="space-y-4">
+              {bookings.length === 0 ? (
+                <Card className="bg-gradient-card border-border">
+                  <CardContent className="pt-6">
+                    <p className="text-center text-muted-foreground">No bookings yet</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                bookings.map((booking) => (
+                  <Card key={booking.id} className="bg-gradient-card border-border">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{booking.class.name}</span>
+                        <span className={`text-sm px-3 py-1 rounded-full ${
+                          booking.status === 'confirmed' 
+                            ? 'bg-primary/20 text-primary' 
+                            : 'bg-destructive/20 text-destructive'
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </CardTitle>
+                      <CardDescription>
+                        <div className="flex flex-col gap-2 mt-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-primary" />
+                            <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-primary" />
+                            <span>{booking.class.time} ({booking.class.duration_minutes} min)</span>
+                          </div>
+                        </div>
+                      </CardDescription>
+                    </CardHeader>
+                    {booking.status === 'confirmed' && (
+                      <CardContent>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => handleCancelBooking(booking.id)}
+                        >
+                          {t('booking.cancel')}
+                        </Button>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
     </div>
