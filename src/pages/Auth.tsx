@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { Navigation } from '@/components/Navigation';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +20,8 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [signupEnabled, setSignupEnabled] = useState(true);
+  const [unverifiedUser, setUnverifiedUser] = useState<{ email: string; userId: string } | null>(null);
+  const [resendingCode, setResendingCode] = useState(false);
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -25,7 +29,30 @@ export default function Auth() {
 
   useEffect(() => {
     checkSignupEnabled();
+    checkUnverifiedUser();
   }, []);
+
+  const checkUnverifiedUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      // Check if user has unverified email
+      const { data: verificationData } = await supabase
+        .from('email_verification_codes')
+        .select('verified, email')
+        .eq('user_id', session.user.id)
+        .eq('verified', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (verificationData) {
+        setUnverifiedUser({
+          email: verificationData.email,
+          userId: session.user.id
+        });
+      }
+    }
+  };
 
   const checkSignupEnabled = async () => {
     const { data } = await supabase
@@ -67,6 +94,74 @@ export default function Auth() {
     };
     checkUser();
   }, [navigate]);
+
+  const handleResendVerification = async () => {
+    if (!unverifiedUser) return;
+    
+    setResendingCode(true);
+    try {
+      // Generate new verification code
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24);
+
+      // Delete old codes
+      await supabase
+        .from('email_verification_codes')
+        .delete()
+        .eq('user_id', unverifiedUser.userId)
+        .eq('verified', false);
+
+      // Insert new verification code
+      await supabase.from('email_verification_codes').insert({
+        user_id: unverifiedUser.userId,
+        code,
+        email: unverifiedUser.email,
+        expires_at: expiresAt.toISOString(),
+      });
+
+      // Get user's full name from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', unverifiedUser.userId)
+        .single();
+
+      // Send verification email
+      await supabase.functions.invoke('send-email', {
+        body: {
+          to: unverifiedUser.email,
+          subject: 'Email Verification Code',
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #6366f1;">Verify Your Email</h1>
+              <p>Welcome ${profile?.full_name || ''}! Your verification code is:</p>
+              <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
+                ${code}
+              </div>
+              <p>This code will expire in 24 hours.</p>
+              <p>If you didn't create this account, please ignore this email.</p>
+            </div>
+          `,
+          text: `Welcome ${profile?.full_name || ''}! Your verification code is: ${code}. This code will expire in 24 hours.`,
+        },
+      });
+
+      toast({ 
+        title: 'Verification code sent',
+        description: 'Check your email for the new verification code'
+      });
+      navigate(`/verify-email?email=${encodeURIComponent(unverifiedUser.email)}`);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setResendingCode(false);
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,7 +317,25 @@ export default function Auth() {
     <>
       <Navigation user={null} isAdmin={false} />
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-hero pt-16">
-        <Card className="w-full max-w-md bg-card border-border">
+        <div className="w-full max-w-md space-y-4">
+          {unverifiedUser && (
+            <Alert variant="destructive" className="bg-destructive/10 border-destructive/50">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>Your email is not verified. Please verify to access all features.</span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={resendingCode}
+                  className="ml-2"
+                >
+                  {resendingCode ? '...' : 'Resend Code'}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+        <Card className="w-full bg-card border-border">
         <CardHeader>
           <CardTitle className="text-2xl">
             {isForgotPassword ? 'Reset Password' : isLogin ? t('auth.welcomeBack') : t('auth.createAccount')}
@@ -338,6 +451,7 @@ export default function Auth() {
           )}
         </CardContent>
       </Card>
+        </div>
       </div>
     </>
   );
