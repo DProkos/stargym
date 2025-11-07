@@ -24,6 +24,8 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import BookingCalendar from '@/components/BookingCalendar';
+import { Line, LineChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface Booking {
   id: string;
@@ -67,6 +69,8 @@ export default function AdminBookings() {
     cancellationRate: 0,
     popularClasses: [] as { name: string; count: number }[],
   });
+  const [chartData, setChartData] = useState<{ date: string; confirmed: number; cancelled: number; total: number }[]>([]);
+  const [chartType, setChartType] = useState<'line' | 'bar'>('line');
 
   useEffect(() => {
     checkAuth();
@@ -76,6 +80,7 @@ export default function AdminBookings() {
   useEffect(() => {
     filterBookings();
     calculateStats();
+    generateChartData();
   }, [bookings, searchQuery, statusFilter, dateRangePreset, customDateRange]);
 
   const checkAuth = async () => {
@@ -248,6 +253,44 @@ export default function AdminBookings() {
       cancellationRate,
       popularClasses,
     });
+  };
+
+  const generateChartData = () => {
+    const dataToAnalyze = dateRangePreset !== 'all' ? filteredBookings : bookings;
+    
+    // Group bookings by date
+    const bookingsByDate = new Map<string, { confirmed: number; cancelled: number }>();
+    
+    dataToAnalyze.forEach(booking => {
+      const dateKey = format(new Date(booking.booking_date), 'MMM dd');
+      const existing = bookingsByDate.get(dateKey) || { confirmed: 0, cancelled: 0 };
+      
+      if (booking.status === 'confirmed') {
+        existing.confirmed++;
+      } else if (booking.status === 'cancelled') {
+        existing.cancelled++;
+      }
+      
+      bookingsByDate.set(dateKey, existing);
+    });
+
+    // Convert to array and sort by date
+    const chartDataArray = Array.from(bookingsByDate.entries())
+      .map(([date, counts]) => ({
+        date,
+        confirmed: counts.confirmed,
+        cancelled: counts.cancelled,
+        total: counts.confirmed + counts.cancelled,
+      }))
+      .sort((a, b) => {
+        // Sort by actual date (parse the date string back)
+        const dateA = new Date(a.date + ' 2024');
+        const dateB = new Date(b.date + ' 2024');
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(-30); // Show last 30 days
+
+    setChartData(chartDataArray);
   };
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
@@ -587,6 +630,146 @@ export default function AdminBookings() {
                         </Badge>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Booking Trends Chart */}
+            {chartData.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        Booking Trends
+                      </CardTitle>
+                      <CardDescription>
+                        Bookings over time (last 30 days)
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={chartType === 'line' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setChartType('line')}
+                      >
+                        Line Chart
+                      </Button>
+                      <Button
+                        variant={chartType === 'bar' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setChartType('bar')}
+                      >
+                        Bar Chart
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      {chartType === 'line' ? (
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis 
+                            dataKey="date" 
+                            className="text-xs"
+                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <YAxis 
+                            className="text-xs"
+                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              color: 'hsl(var(--foreground))',
+                            }}
+                          />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="confirmed" 
+                            stroke="hsl(142, 76%, 36%)" 
+                            strokeWidth={2}
+                            name="Confirmed"
+                            dot={{ fill: 'hsl(142, 76%, 36%)' }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="cancelled" 
+                            stroke="hsl(0, 84%, 60%)" 
+                            strokeWidth={2}
+                            name="Cancelled"
+                            dot={{ fill: 'hsl(0, 84%, 60%)' }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="total" 
+                            stroke="hsl(var(--primary))" 
+                            strokeWidth={2}
+                            name="Total"
+                            dot={{ fill: 'hsl(var(--primary))' }}
+                          />
+                        </LineChart>
+                      ) : (
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis 
+                            dataKey="date" 
+                            className="text-xs"
+                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <YAxis 
+                            className="text-xs"
+                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px',
+                              color: 'hsl(var(--foreground))',
+                            }}
+                          />
+                          <Legend />
+                          <Bar 
+                            dataKey="confirmed" 
+                            fill="hsl(142, 76%, 36%)" 
+                            name="Confirmed"
+                          />
+                          <Bar 
+                            dataKey="cancelled" 
+                            fill="hsl(0, 84%, 60%)" 
+                            name="Cancelled"
+                          />
+                        </BarChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                    <div className="p-3 bg-green-500/10 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Confirmed</p>
+                      <p className="text-2xl font-bold text-green-500">
+                        {chartData.reduce((sum, day) => sum + day.confirmed, 0)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-red-500/10 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Cancelled</p>
+                      <p className="text-2xl font-bold text-red-500">
+                        {chartData.reduce((sum, day) => sum + day.cancelled, 0)}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Total</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {chartData.reduce((sum, day) => sum + day.total, 0)}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
