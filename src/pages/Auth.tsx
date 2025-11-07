@@ -17,6 +17,7 @@ export default function Auth() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [signupEnabled, setSignupEnabled] = useState(true);
@@ -254,6 +255,17 @@ export default function Auth() {
           return;
         }
 
+        // Validate password confirmation
+        if (password !== confirmPassword) {
+          toast({
+            title: 'Passwords do not match',
+            description: 'Please make sure your passwords match',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -297,6 +309,9 @@ export default function Auth() {
               text: `Welcome ${fullName}! Your verification code is: ${code}. This code will expire in 24 hours.`,
             },
           });
+
+          // Sign out immediately - user must verify email first
+          await supabase.auth.signOut();
 
           toast({ title: 'Check your email for verification code' });
           navigate(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -419,33 +434,43 @@ export default function Auth() {
                 </div>
               )}
             </div>
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required={!isLogin}
+                  className="bg-secondary border-border"
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? '...' : isLogin ? t('auth.signIn') : t('auth.signUp')}
             </Button>
           </form>
           )}
-          {signupEnabled && (
+          {!isForgotPassword && signupEnabled && isLogin && (
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => setIsLogin(false)}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
+                {t('auth.noAccount')}
               </button>
             </div>
           )}
-          {!signupEnabled && !isLogin && (
+          {!isForgotPassword && !isLogin && (
             <div className="mt-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Registration is currently disabled
-              </p>
               <button
                 type="button"
                 onClick={() => setIsLogin(true)}
-                className="text-sm text-primary hover:underline mt-2"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Back to Login
+                {t('auth.haveAccount')}
               </button>
             </div>
           )}

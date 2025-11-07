@@ -27,18 +27,11 @@ export default function VerifyEmail() {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Please log in first');
-        navigate('/auth');
-        return;
-      }
-
-      // Verify the code
+      // Verify the code without requiring session
       const { data: verificationData, error: verifyError } = await supabase
         .from('email_verification_codes')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('email', email || '')
         .eq('code', code.trim())
         .eq('verified', false)
         .gt('expires_at', new Date().toISOString())
@@ -60,8 +53,8 @@ export default function VerifyEmail() {
 
       if (updateError) throw updateError;
 
-      toast.success('Email verified successfully!');
-      navigate('/customer/bookings');
+      toast.success('Email verified successfully! You can now log in.');
+      navigate('/auth');
     } catch (error: any) {
       console.error('Verification error:', error);
       toast.error(error.message || 'Failed to verify email');
@@ -71,11 +64,23 @@ export default function VerifyEmail() {
   };
 
   const handleResendCode = async () => {
+    if (!email) {
+      toast.error('Email address is required');
+      return;
+    }
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error('Please log in first');
-        navigate('/auth');
+      // Find user by email to get user_id
+      const { data: verificationData } = await supabase
+        .from('email_verification_codes')
+        .select('user_id')
+        .eq('email', email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!verificationData) {
+        toast.error('No verification request found for this email');
         return;
       }
 
@@ -87,9 +92,9 @@ export default function VerifyEmail() {
       const { error: insertError } = await supabase
         .from('email_verification_codes')
         .insert({
-          user_id: session.user.id,
+          user_id: verificationData.user_id,
           code: newCode,
-          email: session.user.email!,
+          email: email,
           expires_at: expiresAt.toISOString(),
         });
 
@@ -98,13 +103,13 @@ export default function VerifyEmail() {
       // Send verification email
       const { error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
-          to: session.user.email,
+          to: email,
           subject: 'Email Verification Code',
           html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: hsl(var(--primary));">Verify Your Email</h1>
+              <h1 style="color: #6366f1;">Verify Your Email</h1>
               <p>Your verification code is:</p>
-              <div style="background: hsl(var(--muted)); padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
+              <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
                 ${newCode}
               </div>
               <p>This code will expire in 24 hours.</p>
