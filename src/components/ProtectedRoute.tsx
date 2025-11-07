@@ -26,11 +26,19 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', session.user.id)
-        .single();
+        .eq('user_id', session.user.id);
 
-      if (roleData) {
-        setUserRole(roleData.role);
+      if (roleData && roleData.length > 0) {
+        // If user has multiple roles, check if any match allowed roles
+        const roles = roleData.map(r => r.role);
+        if (allowedRoles) {
+          const hasAllowedRole = roles.some(role => allowedRoles.includes(role));
+          if (hasAllowedRole) {
+            setUserRole(roles[0]); // Set first matching role
+          }
+        } else {
+          setUserRole(roles[0]);
+        }
       }
       
       setLoading(false);

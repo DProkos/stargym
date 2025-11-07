@@ -41,10 +41,10 @@ export default function EmailTemplates() {
     const { data: roleData } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', session.user.id)
-      .single();
+      .eq('user_id', session.user.id);
 
-    if (roleData?.role !== 'admin') {
+    const hasAdminRole = roleData?.some(r => r.role === 'admin');
+    if (!hasAdminRole) {
       navigate('/');
       return;
     }
