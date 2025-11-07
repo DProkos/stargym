@@ -70,6 +70,10 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   const handleRoleToggle = async (role: Role, checked: boolean) => {
     setLoading(true);
     try {
+      // Get current admin info
+      const { data: { session } } = await supabase.auth.getSession();
+      const adminEmail = session?.user?.email || 'Unknown';
+
       if (checked) {
         // Add role
         const { error } = await supabase
@@ -77,6 +81,19 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
           .insert({ user_id: member.id, role });
 
         if (error) throw error;
+
+        // Log activity
+        await supabase.from('admin_activity_log').insert({
+          admin_id: session?.user?.id,
+          action_type: 'role_added',
+          target_user_id: member.id,
+          details: {
+            role,
+            user_email: member.email,
+            admin_email: adminEmail
+          }
+        });
+
         toast.success(`Added ${role} role to ${member.full_name || member.email}`);
       } else {
         // Remove role
@@ -87,6 +104,19 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
           .eq('role', role);
 
         if (error) throw error;
+
+        // Log activity
+        await supabase.from('admin_activity_log').insert({
+          admin_id: session?.user?.id,
+          action_type: 'role_removed',
+          target_user_id: member.id,
+          details: {
+            role,
+            user_email: member.email,
+            admin_email: adminEmail
+          }
+        });
+
         toast.success(`Removed ${role} role from ${member.full_name || member.email}`);
       }
 

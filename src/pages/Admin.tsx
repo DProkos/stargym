@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
 import BookingCalendar from '@/components/BookingCalendar';
 import { MemberRow } from '@/components/MemberRow';
+import { RecentActivityWidget } from '@/components/admin/RecentActivityWidget';
 
 export default function Admin() {
   const { t } = useLanguage();
@@ -110,12 +111,15 @@ export default function Admin() {
           </header>
 
           <main className="p-6">
-            <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+            <div className="max-w-7xl mx-auto space-y-6">
+          <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('dashboard.overview')}
             </h1>
           </div>
+
+          {/* Recent Activity Widget */}
+          <RecentActivityWidget />
 
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card className="bg-gradient-card border-border">

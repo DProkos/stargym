@@ -106,6 +106,10 @@ export default function UserProfile() {
       return;
     }
 
+    // Get current admin info
+    const { data: { session } } = await supabase.auth.getSession();
+    const adminEmail = session?.user?.email || 'Unknown';
+
     const { error } = await supabase
       .from('user_roles')
       .insert({ 
@@ -119,6 +123,18 @@ export default function UserProfile() {
       return;
     }
 
+    // Log activity
+    await supabase.from('admin_activity_log').insert({
+      admin_id: session?.user?.id,
+      action_type: 'role_added',
+      target_user_id: userId,
+      details: {
+        role: newRole,
+        user_email: profile?.email,
+        admin_email: adminEmail
+      }
+    });
+
     toast.success(`Role "${newRole}" added successfully`);
     loadUserData();
   };
@@ -127,6 +143,10 @@ export default function UserProfile() {
     if (!confirm(`Are you sure you want to remove the "${roleName}" role?`)) {
       return;
     }
+
+    // Get current admin info
+    const { data: { session } } = await supabase.auth.getSession();
+    const adminEmail = session?.user?.email || 'Unknown';
 
     const { error } = await supabase
       .from('user_roles')
@@ -138,6 +158,18 @@ export default function UserProfile() {
       toast.error('Failed to remove role');
       return;
     }
+
+    // Log activity
+    await supabase.from('admin_activity_log').insert({
+      admin_id: session?.user?.id,
+      action_type: 'role_removed',
+      target_user_id: userId,
+      details: {
+        role: roleName,
+        user_email: profile?.email,
+        admin_email: adminEmail
+      }
+    });
 
     toast.success(`Role "${roleName}" removed successfully`);
     loadUserData();
