@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
@@ -15,6 +15,7 @@ import 'react-quill/dist/quill.snow.css';
 
 export default function NewsletterComposer() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
@@ -25,7 +26,13 @@ export default function NewsletterComposer() {
   useEffect(() => {
     checkAuth();
     loadSubscriberCount();
-  }, []);
+    
+    // Load template if passed via navigation state
+    const state = location.state as { template?: string };
+    if (state?.template) {
+      setHtmlContent(state.template);
+    }
+  }, [location]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -172,15 +179,23 @@ export default function NewsletterComposer() {
           <div className="border-b">
             <div className="flex h-16 items-center px-6">
               <SidebarTrigger />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/admin/settings?tab=newsletter')}
-                className="ml-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/admin/settings?tab=newsletter')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/admin/email-templates')}
+                >
+                  Browse Templates
+                </Button>
+              </div>
               <h1 className="text-2xl font-bold ml-4">Newsletter Composer</h1>
             </div>
           </div>

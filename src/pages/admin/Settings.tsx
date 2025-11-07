@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -688,10 +688,14 @@ export default function Settings() {
               </TabsContent>
 
               <TabsContent value="newsletter" className="space-y-4">
-                <div className="mb-4">
+                <div className="mb-4 flex gap-2">
                   <Button onClick={() => navigate('/admin/newsletter')}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create New Campaign
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/admin/email-templates')}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Browse Templates
                   </Button>
                 </div>
 
