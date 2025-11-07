@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
 
 const contactSchema = z.object({
   name: z.string()
@@ -44,6 +45,7 @@ export default function Contact() {
     message: '',
   });
   const [loading, setLoading] = useState(false);
+  const { executeRecaptcha, verifyRecaptcha } = useRecaptcha();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -75,6 +77,22 @@ export default function Contact() {
     setLoading(true);
 
     try {
+      // Execute reCAPTCHA
+      const recaptchaToken = await executeRecaptcha('contact');
+      
+      if (recaptchaToken) {
+        const isValid = await verifyRecaptcha(recaptchaToken);
+        if (!isValid) {
+          toast({
+            title: 'Verification Failed',
+            description: 'Please try again',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       // Validate input data
       const validatedData = contactSchema.parse(formData);
 

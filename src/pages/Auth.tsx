@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +18,7 @@ export default function Auth() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { executeRecaptcha, verifyRecaptcha } = useRecaptcha();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -55,6 +57,23 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Execute reCAPTCHA
+      const action = isLogin ? 'login' : 'signup';
+      const recaptchaToken = await executeRecaptcha(action);
+      
+      if (recaptchaToken) {
+        const isValid = await verifyRecaptcha(recaptchaToken);
+        if (!isValid) {
+          toast({
+            title: 'Verification Failed',
+            description: 'Please try again',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,

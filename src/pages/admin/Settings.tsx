@@ -56,6 +56,10 @@ export default function Settings() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTier, setEditingTier] = useState<MembershipTier | null>(null);
+  const [recaptchaSettings, setRecaptchaSettings] = useState({
+    siteKey: '',
+    secretKey: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -76,6 +80,7 @@ export default function Settings() {
     if (isAdmin) {
       loadTiers();
       loadSubscriptions();
+      loadRecaptchaSettings();
     }
   }, [isAdmin]);
 
@@ -146,6 +151,54 @@ export default function Settings() {
     }));
 
     setSubscriptions(subsWithProfiles as any);
+  };
+
+  const loadRecaptchaSettings = async () => {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['recaptcha_site_key', 'recaptcha_secret_key']);
+
+    if (error) {
+      console.error('Failed to load reCAPTCHA settings:', error);
+      return;
+    }
+
+    const settings = {
+      siteKey: data?.find(s => s.setting_key === 'recaptcha_site_key')?.setting_value || '',
+      secretKey: data?.find(s => s.setting_key === 'recaptcha_secret_key')?.setting_value || '',
+    };
+
+    setRecaptchaSettings(settings);
+  };
+
+  const handleSaveRecaptchaSettings = async () => {
+    try {
+      const updates = [
+        {
+          setting_key: 'recaptcha_site_key',
+          setting_value: recaptchaSettings.siteKey,
+        },
+        {
+          setting_key: 'recaptcha_secret_key',
+          setting_value: recaptchaSettings.secretKey,
+        },
+      ];
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('app_settings')
+          .update({ setting_value: update.setting_value })
+          .eq('setting_key', update.setting_key);
+
+        if (error) throw error;
+      }
+
+      toast.success('reCAPTCHA settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save reCAPTCHA settings:', error);
+      toast.error('Failed to save reCAPTCHA settings');
+    }
   };
 
   const handleOpenDialog = (tier?: MembershipTier) => {
@@ -256,6 +309,7 @@ export default function Settings() {
                 <TabsTrigger value="memberships">Membership Tiers</TabsTrigger>
                 <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
                 <TabsTrigger value="stripe">Stripe Settings</TabsTrigger>
+                <TabsTrigger value="recaptcha">reCAPTCHA Settings</TabsTrigger>
               </TabsList>
 
               <TabsContent value="memberships" className="space-y-4">
@@ -394,6 +448,63 @@ export default function Settings() {
                       </p>
                     </div>
                     <Button>Save Stripe Settings</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="recaptcha" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Google reCAPTCHA v3 Configuration</CardTitle>
+                    <CardDescription>
+                      Configure reCAPTCHA to protect registration and contact forms from bots
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>reCAPTCHA Site Key</Label>
+                      <Input 
+                        placeholder="6Lc..." 
+                        value={recaptchaSettings.siteKey}
+                        onChange={(e) => setRecaptchaSettings({ ...recaptchaSettings, siteKey: e.target.value })}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Your site key from Google reCAPTCHA console (visible to users)
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>reCAPTCHA Secret Key</Label>
+                      <Input 
+                        type="password" 
+                        placeholder="6Lc..." 
+                        value={recaptchaSettings.secretKey}
+                        onChange={(e) => setRecaptchaSettings({ ...recaptchaSettings, secretKey: e.target.value })}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Your secret key is stored securely in the database and used for server-side verification
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Get reCAPTCHA Keys</Label>
+                      <p className="text-sm text-muted-foreground">
+                        1. Go to{' '}
+                        <a 
+                          href="https://www.google.com/recaptcha/admin" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Google reCAPTCHA Admin Console
+                        </a>
+                        <br />
+                        2. Register a new site with reCAPTCHA v3
+                        <br />
+                        3. Add your domain to the authorized domains
+                        <br />
+                        4. Copy the Site Key and Secret Key here
+                      </p>
+                    </div>
+                    <Button onClick={handleSaveRecaptchaSettings}>Save reCAPTCHA Settings</Button>
                   </CardContent>
                 </Card>
               </TabsContent>
