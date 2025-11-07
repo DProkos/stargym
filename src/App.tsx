@@ -22,6 +22,7 @@ import NewsletterComposer from "./pages/admin/NewsletterComposer";
 import TemplateBuilder from "./pages/admin/TemplateBuilder";
 import EmailTemplates from "./pages/admin/EmailTemplates";
 import UserProfile from "./pages/admin/UserProfile";
+import BulkUserManagement from "./pages/admin/BulkUserManagement";
 import Memberships from "./pages/Memberships";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
@@ -103,6 +104,11 @@ const App = () => (
             <Route path="/admin/users/:userId" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/bulk-users" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <BulkUserManagement />
               </ProtectedRoute>
             } />
             
