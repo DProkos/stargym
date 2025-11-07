@@ -234,6 +234,8 @@ export const ClassesCalendarView = ({ classes, onBookClass }: ClassesCalendarVie
               timeslots={2}
               showMultiDayTimes
               defaultDate={new Date()}
+              min={new Date(0, 0, 0, 6, 0, 0)}
+              max={new Date(0, 0, 0, 22, 0, 0)}
               tooltipAccessor={(event: ClassEvent) => 
                 `${event.title} - ${event.resource.available} θέσεις διαθέσιμες`
               }
