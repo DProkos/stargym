@@ -29,6 +29,8 @@ import Memberships from "./pages/Memberships";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 import CronJobs from "./pages/admin/CronJobs";
+import TrainerProfile from "./pages/trainer/TrainerProfile";
+import CustomerProfile from "./pages/customer/CustomerProfile";
 
 const queryClient = new QueryClient();
 
@@ -57,9 +59,26 @@ const App = () => (
             <Route path="/bookings" element={<MyBookings />} />
             
             {/* Trainer routes */}
-            <Route path="/trainer/*" element={
+            <Route path="/trainer/schedule" element={
               <ProtectedRoute allowedRoles={['trainer']}>
                 <TrainerPortal />
+              </ProtectedRoute>
+            } />
+            <Route path="/trainer/profile" element={
+              <ProtectedRoute allowedRoles={['trainer']}>
+                <TrainerProfile />
+              </ProtectedRoute>
+            } />
+            
+            {/* Customer routes - Add specific profile route */}
+            <Route path="/customer/profile" element={
+              <ProtectedRoute allowedRoles={['member']}>
+                <CustomerProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/*" element={
+              <ProtectedRoute allowedRoles={['member']}>
+                <CustomerPortal />
               </ProtectedRoute>
             } />
             

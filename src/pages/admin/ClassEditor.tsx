@@ -39,17 +39,32 @@ export default function ClassEditor() {
     try {
       const { data, error } = await supabase
         .from('classes')
-        .select(`
-          *,
-          trainer:trainers(name)
-        `)
+        .select('*')
         .order('day_of_week')
         .order('time');
 
       if (error) throw error;
 
       if (data) {
-        setClasses(data);
+        // Get trainer names separately
+        const classesWithTrainers = await Promise.all(
+          data.map(async (cls) => {
+            if (cls.trainer_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', cls.trainer_id)
+                .single();
+              
+              return {
+                ...cls,
+                trainer: { name: profile?.full_name || 'Unknown' }
+              };
+            }
+            return { ...cls, trainer: { name: 'No trainer' } };
+          })
+        );
+        setClasses(classesWithTrainers);
       }
     } catch (error: any) {
       toast({

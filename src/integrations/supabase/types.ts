@@ -187,15 +187,7 @@ export type Database = {
           time?: string
           trainer_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "classes_trainer_id_fkey"
-            columns: ["trainer_id"]
-            isOneToOne: false
-            referencedRelation: "trainers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       content_blocks: {
         Row: {

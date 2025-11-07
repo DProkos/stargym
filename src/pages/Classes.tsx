@@ -9,6 +9,7 @@ import { BookingModal } from '@/components/BookingModal';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClassesCalendarView } from '@/components/ClassesCalendarView';
+import { useToast } from '@/hooks/use-toast';
 
 interface Class {
   id: string;
@@ -25,6 +26,7 @@ interface Class {
 
 export default function Classes() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -61,17 +63,43 @@ export default function Classes() {
   }, []);
 
   const loadClasses = async () => {
-    const { data } = await supabase
-      .from('classes')
-      .select(`
-        *,
-        trainer:trainers(name)
-      `)
-      .order('day_of_week')
-      .order('time');
-    
-    if (data) {
-      setClasses(data);
+    try {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .order('day_of_week')
+        .order('time');
+
+      if (error) throw error;
+
+      if (data) {
+        // Get trainer names separately
+        const classesWithTrainers = await Promise.all(
+          data.map(async (cls) => {
+            if (cls.trainer_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', cls.trainer_id)
+                .single();
+              
+              return {
+                ...cls,
+                trainer: { name: profile?.full_name || 'Unknown' }
+              };
+            }
+            return { ...cls, trainer: { name: 'No trainer' } };
+          })
+        );
+        setClasses(classesWithTrainers);
+      }
+    } catch (error: any) {
+      console.error('Error loading classes:', error);
+      toast({
+        title: 'Error loading classes',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
