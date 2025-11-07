@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.notify-waitlist]
 verify_jwt = false
 
+[functions.send-class-reminders]
+verify_jwt = false
+
 [functions.admin-update-user]
 verify_jwt = true
 
