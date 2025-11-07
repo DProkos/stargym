@@ -1,1 +1,4 @@
 project_id = "nwljwmdiyflkmgsemmbm"
+
+[functions.gym-chatbot]
+verify_jwt = false

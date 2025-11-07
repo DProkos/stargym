@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Clock, Users, Calendar } from 'lucide-react';
 import { BookingModal } from '@/components/BookingModal';
+import { ChatbotWidget } from '@/components/ChatbotWidget';
 
 interface Class {
   id: string;
@@ -83,6 +84,7 @@ export default function Classes() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
+      <ChatbotWidget />
       
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto">

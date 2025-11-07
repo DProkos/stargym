@@ -6,6 +6,7 @@ import { Navigation } from '@/components/Navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import heroImage from '@/assets/hero-gym.jpg';
+import { ChatbotWidget } from '@/components/ChatbotWidget';
 
 export default function Home() {
   const { t } = useLanguage();
@@ -40,6 +41,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
+      <ChatbotWidget />
       
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 bg-gradient-hero relative overflow-hidden">

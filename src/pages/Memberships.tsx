@@ -6,6 +6,7 @@ import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { ChatbotWidget } from '@/components/ChatbotWidget';
 
 interface MembershipTier {
   id: string;
@@ -91,6 +92,7 @@ export default function Memberships() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ChatbotWidget />
       <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="text-2xl font-bold">Star Gym</a>

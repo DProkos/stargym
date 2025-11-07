@@ -6,6 +6,7 @@ import { Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { ChatbotWidget } from '@/components/ChatbotWidget';
 
 export default function Pricing() {
   const { t } = useLanguage();
@@ -82,6 +83,7 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
+      <ChatbotWidget />
       
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto">

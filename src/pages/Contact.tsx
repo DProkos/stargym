@@ -10,6 +10,7 @@ import { MapPin, Phone, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import { ChatbotWidget } from '@/components/ChatbotWidget';
 
 const contactSchema = z.object({
   name: z.string()
@@ -110,6 +111,7 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
+      <ChatbotWidget />
       
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
