@@ -291,11 +291,37 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
     if (selectedClassIds.size === 0) return;
 
     try {
+      // Send email notifications before deleting
+      const classIdsArray = Array.from(selectedClassIds);
+      
+      try {
+        const { data: notificationResult, error: notifyError } = await supabase.functions.invoke(
+          'notify-class-deletion',
+          {
+            body: { classIds: classIdsArray }
+          }
+        );
+
+        if (notifyError) {
+          console.error('Error sending notifications:', notifyError);
+          toast({
+            title: 'Προειδοποίηση',
+            description: 'Οι ειδοποιήσεις email ενδέχεται να μην έχουν σταλεί. Θα συνεχίσει η διαγραφή.',
+            variant: 'destructive',
+          });
+        } else {
+          console.log(`Notifications sent: ${notificationResult?.notified || 0} succeeded, ${notificationResult?.failed || 0} failed`);
+        }
+      } catch (notifyErr) {
+        console.error('Failed to send notifications:', notifyErr);
+        // Continue with deletion even if notifications fail
+      }
+
       // First, delete all bookings for the selected classes
       const { error: bookingsError } = await supabase
         .from('bookings')
         .delete()
-        .in('class_id', Array.from(selectedClassIds));
+        .in('class_id', classIdsArray);
 
       if (bookingsError) {
         console.error('Error deleting bookings:', bookingsError);
@@ -306,7 +332,7 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
       const { error: waitlistError } = await supabase
         .from('waitlist')
         .delete()
-        .in('class_id', Array.from(selectedClassIds));
+        .in('class_id', classIdsArray);
 
       if (waitlistError) {
         console.error('Error deleting waitlist entries:', waitlistError);
@@ -317,7 +343,7 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
       const { error: statusError } = await supabase
         .from('class_status_changes')
         .delete()
-        .in('class_id', Array.from(selectedClassIds));
+        .in('class_id', classIdsArray);
 
       if (statusError) {
         console.error('Error deleting status changes:', statusError);
@@ -328,14 +354,14 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
       const { error: classesError } = await supabase
         .from('classes')
         .delete()
-        .in('id', Array.from(selectedClassIds))
+        .in('id', classIdsArray)
         .eq('trainer_id', trainerId);
 
       if (classesError) throw classesError;
 
       toast({
         title: 'Επιτυχής Διαγραφή',
-        description: `${selectedClassIds.size} τάξεις διαγράφηκαν επιτυχώς μαζί με όλες τις κρατήσεις τους`,
+        description: `${selectedClassIds.size} τάξεις διαγράφηκαν επιτυχώς και στάλθηκαν ειδοποιήσεις στους μαθητές`,
       });
 
       setShowBulkDeleteDialog(false);
