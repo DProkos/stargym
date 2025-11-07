@@ -34,6 +34,44 @@ export const TrainerStats = ({ trainerId }: TrainerStatsProps) => {
 
   useEffect(() => {
     loadStats();
+
+    // Set up real-time subscription for bookings and classes
+    const bookingsChannel = supabase
+      .channel('trainer-stats-bookings')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings'
+        },
+        () => {
+          console.log('Booking change detected, refreshing stats...');
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    const classesChannel = supabase
+      .channel('trainer-stats-classes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'classes'
+        },
+        () => {
+          console.log('Class change detected, refreshing stats...');
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(classesChannel);
+    };
   }, [trainerId]);
 
   const loadStats = async () => {

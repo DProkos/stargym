@@ -49,6 +49,32 @@ export default function TrainerPortal() {
     };
 
     loadData();
+
+    // Set up real-time subscription for bookings
+    const channel = supabase
+      .channel('bookings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings'
+        },
+        (payload) => {
+          console.log('Booking change detected:', payload);
+          // Reload classes and booking counts when bookings change
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+              loadClasses(session.user.id);
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadClasses = async (trainerId: string) => {
@@ -142,8 +168,19 @@ export default function TrainerPortal() {
             <div className="max-w-7xl mx-auto space-y-6">
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
-                  <CardTitle>Welcome, {user?.user_metadata?.full_name || user?.email}</CardTitle>
-                  <CardDescription>Your training dashboard</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Welcome, {user?.user_metadata?.full_name || user?.email}</CardTitle>
+                      <CardDescription>Your training dashboard - updates in real-time</CardDescription>
+                    </div>
+                    <Badge variant="outline" className="bg-success/20 text-success border-success">
+                      <span className="relative flex h-2 w-2 mr-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                      </span>
+                      Live
+                    </Badge>
+                  </div>
                 </CardHeader>
               </Card>
 
