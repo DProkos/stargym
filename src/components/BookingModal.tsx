@@ -20,12 +20,13 @@ interface BookingModalProps {
   onClose: () => void;
   classItem: any;
   userId: string;
+  preSelectedDate?: Date;
 }
 
-export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModalProps) => {
+export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDate }: BookingModalProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(preSelectedDate || new Date());
   const [loading, setLoading] = useState(false);
   const [availability, setAvailability] = useState<{
     booked: number;
@@ -35,6 +36,12 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [isInWaitlist, setIsInWaitlist] = useState(false);
   const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (preSelectedDate) {
+      setSelectedDate(preSelectedDate);
+    }
+  }, [preSelectedDate]);
 
   useEffect(() => {
     if (isOpen && selectedDate) {
