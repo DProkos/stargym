@@ -38,6 +38,18 @@ serve(async (req) => {
 
     console.log(`Processing deletion notifications for ${classIds.length} classes`);
 
+    // Get email template
+    const { data: template, error: templateError } = await supabase
+      .from('email_templates')
+      .select('html_template')
+      .eq('name', 'class_deletion_notification')
+      .single();
+
+    if (templateError) {
+      console.error('Error fetching email template:', templateError);
+      throw new Error('Email template not found');
+    }
+
     // Get class information
     const { data: classes, error: classesError } = await supabase
       .from('classes')
@@ -105,25 +117,23 @@ serve(async (req) => {
     for (const [email, userClasses] of userBookings) {
       try {
         const classListHtml = userClasses.map(cls => 
-          `<li><strong>${cls.className}</strong> - ${cls.dayName} στις ${cls.time}${cls.bookingDate ? ` (${new Date(cls.bookingDate).toLocaleDateString('el-GR')})` : ''}</li>`
+          `<li style="color: #333; font-size: 15px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;"><strong>${cls.className}</strong> - ${cls.dayName} στις ${cls.time}${cls.bookingDate ? ` (${new Date(cls.bookingDate).toLocaleDateString('el-GR')})` : ''}</li>`
         ).join('');
 
         const subject = userClasses.length === 1 
           ? 'Ακύρωση Τάξης - Ειδοποίηση'
           : `Ακύρωση ${userClasses.length} Τάξεων - Ειδοποίηση`;
 
-        const html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #d32f2f;">Ακύρωση ${userClasses.length === 1 ? 'Τάξης' : 'Τάξεων'}</h2>
-            <p>Αγαπητέ μέλος,</p>
-            <p>Σας ενημερώνουμε ότι ${userClasses.length === 1 ? 'η παρακάτω τάξη έχει ακυρωθεί' : 'οι παρακάτω τάξεις έχουν ακυρωθεί'}:</p>
-            <ul style="list-style-type: none; padding-left: 0;">
-              ${classListHtml}
-            </ul>
-            <p>Λυπούμαστε για την αναστάτωση. Μπορείτε να κάνετε κράτηση σε άλλες διαθέσιμες τάξεις μέσω της πλατφόρμας μας.</p>
-            <p style="margin-top: 30px;">Με εκτίμηση,<br>Η ομάδα του γυμναστηρίου</p>
-          </div>
-        `;
+        const title = userClasses.length === 1 ? 'Ακύρωση Τάξης' : `Ακύρωση ${userClasses.length} Τάξεων`;
+        const introText = userClasses.length === 1 
+          ? 'Σας ενημερώνουμε ότι η παρακάτω τάξη έχει ακυρωθεί:'
+          : 'Σας ενημερώνουμε ότι οι παρακάτω τάξεις έχουν ακυρωθεί:';
+
+        // Replace template variables
+        const html = template.html_template
+          .replace('{{title}}', title)
+          .replace('{{intro_text}}', introText)
+          .replace('{{class_list}}', classListHtml);
 
         const text = `
 Ακύρωση ${userClasses.length === 1 ? 'Τάξης' : 'Τάξεων'}

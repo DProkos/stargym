@@ -74,6 +74,8 @@ export default function Settings() {
   });
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -99,6 +101,7 @@ export default function Settings() {
       loadAuthSettings();
       loadNewsletterSubscribers();
       loadCampaigns();
+      loadEmailTemplates();
     }
   }, [isAdmin]);
 
@@ -267,6 +270,21 @@ export default function Settings() {
     setCampaigns(data || []);
   };
 
+  const loadEmailTemplates = async () => {
+    const { data, error } = await supabase
+      .from('email_templates')
+      .select('*')
+      .eq('category', 'notification')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading email templates:', error);
+      toast.error('Failed to load email templates');
+    } else {
+      setEmailTemplates(data || []);
+    }
+  };
+
   const handleSaveRecaptchaSettings = async () => {
     try {
       const updates = [
@@ -337,6 +355,30 @@ export default function Settings() {
     } catch (error) {
       console.error('Failed to save auth settings:', error);
       toast.error('Failed to save authentication settings');
+    }
+  };
+
+  const handleSaveEmailTemplate = async () => {
+    if (!editingTemplate) return;
+
+    try {
+      const { error } = await supabase
+        .from('email_templates')
+        .update({
+          html_template: editingTemplate.html_template,
+          description: editingTemplate.description,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingTemplate.id);
+
+      if (error) throw error;
+
+      toast.success('Email template updated successfully');
+      loadEmailTemplates();
+      setEditingTemplate(null);
+    } catch (error: any) {
+      console.error('Error saving email template:', error);
+      toast.error('Failed to save email template: ' + error.message);
     }
   };
 
@@ -451,6 +493,7 @@ export default function Settings() {
                 <TabsTrigger value="recaptcha">reCAPTCHA Settings</TabsTrigger>
                 <TabsTrigger value="smtp">SMTP Settings</TabsTrigger>
                 <TabsTrigger value="auth">Authentication</TabsTrigger>
+                <TabsTrigger value="email-templates">Email Templates</TabsTrigger>
                 <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
               </TabsList>
 
@@ -749,6 +792,94 @@ export default function Settings() {
                       />
                     </div>
                     <Button onClick={handleSaveAuthSettings}>Save Authentication Settings</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="email-templates" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Email Templates for Notifications</CardTitle>
+                    <CardDescription>
+                      Customize email templates used for system notifications
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {emailTemplates.map((template) => (
+                          <TableRow key={template.id}>
+                            <TableCell className="font-medium">{template.name}</TableCell>
+                            <TableCell>{template.description}</TableCell>
+                            <TableCell>{template.category}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingTemplate(template)}
+                              >
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {editingTemplate && (
+                      <Card className="mt-6">
+                        <CardHeader>
+                          <CardTitle>Edit Template: {editingTemplate.name}</CardTitle>
+                          <CardDescription>
+                            Use the following variables: {'{{title}}'}, {'{{intro_text}}'}, {'{{class_list}}'}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Description</Label>
+                            <Input
+                              value={editingTemplate.description || ''}
+                              onChange={(e) => setEditingTemplate({
+                                ...editingTemplate,
+                                description: e.target.value
+                              })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>HTML Template</Label>
+                            <Textarea
+                              value={editingTemplate.html_template || ''}
+                              onChange={(e) => setEditingTemplate({
+                                ...editingTemplate,
+                                html_template: e.target.value
+                              })}
+                              rows={20}
+                              className="font-mono text-sm"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button onClick={handleSaveEmailTemplate}>
+                              Save Template
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              onClick={() => setEditingTemplate(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
