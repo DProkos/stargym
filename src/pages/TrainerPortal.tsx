@@ -3,13 +3,14 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users, List, CalendarDays, BarChart3 } from 'lucide-react';
+import { Calendar, Clock, Users, List, CalendarDays, BarChart3, MessageSquare } from 'lucide-react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarTrainer } from "@/components/app-sidebar-trainer";
 import BookingCalendar from '@/components/BookingCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrainerStats } from '@/components/trainer/TrainerStats';
 import { TrainerClassDetails } from '@/components/trainer/TrainerClassDetails';
+import { TrainerMessaging } from '@/components/trainer/TrainerMessaging';
 
 interface Class {
   id: string;
@@ -144,14 +145,18 @@ export default function TrainerPortal() {
               />
 
               <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList className="grid w-full max-w-2xl grid-cols-4">
+                <TabsList className="grid w-full max-w-3xl grid-cols-5">
                   <TabsTrigger value="overview" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Overview
                   </TabsTrigger>
                   <TabsTrigger value="details" className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    Class Details
+                    Details
+                  </TabsTrigger>
+                  <TabsTrigger value="messaging" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Messaging
                   </TabsTrigger>
                   <TabsTrigger value="calendar" className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4" />
@@ -250,6 +255,15 @@ export default function TrainerPortal() {
                         />
                       ))}
                     </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="messaging" className="space-y-4">
+                  {user && (
+                    <TrainerMessaging 
+                      trainerId={user.id}
+                      classes={classes}
+                    />
                   )}
                 </TabsContent>
 
