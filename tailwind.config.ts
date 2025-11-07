@@ -59,6 +59,10 @@ export default {
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        "calendar-high": "hsl(var(--calendar-high))",
+        "calendar-medium": "hsl(var(--calendar-medium))",
+        "calendar-low": "hsl(var(--calendar-low))",
+        "calendar-full": "hsl(var(--calendar-full))",
       },
       boxShadow: {
         'neon': 'var(--neon-glow)',

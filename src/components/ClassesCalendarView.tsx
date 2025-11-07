@@ -127,25 +127,25 @@ export const ClassesCalendarView = ({ classes, onBookClass }: ClassesCalendarVie
   const eventStyleGetter = (event: ClassEvent) => {
     const { availabilityPercent } = event.resource;
     
-    let backgroundColor = 'hsl(var(--primary))';
-    let borderColor = 'hsl(var(--primary))';
+    let backgroundColor: string;
+    let borderColor: string;
     
     if (availabilityPercent > 50) {
       // Green - plenty of spots
-      backgroundColor = 'hsl(142, 76%, 36%)';
-      borderColor = 'hsl(142, 76%, 30%)';
+      backgroundColor = 'hsl(var(--calendar-high))';
+      borderColor = 'hsl(var(--calendar-high))';
     } else if (availabilityPercent > 20) {
       // Amber - limited spots
-      backgroundColor = 'hsl(43, 96%, 56%)';
-      borderColor = 'hsl(43, 96%, 46%)';
+      backgroundColor = 'hsl(var(--calendar-medium))';
+      borderColor = 'hsl(var(--calendar-medium))';
     } else if (availabilityPercent > 0) {
       // Orange - very few spots
-      backgroundColor = 'hsl(24, 95%, 53%)';
-      borderColor = 'hsl(24, 95%, 43%)';
+      backgroundColor = 'hsl(var(--calendar-low))';
+      borderColor = 'hsl(var(--calendar-low))';
     } else {
       // Red - full
-      backgroundColor = 'hsl(0, 84%, 60%)';
-      borderColor = 'hsl(0, 84%, 50%)';
+      backgroundColor = 'hsl(var(--calendar-full))';
+      borderColor = 'hsl(var(--calendar-full))';
     }
 
     return {
@@ -153,10 +153,15 @@ export const ClassesCalendarView = ({ classes, onBookClass }: ClassesCalendarVie
         backgroundColor,
         borderColor,
         color: 'white',
-        borderRadius: '4px',
-        border: `2px solid ${borderColor}`,
+        borderRadius: '6px',
+        border: `3px solid ${borderColor}`,
         fontSize: '0.875rem',
-        padding: '2px 4px',
+        fontWeight: '600',
+        padding: '6px 10px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+        minHeight: '50px',
+        display: 'flex',
+        alignItems: 'center',
       },
     };
   };
@@ -190,19 +195,19 @@ export const ClassesCalendarView = ({ classes, onBookClass }: ClassesCalendarVie
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded" style={{ backgroundColor: 'hsl(142, 76%, 36%)' }}></div>
+                <div className="w-6 h-6 rounded bg-calendar-high"></div>
                 <span className="text-sm">Πολλές θέσεις (&gt;50%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded" style={{ backgroundColor: 'hsl(43, 96%, 56%)' }}></div>
+                <div className="w-6 h-6 rounded bg-calendar-medium"></div>
                 <span className="text-sm">Λίγες θέσεις (20-50%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded" style={{ backgroundColor: 'hsl(24, 95%, 53%)' }}></div>
+                <div className="w-6 h-6 rounded bg-calendar-low"></div>
                 <span className="text-sm">Ελάχιστες θέσεις (&lt;20%)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded" style={{ backgroundColor: 'hsl(0, 84%, 60%)' }}></div>
+                <div className="w-6 h-6 rounded bg-calendar-full"></div>
                 <span className="text-sm">Πλήρης</span>
               </div>
             </div>
@@ -217,7 +222,7 @@ export const ClassesCalendarView = ({ classes, onBookClass }: ClassesCalendarVie
               events={events}
               startAccessor="start"
               endAccessor="end"
-              style={{ height: 600 }}
+              style={{ height: 700, minHeight: 700 }}
               view={view}
               onView={setView}
               date={date}
@@ -226,8 +231,12 @@ export const ClassesCalendarView = ({ classes, onBookClass }: ClassesCalendarVie
               onSelectEvent={handleSelectEvent}
               views={['month', 'week', 'day']}
               step={30}
+              timeslots={2}
               showMultiDayTimes
               defaultDate={new Date()}
+              tooltipAccessor={(event: ClassEvent) => 
+                `${event.title} - ${event.resource.available} θέσεις διαθέσιμες`
+              }
             />
           </CardContent>
         </Card>

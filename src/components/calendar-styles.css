@@ -48,20 +48,28 @@
   font-weight: 700;
 }
 
+/* Enhanced Event Styling */
 .rbc-event {
-  padding: 4px 8px;
+  padding: 8px 12px !important;
   background: hsl(var(--primary));
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 13px;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
+  min-height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 .rbc-event:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  z-index: 10;
 }
 
 .rbc-event-label {
@@ -69,12 +77,19 @@
 }
 
 .rbc-event-content {
-  font-weight: 500;
+  font-weight: 600 !important;
+  text-align: center;
+  line-height: 1.3;
 }
 
 .rbc-selected {
-  background: hsl(var(--primary)) !important;
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.4) !important;
+}
+
+/* Week/Day view event styling */
+.rbc-time-slot .rbc-event {
+  min-height: 60px !important;
+  padding: 10px 12px !important;
 }
 
 .rbc-toolbar {
@@ -162,7 +177,7 @@
 
 .rbc-timeslot-group {
   border-left: 1px solid hsl(var(--border));
-  min-height: 60px;
+  min-height: 80px;
 }
 
 .rbc-time-slot {
@@ -172,7 +187,8 @@
 
 .rbc-current-time-indicator {
   background-color: hsl(var(--primary));
-  height: 2px;
+  height: 3px;
+  box-shadow: 0 0 8px hsl(var(--primary));
 }
 
 .rbc-agenda-view {
@@ -233,6 +249,16 @@
   border-radius: 8px 8px 0 0;
 }
 
+/* Month view - ensure events have proper height */
+.rbc-month-row {
+  min-height: 100px;
+  overflow: visible;
+}
+
+.rbc-row-segment {
+  padding: 2px 4px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .rbc-toolbar {
@@ -250,5 +276,11 @@
   
   .rbc-btn-group button {
     flex: 1;
+  }
+  
+  .rbc-event {
+    font-size: 12px !important;
+    min-height: 40px !important;
+    padding: 6px 8px !important;
   }
 }
