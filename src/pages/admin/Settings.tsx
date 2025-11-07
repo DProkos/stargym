@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmailBlockEditor } from '@/components/email-editor/EmailBlockEditor';
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,7 @@ export default function Settings() {
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [showVisualEditor, setShowVisualEditor] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -391,10 +393,23 @@ export default function Settings() {
       loadEmailTemplates();
       setEditingTemplate(null);
       setShowTemplatePreview(false);
+      setShowVisualEditor(false);
     } catch (error: any) {
       console.error('Error saving email template:', error);
       toast.error('Failed to save email template: ' + error.message);
     }
+  };
+
+  const handleVisualEditorSave = (html: string) => {
+    if (!editingTemplate) return;
+    
+    setEditingTemplate({
+      ...editingTemplate,
+      html_template: html,
+    });
+    
+    // Auto-save after visual editor
+    handleSaveEmailTemplate();
   };
 
   const getPreviewHtml = () => {
@@ -923,7 +938,7 @@ Test Email - ${editingTemplate.name}
                       </TableBody>
                     </Table>
 
-                    {editingTemplate && (
+                    {editingTemplate && !showVisualEditor && (
                       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Card>
                           <CardHeader>
@@ -974,6 +989,12 @@ Test Email - ${editingTemplate.name}
                                 {sendingTestEmail ? 'Αποστολή...' : 'Send Test Email'}
                               </Button>
                               <Button 
+                                variant="secondary"
+                                onClick={() => setShowVisualEditor(true)}
+                              >
+                                Visual Editor
+                              </Button>
+                              <Button 
                                 variant="outline"
                                 onClick={() => {
                                   setEditingTemplate(null);
@@ -1008,6 +1029,16 @@ Test Email - ${editingTemplate.name}
                             </CardContent>
                           </Card>
                         )}
+                      </div>
+                    )}
+
+                    {editingTemplate && showVisualEditor && (
+                      <div className="mt-6">
+                        <EmailBlockEditor
+                          initialHtml={editingTemplate.html_template}
+                          onSave={handleVisualEditorSave}
+                          onCancel={() => setShowVisualEditor(false)}
+                        />
                       </div>
                     )}
                   </CardContent>
