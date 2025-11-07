@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
+import { Navigation } from '@/components/Navigation';
 
 interface MembershipTier {
   id: string;
@@ -25,11 +26,35 @@ export default function Memberships() {
   const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentSubscription, setCurrentSubscription] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadTiers();
     checkCurrentSubscription();
+    checkUser();
   }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+
+    if (session?.user) {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      setIsAdmin(!!data);
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  };
 
   const loadTiers = async () => {
     const { data, error } = await supabase
@@ -92,20 +117,10 @@ export default function Memberships() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
-      <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="/" className="text-2xl font-bold">Star Gym</a>
-          <nav className="flex gap-6">
-            <a href="/" className="hover:text-primary">Home</a>
-            <a href="/classes" className="hover:text-primary">Classes</a>
-            <a href="/memberships" className="hover:text-primary">Memberships</a>
-            <a href="/contact" className="hover:text-primary">Contact</a>
-          </nav>
-        </div>
-      </header>
       
-      <section className="pt-24 pb-16">
+      <section className="pt-32 pb-16">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">{t('memberships.title')}</h1>
