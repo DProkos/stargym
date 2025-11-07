@@ -137,13 +137,8 @@ export default function TrainerPortal() {
                 </CardHeader>
               </Card>
 
-              {/* Statistics */}
-              <TrainerStats 
-                totalClasses={classes.length}
-                totalBookings={totalBookings}
-                totalCapacity={totalCapacity}
-                averageAttendance={totalCapacity > 0 ? (totalBookings / totalCapacity) * 100 : 0}
-              />
+              {/* Statistics Dashboard */}
+              {user && <TrainerStats trainerId={user.id} />}
 
               <Tabs defaultValue="overview" className="space-y-4">
                 <TabsList className="grid w-full max-w-4xl grid-cols-6">
