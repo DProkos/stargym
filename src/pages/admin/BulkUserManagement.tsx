@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Users, Shield, Dumbbell, User2, Check, X, Download, FileSpreadsheet, Key } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Dumbbell, User2, Check, X, Download, FileSpreadsheet, Key, UserX, UserCheck } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
@@ -35,6 +35,7 @@ interface UserWithRoles {
   email: string;
   full_name: string | null;
   roles: string[];
+  banned: boolean;
 }
 
 type Role = 'admin' | 'trainer' | 'member';
@@ -83,41 +84,44 @@ export default function BulkUserManagement() {
   const loadUsers = async () => {
     setLoading(true);
 
-    // Load all profiles
-    const { data: profilesData, error: profilesError } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('email', { ascending: true });
+    try {
+      // Load all user data including ban status from admin API
+      const { data: usersData, error: usersError } = await supabase.functions.invoke('admin-get-users');
 
-    if (profilesError) {
-      console.error('Failed to load users:', profilesError);
+      if (usersError) {
+        throw usersError;
+      }
+
+      // Load all user roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) {
+        console.error('Failed to load roles:', rolesError);
+        toast.error('Failed to load user roles');
+        setLoading(false);
+        return;
+      }
+
+      // Combine users with their roles
+      const usersWithRoles = usersData.users.map((user: any) => ({
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || null,
+        banned: user.banned_until !== null && user.banned_until !== undefined,
+        roles: rolesData
+          ?.filter(r => r.user_id === user.id)
+          .map(r => r.role) || []
+      }));
+
+      setUsers(usersWithRoles);
+    } catch (error) {
+      console.error('Failed to load users:', error);
       toast.error('Failed to load users');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Load all user roles
-    const { data: rolesData, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('user_id, role');
-
-    if (rolesError) {
-      console.error('Failed to load roles:', rolesError);
-      toast.error('Failed to load user roles');
-      setLoading(false);
-      return;
-    }
-
-    // Combine users with their roles
-    const usersWithRoles = profilesData.map(profile => ({
-      ...profile,
-      roles: rolesData
-        ?.filter(r => r.user_id === profile.id)
-        .map(r => r.role) || []
-    }));
-
-    setUsers(usersWithRoles);
-    setLoading(false);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -378,6 +382,87 @@ export default function BulkUserManagement() {
     }
   };
 
+  const handleToggleUserStatus = async (user: UserWithRoles) => {
+    const action = user.banned ? 'enable' : 'disable';
+    const confirmMessage = `Are you sure you want to ${action} ${user.email}?`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke('admin-toggle-user-status', {
+        body: {
+          userId: user.id,
+          action,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`User ${action}d successfully`);
+      loadUsers();
+    } catch (error: any) {
+      console.error(`Failed to ${action} user:`, error);
+      toast.error(`Failed to ${action} user: ${error.message}`);
+    }
+  };
+
+  const handleBulkToggleStatus = async (action: 'enable' | 'disable') => {
+    if (selectedUsers.size === 0) {
+      toast.error('Please select at least one user');
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to ${action} ${selectedUsers.size} user(s)?`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setProcessing(true);
+    setProgress(0);
+
+    const selectedUserIds = Array.from(selectedUsers);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < selectedUserIds.length; i++) {
+      const userId = selectedUserIds[i];
+      
+      try {
+        const { error } = await supabase.functions.invoke('admin-toggle-user-status', {
+          body: {
+            userId,
+            action,
+          },
+        });
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to ${action} user ${userId}:`, error);
+        errorCount++;
+      }
+
+      setProgress(((i + 1) / selectedUserIds.length) * 100);
+    }
+
+    setProcessing(false);
+    setProgress(0);
+    setSelectedUsers(new Set());
+
+    if (successCount > 0) {
+      toast.success(`Successfully ${action}d ${successCount} user(s)`);
+    }
+
+    if (errorCount > 0) {
+      toast.error(`Failed to ${action} ${errorCount} user(s)`);
+    }
+
+    loadUsers();
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -425,14 +510,17 @@ export default function BulkUserManagement() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Bulk Role Management
+                  Bulk User Management
                 </CardTitle>
                 <CardDescription>
-                  Select multiple users and assign or remove roles in bulk
+                  Manage roles and account status for multiple users
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="space-y-6">
+                {/* Role Management Section */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Role Management</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="text-sm font-medium mb-2 block">
                       Select Role
@@ -489,6 +577,32 @@ export default function BulkUserManagement() {
                     </AlertDescription>
                   </Alert>
                 )}
+              </div>
+
+                {/* Account Status Section */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="font-semibold">Account Status</h3>
+                  <div className="flex gap-4">
+                    <Button 
+                      variant="destructive"
+                      onClick={() => handleBulkToggleStatus('disable')} 
+                      disabled={processing || selectedUsers.size === 0}
+                      className="flex-1"
+                    >
+                      <UserX className="h-4 w-4 mr-2" />
+                      Disable {selectedUsers.size > 0 ? `(${selectedUsers.size})` : ''} User(s)
+                    </Button>
+                    <Button 
+                      variant="default"
+                      onClick={() => handleBulkToggleStatus('enable')} 
+                      disabled={processing || selectedUsers.size === 0}
+                      className="flex-1"
+                    >
+                      <UserCheck className="h-4 w-4 mr-2" />
+                      Enable {selectedUsers.size > 0 ? `(${selectedUsers.size})` : ''} User(s)
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -520,7 +634,9 @@ export default function BulkUserManagement() {
                   {filteredUsers.map((user) => (
                     <div
                       key={user.id}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-secondary/50 transition-colors"
+                      className={`flex items-center justify-between p-3 border border-border rounded-lg hover:bg-secondary/50 transition-colors ${
+                        user.banned ? 'opacity-50 bg-destructive/5' : ''
+                      }`}
                     >
                       <div className="flex items-center gap-3">
                         <Checkbox
@@ -528,7 +644,15 @@ export default function BulkUserManagement() {
                           onCheckedChange={(checked) => handleSelectUser(user.id, checked as boolean)}
                         />
                         <div>
-                          <p className="font-medium">{user.full_name || 'No name'}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{user.full_name || 'No name'}</p>
+                            {user.banned && (
+                              <Badge variant="destructive" className="text-xs">
+                                <UserX className="h-3 w-3 mr-1" />
+                                Disabled
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
@@ -568,6 +692,23 @@ export default function BulkUserManagement() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        <Button 
+                          variant={user.banned ? "default" : "destructive"}
+                          size="sm"
+                          onClick={() => handleToggleUserStatus(user)}
+                        >
+                          {user.banned ? (
+                            <>
+                              <UserCheck className="h-4 w-4 mr-1" />
+                              Enable
+                            </>
+                          ) : (
+                            <>
+                              <UserX className="h-4 w-4 mr-1" />
+                              Disable
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
                   ))}

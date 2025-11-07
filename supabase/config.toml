@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.send-mass-email]
 verify_jwt = false
+
+[functions.admin-update-user]
+verify_jwt = true
+
+[functions.admin-get-users]
+verify_jwt = true
+
+[functions.admin-toggle-user-status]
+verify_jwt = true
