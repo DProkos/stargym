@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Users, Shield, Dumbbell, User2, Check, X, Download, FileSpreadsheet } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Dumbbell, User2, Check, X, Download, FileSpreadsheet, Key } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
@@ -17,7 +17,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface UserWithRoles {
   id: string;
@@ -39,6 +50,9 @@ export default function BulkUserManagement() {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [resetPasswordDialog, setResetPasswordDialog] = useState(false);
+  const [selectedUserForReset, setSelectedUserForReset] = useState<UserWithRoles | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     checkAuth();
@@ -317,6 +331,53 @@ export default function BulkUserManagement() {
     toast.success(`Exported ${filteredUsers.length} users to Excel`);
   };
 
+  const handleResetPassword = async (user: UserWithRoles) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Password reset email sent to ${user.email}`);
+    } catch (error: any) {
+      console.error('Failed to send reset email:', error);
+      toast.error(`Failed to send reset email: ${error.message}`);
+    }
+  };
+
+  const handleSetNewPassword = async () => {
+    if (!selectedUserForReset || !newPassword) {
+      toast.error('Please enter a new password');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      // Use Supabase admin API through edge function
+      const { data, error } = await supabase.functions.invoke('admin-update-user', {
+        body: {
+          userId: selectedUserForReset.id,
+          password: newPassword,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Password updated successfully for ${selectedUserForReset.email}`);
+      setResetPasswordDialog(false);
+      setSelectedUserForReset(null);
+      setNewPassword('');
+    } catch (error: any) {
+      console.error('Failed to update password:', error);
+      toast.error(`Failed to update password: ${error.message}`);
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -471,21 +532,42 @@ export default function BulkUserManagement() {
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
-                      <div className="flex gap-1">
-                        {user.roles.map((role) => (
-                          <Badge
-                            key={role}
-                            className={`${getRoleBadgeColor(role)} flex items-center gap-1`}
-                          >
-                            {getRoleIcon(role)}
-                            {role}
-                          </Badge>
-                        ))}
-                        {user.roles.length === 0 && (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            No roles
-                          </Badge>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {user.roles.map((role) => (
+                            <Badge
+                              key={role}
+                              className={`${getRoleBadgeColor(role)} flex items-center gap-1`}
+                            >
+                              {getRoleIcon(role)}
+                              {role}
+                            </Badge>
+                          ))}
+                          {user.roles.length === 0 && (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              No roles
+                            </Badge>
+                          )}
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Key className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleResetPassword(user)}>
+                              Send Reset Email
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedUserForReset(user);
+                              setResetPasswordDialog(true);
+                            }}>
+                              Set New Password
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   ))}
@@ -501,6 +583,45 @@ export default function BulkUserManagement() {
           </div>
         </main>
       </div>
+
+      <Dialog open={resetPasswordDialog} onOpenChange={setResetPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set New Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {selectedUserForReset?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (min 6 characters)"
+                className="bg-secondary border-border"
+              />
+              <p className="text-xs text-muted-foreground">
+                Password must be at least 6 characters long
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setResetPasswordDialog(false);
+              setSelectedUserForReset(null);
+              setNewPassword('');
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleSetNewPassword} disabled={!newPassword || newPassword.length < 6}>
+              Update Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
