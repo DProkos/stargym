@@ -77,6 +77,8 @@ export default function Settings() {
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -122,6 +124,17 @@ export default function Settings() {
     if (!hasAdminRole) {
       navigate('/');
       return;
+    }
+
+    // Get user email
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profile) {
+      setUserEmail(profile.email);
     }
 
     setIsAdmin(true);
@@ -408,6 +421,53 @@ export default function Settings() {
     });
 
     return html;
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!editingTemplate || !userEmail) {
+      toast.error('Unable to send test email');
+      return;
+    }
+
+    setSendingTestEmail(true);
+
+    try {
+      const html = getPreviewHtml();
+      const subject = '[TEST] ' + (editingTemplate.name === 'class_deletion_notification' 
+        ? 'Ακύρωση 2 Τάξεων - Ειδοποίηση' 
+        : 'Test Email');
+
+      const text = `
+Test Email - ${editingTemplate.name}
+
+Αυτό είναι ένα test email για το template: ${editingTemplate.description}
+
+Περιεχόμενο:
+- Yoga για Αρχάριους - Δευτέρα στις 10:00 (15/01/2025)
+- HIIT Training - Τετάρτη στις 18:30 (17/01/2025)
+
+Με εκτίμηση,
+Η ομάδα του γυμναστηρίου
+      `;
+
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: userEmail,
+          subject: subject,
+          html: html,
+          text: text
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Test email στάλθηκε επιτυχώς στο ${userEmail}`);
+    } catch (error: any) {
+      console.error('Error sending test email:', error);
+      toast.error('Αποτυχία αποστολής test email: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSendingTestEmail(false);
+    }
   };
 
   const handleOpenDialog = (tier?: MembershipTier) => {
@@ -895,7 +955,7 @@ export default function Settings() {
                                 className="font-mono text-sm"
                               />
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               <Button onClick={handleSaveEmailTemplate}>
                                 Save Template
                               </Button>
@@ -907,6 +967,13 @@ export default function Settings() {
                                 {showTemplatePreview ? 'Hide Preview' : 'Show Preview'}
                               </Button>
                               <Button 
+                                variant="secondary"
+                                onClick={handleSendTestEmail}
+                                disabled={sendingTestEmail}
+                              >
+                                {sendingTestEmail ? 'Αποστολή...' : 'Send Test Email'}
+                              </Button>
+                              <Button 
                                 variant="outline"
                                 onClick={() => {
                                   setEditingTemplate(null);
@@ -916,6 +983,11 @@ export default function Settings() {
                                 Cancel
                               </Button>
                             </div>
+                            {userEmail && (
+                              <p className="text-sm text-muted-foreground">
+                                Test email θα σταλεί στο: {userEmail}
+                              </p>
+                            )}
                           </CardContent>
                         </Card>
 
