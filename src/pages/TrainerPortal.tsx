@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrainerStats } from '@/components/trainer/TrainerStats';
 import { TrainerClassDetails } from '@/components/trainer/TrainerClassDetails';
 import { TrainerMessaging } from '@/components/trainer/TrainerMessaging';
+import { TrainerClassManager } from '@/components/trainer/TrainerClassManager';
 
 interface Class {
   id: string;
@@ -145,10 +146,14 @@ export default function TrainerPortal() {
               />
 
               <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList className="grid w-full max-w-3xl grid-cols-5">
+                <TabsList className="grid w-full max-w-4xl grid-cols-6">
                   <TabsTrigger value="overview" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="manage" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Manage
                   </TabsTrigger>
                   <TabsTrigger value="details" className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
@@ -233,6 +238,15 @@ export default function TrainerPortal() {
                       );
                     })}
                   </div>
+                </TabsContent>
+
+                <TabsContent value="manage" className="space-y-4">
+                  {user && (
+                    <TrainerClassManager 
+                      trainerId={user.id}
+                      onClassesChange={() => loadClasses(user.id)}
+                    />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="details" className="space-y-4">
