@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, CheckCircle, XCircle } from 'lucide-react';
+import { Users, CheckCircle, XCircle, Repeat } from 'lucide-react';
 import { z } from 'zod';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 const bookingSchema = z.object({
   booking_date: z.date({ required_error: 'Please select a date' }),
@@ -36,6 +39,8 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [isInWaitlist, setIsInWaitlist] = useState(false);
   const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringWeeks, setRecurringWeeks] = useState<string>('4');
 
   useEffect(() => {
     if (preSelectedDate) {
@@ -224,47 +229,94 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
 
     setLoading(true);
     try {
-      // Validate input
-      const validatedData = bookingSchema.parse({
-        booking_date: selectedDate,
-        class_id: classItem.id,
-        user_id: userId,
-      });
+      const bookingsToCreate = [];
+      const weeks = isRecurring ? parseInt(recurringWeeks) : 1;
+      
+      // Generate booking dates
+      for (let i = 0; i < weeks; i++) {
+        const bookingDate = new Date(selectedDate);
+        bookingDate.setDate(bookingDate.getDate() + (i * 7));
+        
+        bookingsToCreate.push({
+          user_id: userId,
+          class_id: classItem.id,
+          booking_date: bookingDate.toISOString().split('T')[0],
+          status: 'confirmed',
+        });
+      }
 
-      // Check if booking already exists
-      const { data: existingBooking } = await supabase
+      // Check for existing bookings
+      const bookingDates = bookingsToCreate.map(b => b.booking_date);
+      const { data: existingBookings } = await supabase
         .from('bookings')
-        .select('id')
+        .select('booking_date')
         .eq('user_id', userId)
         .eq('class_id', classItem.id)
-        .eq('booking_date', selectedDate.toISOString().split('T')[0])
-        .eq('status', 'confirmed')
-        .maybeSingle();
+        .in('booking_date', bookingDates)
+        .eq('status', 'confirmed');
 
-      if (existingBooking) {
+      if (existingBookings && existingBookings.length > 0) {
+        const existingDates = existingBookings.map(b => 
+          new Date(b.booking_date).toLocaleDateString('el-GR')
+        ).join(', ');
+        
         toast({
           title: 'Already Booked',
-          description: 'You already have a booking for this class on this date',
+          description: `Έχετε ήδη κρατήσεις για τις ημερομηνίες: ${existingDates}`,
           variant: 'destructive',
         });
         setLoading(false);
         return;
       }
 
+      // Check availability for all dates
+      const availabilityChecks = await Promise.all(
+        bookingsToCreate.map(async (booking) => {
+          const { count } = await supabase
+            .from('bookings')
+            .select('*', { count: 'exact', head: true })
+            .eq('class_id', classItem.id)
+            .eq('booking_date', booking.booking_date)
+            .eq('status', 'confirmed');
+          
+          return {
+            date: booking.booking_date,
+            available: classItem.max_capacity - (count || 0),
+            isFull: (count || 0) >= classItem.max_capacity,
+          };
+        })
+      );
+
+      const fullDates = availabilityChecks.filter(check => check.isFull);
+      
+      if (fullDates.length > 0) {
+        const fullDatesList = fullDates.map(d => 
+          new Date(d.date).toLocaleDateString('el-GR')
+        ).join(', ');
+        
+        toast({
+          title: 'Class Full',
+          description: `Οι ακόλουθες ημερομηνίες είναι πλήρεις: ${fullDatesList}`,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Create all bookings
       const { error } = await supabase
         .from('bookings')
-        .insert({
-          user_id: validatedData.user_id,
-          class_id: validatedData.class_id,
-          booking_date: validatedData.booking_date.toISOString().split('T')[0],
-          status: 'confirmed',
-        });
+        .insert(bookingsToCreate);
 
       if (error) throw error;
 
+      const successMessage = isRecurring 
+        ? `Επιτυχής κράτηση για ${weeks} εβδομάδες!`
+        : 'Your booking has been confirmed successfully';
+
       toast({ 
         title: t('booking.success'),
-        description: 'Your booking has been confirmed successfully',
+        description: successMessage,
       });
       onClose();
     } catch (error: any) {
@@ -348,6 +400,49 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
             </Alert>
           )}
 
+          {/* Recurring Booking Options */}
+          {!availability?.isFull && !isInWaitlist && selectedDate && (
+            <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Repeat className="h-4 w-4 text-primary" />
+                  <Label htmlFor="recurring-mode" className="font-semibold">
+                    Επαναλαμβανόμενη Κράτηση
+                  </Label>
+                </div>
+                <Switch
+                  id="recurring-mode"
+                  checked={isRecurring}
+                  onCheckedChange={setIsRecurring}
+                />
+              </div>
+              
+              {isRecurring && (
+                <div className="space-y-2">
+                  <Label htmlFor="recurring-weeks">
+                    Αριθμός Εβδομάδων
+                  </Label>
+                  <Select value={recurringWeeks} onValueChange={setRecurringWeeks}>
+                    <SelectTrigger id="recurring-weeks">
+                      <SelectValue placeholder="Επιλέξτε εβδομάδες" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 Εβδομάδες</SelectItem>
+                      <SelectItem value="3">3 Εβδομάδες</SelectItem>
+                      <SelectItem value="4">4 Εβδομάδες</SelectItem>
+                      <SelectItem value="6">6 Εβδομάδες</SelectItem>
+                      <SelectItem value="8">8 Εβδομάδες</SelectItem>
+                      <SelectItem value="12">12 Εβδομάδες</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Θα κλείσετε την τάξη κάθε {new Date(selectedDate).toLocaleDateString('el-GR', { weekday: 'long' })} για {recurringWeeks} εβδομάδες
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {availability?.isFull && !isInWaitlist ? (
             <Button 
               onClick={handleJoinWaitlist} 
@@ -372,7 +467,7 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
               disabled={!selectedDate || loading || availability?.isFull || checkingAvailability}
               className="w-full"
             >
-              {loading ? '...' : t('booking.confirm')}
+              {loading ? '...' : isRecurring ? `Κλείσε ${recurringWeeks} Εβδομάδες` : t('booking.confirm')}
             </Button>
           )}
         </div>
