@@ -4,11 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, List, CalendarDays } from 'lucide-react';
+import { Calendar, Clock, List, CalendarDays, Users, Search } from 'lucide-react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarCustomer } from "@/components/app-sidebar-customer";
 import BookingCalendar from '@/components/BookingCalendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BookingModal } from '@/components/BookingModal';
+import { Badge } from '@/components/ui/badge';
 
 interface Booking {
   id: string;
@@ -21,12 +23,28 @@ interface Booking {
   };
 }
 
+interface Class {
+  id: string;
+  name: string;
+  description: string;
+  time: string;
+  day_of_week: number;
+  duration_minutes: number;
+  max_capacity: number;
+  status: string;
+}
+
 export default function CustomerPortal() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   useEffect(() => {
     const loadData = async () => {
@@ -34,6 +52,7 @@ export default function CustomerPortal() {
       if (session) {
         setUser(session.user);
         loadBookings(session.user.id);
+        loadClasses();
       }
     };
 
@@ -53,6 +72,34 @@ export default function CustomerPortal() {
     if (data) {
       setBookings(data);
     }
+  };
+
+  const loadClasses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('classes')
+        .select('*')
+        .eq('status', 'active')
+        .order('day_of_week')
+        .order('time');
+
+      if (error) throw error;
+
+      if (data) {
+        setClasses(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error loading classes',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBookClass = (classItem: Class) => {
+    setSelectedClass(classItem);
+    setIsBookingModalOpen(true);
   };
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -108,19 +155,24 @@ export default function CustomerPortal() {
                 </CardHeader>
               </Card>
 
-              <Tabs defaultValue="calendar" className="space-y-4">
-                <TabsList className="grid w-full max-w-md grid-cols-2">
+              <Tabs defaultValue="my-bookings" className="space-y-4">
+                <TabsList className="grid w-full max-w-2xl grid-cols-3">
+                  <TabsTrigger value="my-bookings" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    My Bookings
+                  </TabsTrigger>
+                  <TabsTrigger value="browse" className="flex items-center gap-2">
+                    <Search className="h-4 w-4" />
+                    Browse Classes
+                  </TabsTrigger>
                   <TabsTrigger value="calendar" className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4" />
                     Calendar View
                   </TabsTrigger>
-                  <TabsTrigger value="list" className="flex items-center gap-2">
-                    <List className="h-4 w-4" />
-                    List View
-                  </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="calendar" className="space-y-4">
+                {/* My Bookings Tab */}
+                <TabsContent value="my-bookings" className="space-y-4">
                   <BookingCalendar 
                     events={calendarEvents}
                     onSelectEvent={(event) => setSelectedBooking(event.resource)}
@@ -174,7 +226,58 @@ export default function CustomerPortal() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="list" className="space-y-4">
+                {/* Browse Classes Tab */}
+                <TabsContent value="browse" className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {classes.length === 0 ? (
+                      <Card className="bg-gradient-card border-border col-span-full">
+                        <CardContent className="pt-6">
+                          <p className="text-center text-muted-foreground">No classes available yet</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      classes.map((cls) => (
+                        <Card key={cls.id} className="bg-gradient-card border-border">
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between">
+                              <span>{cls.name}</span>
+                              <Badge variant="outline" className="bg-primary/20 text-primary border-primary">
+                                {daysOfWeek[cls.day_of_week]}
+                              </Badge>
+                            </CardTitle>
+                            <CardDescription>
+                              <div className="flex flex-col gap-2 mt-2">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-primary" />
+                                  <span>{cls.time} ({cls.duration_minutes} min)</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-primary" />
+                                  <span>Max {cls.max_capacity} people</span>
+                                </div>
+                              </div>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {cls.description && (
+                              <p className="text-sm text-muted-foreground">{cls.description}</p>
+                            )}
+                            <Button 
+                              onClick={() => handleBookClass(cls)}
+                              className="w-full"
+                            >
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Book This Class
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </TabsContent>
+
+                {/* Calendar View Tab */}
+                <TabsContent value="calendar" className="space-y-4">
                 {bookings.length === 0 ? (
                   <Card className="bg-gradient-card border-border">
                     <CardContent className="pt-6">
@@ -227,6 +330,28 @@ export default function CustomerPortal() {
           </main>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {selectedClass && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => {
+            setIsBookingModalOpen(false);
+            setSelectedClass(null);
+            if (user) loadBookings(user.id);
+          }}
+          classItem={{
+            id: selectedClass.id,
+            name: selectedClass.name,
+            description: selectedClass.description,
+            time: selectedClass.time,
+            day_of_week: selectedClass.day_of_week,
+            duration_minutes: selectedClass.duration_minutes,
+            max_capacity: selectedClass.max_capacity,
+          }}
+          userId={user?.id}
+        />
+      )}
     </SidebarProvider>
   );
 }

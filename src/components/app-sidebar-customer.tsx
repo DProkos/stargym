@@ -1,4 +1,4 @@
-import { Calendar, User, LogOut, Home } from "lucide-react";
+import { Calendar, User, LogOut, Home, Search } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,7 @@ export function AppSidebarCustomer() {
 
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
+    { title: 'Browse Classes', url: "/classes", icon: Search },
     { title: t('booking.myBookings'), url: "/customer/bookings", icon: Calendar },
     { title: t('nav.profile'), url: "/customer/profile", icon: User },
   ];
