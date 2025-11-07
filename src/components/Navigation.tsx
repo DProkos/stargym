@@ -49,7 +49,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <Dumbbell className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">GymPro</span>
+            <span className="text-xl font-bold">Star Gym</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -153,7 +153,7 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold mb-2">Phone</h3>
                       <p className="text-muted-foreground">+30 210 123 4567</p>
-                      <p className="text-muted-foreground">info@gympro.gr</p>
+                      <p className="text-muted-foreground">info@stargym.gr</p>
                     </div>
                   </div>
                 </CardContent>
