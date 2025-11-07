@@ -21,6 +21,7 @@ import Settings from "./pages/admin/Settings";
 import NewsletterComposer from "./pages/admin/NewsletterComposer";
 import TemplateBuilder from "./pages/admin/TemplateBuilder";
 import EmailTemplates from "./pages/admin/EmailTemplates";
+import UserProfile from "./pages/admin/UserProfile";
 import Memberships from "./pages/Memberships";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
@@ -97,6 +98,11 @@ const App = () => (
             <Route path="/admin/classes" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ClassEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users/:userId" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <UserProfile />
               </ProtectedRoute>
             } />
             

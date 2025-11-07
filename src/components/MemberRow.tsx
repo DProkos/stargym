@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Shield, Dumbbell, User2, Settings } from 'lucide-react';
+import { Shield, Dumbbell, User2, Settings, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MemberRowProps {
@@ -25,6 +26,7 @@ interface MemberRowProps {
 type Role = 'admin' | 'trainer' | 'member';
 
 export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
+  const navigate = useNavigate();
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -118,6 +120,14 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
             </Badge>
           ))}
         </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(`/admin/users/${member.id}`)}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
