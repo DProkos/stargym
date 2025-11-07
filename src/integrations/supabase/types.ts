@@ -109,6 +109,47 @@ export type Database = {
           },
         ]
       }
+      class_status_changes: {
+        Row: {
+          affected_date: string | null
+          changed_by: string
+          class_id: string
+          created_at: string
+          id: string
+          new_status: string
+          old_status: string
+          reason: string | null
+        }
+        Insert: {
+          affected_date?: string | null
+          changed_by: string
+          class_id: string
+          created_at?: string
+          id?: string
+          new_status: string
+          old_status: string
+          reason?: string | null
+        }
+        Update: {
+          affected_date?: string | null
+          changed_by?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          new_status?: string
+          old_status?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_status_changes_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       classes: {
         Row: {
           created_at: string | null
@@ -118,6 +159,7 @@ export type Database = {
           id: string
           max_capacity: number
           name: string
+          status: string
           time: string
           trainer_id: string | null
         }
@@ -129,6 +171,7 @@ export type Database = {
           id?: string
           max_capacity?: number
           name: string
+          status?: string
           time: string
           trainer_id?: string | null
         }
@@ -140,6 +183,7 @@ export type Database = {
           id?: string
           max_capacity?: number
           name?: string
+          status?: string
           time?: string
           trainer_id?: string | null
         }
