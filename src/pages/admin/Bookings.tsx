@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, Filter, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, Filter, Trash2, TrendingUp, Users, BarChart3 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -51,6 +51,13 @@ export default function AdminBookings() {
   const [selectedBookings, setSelectedBookings] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [stats, setStats] = useState({
+    total: 0,
+    upcoming: 0,
+    cancelled: 0,
+    cancellationRate: 0,
+    popularClasses: [] as { name: string; count: number }[],
+  });
 
   useEffect(() => {
     checkAuth();
@@ -59,6 +66,7 @@ export default function AdminBookings() {
 
   useEffect(() => {
     filterBookings();
+    calculateStats();
   }, [bookings, searchQuery, statusFilter]);
 
   const checkAuth = async () => {
@@ -151,6 +159,47 @@ export default function AdminBookings() {
     }
 
     setFilteredBookings(filtered);
+  };
+
+  const calculateStats = () => {
+    const total = bookings.length;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Count upcoming bookings (today and future)
+    const upcoming = bookings.filter(booking => {
+      const bookingDate = new Date(booking.booking_date);
+      bookingDate.setHours(0, 0, 0, 0);
+      return bookingDate >= now && booking.status !== 'cancelled';
+    }).length;
+
+    // Count cancelled bookings
+    const cancelled = bookings.filter(b => b.status === 'cancelled').length;
+
+    // Calculate cancellation rate
+    const cancellationRate = total > 0 ? Math.round((cancelled / total) * 100) : 0;
+
+    // Calculate most popular classes
+    const classCount = new Map<string, number>();
+    bookings.forEach(booking => {
+      if (booking.status !== 'cancelled') {
+        const className = booking.class.name;
+        classCount.set(className, (classCount.get(className) || 0) + 1);
+      }
+    });
+
+    const popularClasses = Array.from(classCount.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    setStats({
+      total,
+      upcoming,
+      cancelled,
+      cancellationRate,
+      popularClasses,
+    });
   };
 
   const handleStatusChange = async (bookingId: string, newStatus: string) => {
@@ -390,6 +439,111 @@ export default function AdminBookings() {
           </div>
 
           <div className="p-6 space-y-6">
+            {/* Statistics Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Total Bookings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-3xl font-bold">{stats.total}</div>
+                    <BarChart3 className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    All time bookings
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Upcoming Bookings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-3xl font-bold">{stats.upcoming}</div>
+                    <Calendar className="h-8 w-8 text-blue-500" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Today and future
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Cancellation Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-3xl font-bold">{stats.cancellationRate}%</div>
+                    <TrendingUp className={`h-8 w-8 ${stats.cancellationRate > 20 ? 'text-red-500' : 'text-green-500'}`} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {stats.cancelled} cancelled of {stats.total}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Most Popular Class
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-lg font-bold truncate">
+                      {stats.popularClasses[0]?.name || 'N/A'}
+                    </div>
+                    <Users className="h-8 w-8 text-green-500" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {stats.popularClasses[0]?.count || 0} bookings
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Popular Classes Card */}
+            {stats.popularClasses.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Top 5 Popular Classes
+                  </CardTitle>
+                  <CardDescription>
+                    Classes with most bookings (excluding cancelled)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {stats.popularClasses.map((classItem, index) => (
+                      <div key={classItem.name} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary font-bold">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium">{classItem.name}</span>
+                        </div>
+                        <Badge variant="secondary" className="text-sm">
+                          {classItem.count} bookings
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Bulk Actions */}
             {viewMode === 'list' && (
               <Card>
