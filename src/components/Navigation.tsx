@@ -60,7 +60,8 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <span className="font-medium">{language === 'en' ? '🇬🇧 EN' : '🇬🇷 ΕΛ'}</span>
+                  <span className="text-lg">{language === 'en' ? '🇬🇧' : '🇬🇷'}</span>
+                  <span className="font-medium">{language === 'en' ? 'English' : 'Ελληνικά'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
