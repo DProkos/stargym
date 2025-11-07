@@ -11,6 +11,7 @@ import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { Navigation } from '@/components/Navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -422,6 +423,7 @@ export default function Auth() {
                 required
                 className="bg-secondary border-border"
               />
+              {!isLogin && <PasswordStrengthIndicator password={password} />}
               {isLogin && (
                 <div className="text-right">
                   <button
