@@ -34,6 +34,7 @@ export function AppSidebarAdmin() {
     { title: t('admin.trainers'), url: "/admin/trainers", icon: UserCog },
     { title: t('admin.classes'), url: "/admin/classes", icon: BookText },
     { title: 'Content Editor', url: "/admin/content", icon: Edit },
+    { title: 'Settings', url: "/admin/settings", icon: Settings },
   ];
 
   return (

@@ -17,6 +17,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ContentEditor from "./pages/admin/ContentEditor";
 import TrainerManager from "./pages/admin/TrainerManager";
 import ClassEditor from "./pages/admin/ClassEditor";
+import Settings from "./pages/admin/Settings";
+import Memberships from "./pages/Memberships";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,9 +33,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/classes" element={<Classes />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/contact" element={<Contact />} />
+          <Route path="/classes" element={<Classes />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/memberships" element={<Memberships />} />
             
             {/* Customer routes */}
             <Route path="/customer/*" element={
@@ -59,6 +62,11 @@ const App = () => (
             <Route path="/admin/content" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ContentEditor />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Settings />
               </ProtectedRoute>
             } />
             <Route path="/admin/trainers" element={
