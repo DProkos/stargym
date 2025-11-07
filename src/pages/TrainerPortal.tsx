@@ -12,6 +12,7 @@ import { TrainerStats } from '@/components/trainer/TrainerStats';
 import { TrainerClassDetails } from '@/components/trainer/TrainerClassDetails';
 import { TrainerMessaging } from '@/components/trainer/TrainerMessaging';
 import { TrainerClassManager } from '@/components/trainer/TrainerClassManager';
+import { TrainerCalendarWithDnD } from '@/components/trainer/TrainerCalendarWithDnD';
 
 interface Class {
   id: string;
@@ -21,6 +22,7 @@ interface Class {
   day_of_week: number;
   max_capacity: number;
   description: string;
+  trainer_id: string;
 }
 
 interface BookingCount {
@@ -205,9 +207,9 @@ export default function TrainerPortal() {
                     <MessageSquare className="h-4 w-4" />
                     Messaging
                   </TabsTrigger>
-                  <TabsTrigger value="calendar" className="flex items-center gap-2">
+                  <TabsTrigger value="schedule" className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4" />
-                    Calendar
+                    Schedule (DnD)
                   </TabsTrigger>
                   <TabsTrigger value="list" className="flex items-center gap-2">
                     <List className="h-4 w-4" />
@@ -323,47 +325,13 @@ export default function TrainerPortal() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="calendar" className="space-y-4">
-                  <BookingCalendar 
-                    events={calendarEvents}
-                    onSelectEvent={(event) => setSelectedClass(event.resource)}
-                    defaultView="week"
-                  />
-                  
-                  {selectedClass && (
-                    <Card className="bg-gradient-card border-border">
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span>{selectedClass.name}</span>
-                          <Badge variant="outline" className="bg-primary/20 text-primary border-primary">
-                            {daysOfWeek[selectedClass.day_of_week]}
-                          </Badge>
-                        </CardTitle>
-                        <CardDescription>
-                          <div className="flex flex-col gap-2 mt-2">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-primary" />
-                              <span>{selectedClass.time} ({selectedClass.duration_minutes} min)</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-primary" />
-                              <span>{bookingCounts[selectedClass.id] || 0} / {selectedClass.max_capacity} booked</span>
-                            </div>
-                          </div>
-                        </CardDescription>
-                      </CardHeader>
-                      {selectedClass.description && (
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground mb-4">{selectedClass.description}</p>
-                          <button 
-                            onClick={() => setSelectedClass(null)}
-                            className="text-sm text-primary hover:underline"
-                          >
-                            Close
-                          </button>
-                        </CardContent>
-                      )}
-                    </Card>
+                <TabsContent value="schedule" className="space-y-4">
+                  {user && (
+                    <TrainerCalendarWithDnD 
+                      trainerId={user.id}
+                      classes={classes}
+                      onClassesChange={() => loadClasses(user.id)}
+                    />
                   )}
                 </TabsContent>
 
