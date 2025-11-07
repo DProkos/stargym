@@ -539,6 +539,44 @@ export type Database = {
           },
         ]
       }
+      waitlist: {
+        Row: {
+          booking_date: string
+          class_id: string
+          created_at: string
+          id: string
+          notified: boolean | null
+          position: number
+          user_id: string
+        }
+        Insert: {
+          booking_date: string
+          class_id: string
+          created_at?: string
+          id?: string
+          notified?: boolean | null
+          position: number
+          user_id: string
+        }
+        Update: {
+          booking_date?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          notified?: boolean | null
+          position?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       campaign_analytics: {
