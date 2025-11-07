@@ -62,28 +62,38 @@ export default function TrainerPortal() {
     if (classData) {
       setClasses(classData);
 
-      // Calculate total capacity
+      // Calculate total capacity per week (since classes repeat weekly)
       const capacity = classData.reduce((sum, cls) => sum + cls.max_capacity, 0);
       setTotalCapacity(capacity);
 
-      // Load booking counts for each class
+      // Load booking counts for each class (upcoming bookings only)
       const counts: Record<string, number> = {};
       let totalBookingsCount = 0;
+      const today = new Date().toISOString().split('T')[0];
       
       for (const cls of classData) {
-        const { count } = await supabase
+        // Get all future and today's confirmed bookings for this class
+        const { data: bookingsData, error } = await supabase
           .from('bookings')
-          .select('*', { count: 'exact', head: true })
+          .select('*')
           .eq('class_id', cls.id)
-          .eq('status', 'confirmed');
+          .eq('status', 'confirmed')
+          .gte('booking_date', today);
         
-        const classBookings = count || 0;
+        if (error) {
+          console.error('Error loading bookings for class:', cls.name, error);
+        }
+        
+        const classBookings = bookingsData?.length || 0;
         counts[cls.id] = classBookings;
         totalBookingsCount += classBookings;
+        
+        console.log(`Class "${cls.name}": ${classBookings} bookings, capacity: ${cls.max_capacity}`);
       }
       
       setBookingCounts(counts);
       setTotalBookings(totalBookingsCount);
+      console.log('Total bookings across all classes:', totalBookingsCount);
     }
   };
 
