@@ -24,6 +24,7 @@ import EmailTemplates from "./pages/admin/EmailTemplates";
 import UserProfile from "./pages/admin/UserProfile";
 import BulkUserManagement from "./pages/admin/BulkUserManagement";
 import Members from "./pages/admin/Members";
+import Bookings from "./pages/admin/Bookings";
 import Memberships from "./pages/Memberships";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
@@ -115,6 +116,11 @@ const App = () => (
             <Route path="/admin/members" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <Members />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/bookings" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Bookings />
               </ProtectedRoute>
             } />
             
