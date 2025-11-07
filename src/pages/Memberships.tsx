@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface MembershipTier {
   id: string;
@@ -18,6 +19,7 @@ interface MembershipTier {
 }
 
 export default function Memberships() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,13 +68,13 @@ export default function Memberships() {
   const handleSubscribe = async (tier: MembershipTier) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast.error('Please sign in to subscribe');
+      toast.error(t('auth.signIn'));
       navigate('/auth');
       return;
     }
 
     // TODO: Integrate with Stripe Checkout
-    toast.info('Stripe checkout integration coming soon. Please configure your Stripe API keys in admin settings.');
+    toast.info(t('memberships.comingSoon'));
     
     // Placeholder for Stripe integration
     // const response = await fetch('/api/create-checkout-session', {
@@ -104,15 +106,16 @@ export default function Memberships() {
       <section className="pt-24 pb-16">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Membership Plans</h1>
+            <h1 className="text-4xl font-bold mb-4">{t('memberships.title')}</h1>
             <p className="text-xl text-muted-foreground">
-              Choose the perfect plan for your fitness journey
+              {t('memberships.subtitle')}
             </p>
           </div>
 
           {loading ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -128,7 +131,7 @@ export default function Memberships() {
                   <CardContent className="space-y-4">
                     <div className="text-4xl font-bold">
                       ${tier.price}
-                      <span className="text-lg font-normal text-muted-foreground">/month</span>
+                      <span className="text-lg font-normal text-muted-foreground">{t('memberships.perMonth')}</span>
                     </div>
                     <ul className="space-y-2">
                       {tier.features.map((feature, index) => (
@@ -145,7 +148,7 @@ export default function Memberships() {
                       onClick={() => handleSubscribe(tier)}
                       disabled={currentSubscription === tier.id}
                     >
-                      {currentSubscription === tier.id ? 'Current Plan' : 'Subscribe'}
+                      {currentSubscription === tier.id ? t('memberships.currentPlan') : t('memberships.subscribe')}
                     </Button>
                   </CardFooter>
                 </Card>

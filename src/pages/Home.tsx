@@ -77,26 +77,26 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="bg-gradient-card p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon">
               <Dumbbell className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Modern Equipment</h3>
-              <p className="text-muted-foreground">Latest fitness technology and equipment</p>
+              <h3 className="text-xl font-semibold mb-2">{t('home.features.equipment.title')}</h3>
+              <p className="text-muted-foreground">{t('home.features.equipment.desc')}</p>
             </div>
             
             <div className="bg-gradient-card p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon">
               <Users className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Expert Trainers</h3>
-              <p className="text-muted-foreground">Certified professionals to guide you</p>
+              <h3 className="text-xl font-semibold mb-2">{t('home.features.trainers.title')}</h3>
+              <p className="text-muted-foreground">{t('home.features.trainers.desc')}</p>
             </div>
             
             <div className="bg-gradient-card p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon">
               <Award className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Proven Results</h3>
-              <p className="text-muted-foreground">Thousands of success stories</p>
+              <h3 className="text-xl font-semibold mb-2">{t('home.features.results.title')}</h3>
+              <p className="text-muted-foreground">{t('home.features.results.desc')}</p>
             </div>
             
             <div className="bg-gradient-card p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon">
               <Clock className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Flexible Hours</h3>
-              <p className="text-muted-foreground">Open early morning to late night</p>
+              <h3 className="text-xl font-semibold mb-2">{t('home.features.hours.title')}</h3>
+              <p className="text-muted-foreground">{t('home.features.hours.desc')}</p>
             </div>
           </div>
         </div>
@@ -105,8 +105,8 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-hero">
         <div className="container mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Start Your Journey?</h2>
-          <p className="text-xl text-muted-foreground mb-8">Join hundreds of members transforming their lives</p>
+          <h2 className="text-4xl font-bold mb-6">{t('home.cta.ready')}</h2>
+          <p className="text-xl text-muted-foreground mb-8">{t('home.cta.join')}</p>
           <Button size="lg" className="shadow-neon-strong" asChild>
             <Link to="/auth">{t('hero.cta')}</Link>
           </Button>

@@ -107,6 +107,43 @@ const translations = {
     'day.friday': 'Friday',
     'day.saturday': 'Saturday',
     'day.sunday': 'Sunday',
+    
+    // Home Page
+    'home.features.equipment.title': 'Modern Equipment',
+    'home.features.equipment.desc': 'Latest fitness technology and equipment',
+    'home.features.trainers.title': 'Expert Trainers',
+    'home.features.trainers.desc': 'Certified professionals to guide you',
+    'home.features.results.title': 'Proven Results',
+    'home.features.results.desc': 'Thousands of success stories',
+    'home.features.hours.title': 'Flexible Hours',
+    'home.features.hours.desc': 'Open early morning to late night',
+    'home.cta.ready': 'Ready to Start Your Journey?',
+    'home.cta.join': 'Join hundreds of members transforming their lives',
+    
+    // Memberships
+    'memberships.title': 'Membership Plans',
+    'memberships.subtitle': 'Choose the perfect plan for your fitness journey',
+    'memberships.perMonth': '/month',
+    'memberships.subscribe': 'Subscribe',
+    'memberships.currentPlan': 'Current Plan',
+    'memberships.comingSoon': 'Stripe checkout integration coming soon. Please configure your Stripe API keys in admin settings.',
+    
+    // Common
+    'common.loading': 'Loading...',
+    'common.save': 'Save',
+    'common.cancel': 'Cancel',
+    'common.delete': 'Delete',
+    'common.edit': 'Edit',
+    'common.create': 'Create',
+    'common.update': 'Update',
+    'common.search': 'Search',
+    'common.filter': 'Filter',
+    'common.actions': 'Actions',
+    'common.status': 'Status',
+    'common.active': 'Active',
+    'common.inactive': 'Inactive',
+    'common.yes': 'Yes',
+    'common.no': 'No',
   },
   el: {
     // Navigation
@@ -206,20 +243,65 @@ const translations = {
     'day.friday': 'Παρασκευή',
     'day.saturday': 'Σάββατο',
     'day.sunday': 'Κυριακή',
+    
+    // Home Page
+    'home.features.equipment.title': 'Σύγχρονος Εξοπλισμός',
+    'home.features.equipment.desc': 'Τελευταία τεχνολογία και εξοπλισμός φυσικής κατάστασης',
+    'home.features.trainers.title': 'Ειδικοί Προπονητές',
+    'home.features.trainers.desc': 'Πιστοποιημένοι επαγγελματίες για να σας καθοδηγήσουν',
+    'home.features.results.title': 'Αποδεδειγμένα Αποτελέσματα',
+    'home.features.results.desc': 'Χιλιάδες ιστορίες επιτυχίας',
+    'home.features.hours.title': 'Ευέλικτο Ωράριο',
+    'home.features.hours.desc': 'Ανοιχτά από νωρίς το πρωί έως αργά το βράδυ',
+    'home.cta.ready': 'Έτοιμοι να Ξεκινήσετε το Ταξίδι σας;',
+    'home.cta.join': 'Γίνετε μέλος εκατοντάδων ατόμων που μεταμορφώνουν τη ζωή τους',
+    
+    // Memberships
+    'memberships.title': 'Πακέτα Συνδρομής',
+    'memberships.subtitle': 'Επιλέξτε το τέλειο πλάνο για το ταξίδι φυσικής κατάστασης',
+    'memberships.perMonth': '/μήνα',
+    'memberships.subscribe': 'Εγγραφή',
+    'memberships.currentPlan': 'Τρέχον Πλάνο',
+    'memberships.comingSoon': 'Η ολοκλήρωση πληρωμής Stripe θα είναι σύντομα διαθέσιμη. Παρακαλώ ρυθμίστε τα κλειδιά API του Stripe στις ρυθμίσεις διαχειριστή.',
+    
+    // Common
+    'common.loading': 'Φόρτωση...',
+    'common.save': 'Αποθήκευση',
+    'common.cancel': 'Ακύρωση',
+    'common.delete': 'Διαγραφή',
+    'common.edit': 'Επεξεργασία',
+    'common.create': 'Δημιουργία',
+    'common.update': 'Ενημέρωση',
+    'common.search': 'Αναζήτηση',
+    'common.filter': 'Φίλτρο',
+    'common.actions': 'Ενέργειες',
+    'common.status': 'Κατάσταση',
+    'common.active': 'Ενεργό',
+    'common.inactive': 'Ανενεργό',
+    'common.yes': 'Ναι',
+    'common.no': 'Όχι',
   },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved === 'el' || saved === 'en') ? saved : 'en';
+  });
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  };
 
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations['en']] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
