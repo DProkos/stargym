@@ -59,16 +59,22 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
           <div className="hidden md:flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
+                <Button variant="ghost" size="sm" className="gap-2 transition-all hover:scale-105">
                   <span className="text-lg">{language === 'en' ? '🇬🇧' : '🇬🇷'}</span>
                   <span className="font-medium">{language === 'en' ? 'English' : 'Ελληνικά'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setLanguage('en')} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => setLanguage('en')} 
+                  className="gap-2 cursor-pointer transition-colors"
+                >
                   🇬🇧 English
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('el')} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => setLanguage('el')} 
+                  className="gap-2 cursor-pointer transition-colors"
+                >
                   🇬🇷 Ελληνικά
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -119,15 +125,21 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="justify-start gap-2 w-full">
+                <Button variant="ghost" size="sm" className="justify-start gap-2 w-full transition-all hover:scale-105">
                   <span className="font-medium">{language === 'en' ? '🇬🇧 English' : '🇬🇷 Ελληνικά'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem onClick={() => { setLanguage('en'); setMobileMenuOpen(false); }} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => { setLanguage('en'); setMobileMenuOpen(false); }} 
+                  className="gap-2 cursor-pointer transition-colors"
+                >
                   🇬🇧 English
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setLanguage('el'); setMobileMenuOpen(false); }} className="gap-2">
+                <DropdownMenuItem 
+                  onClick={() => { setLanguage('el'); setMobileMenuOpen(false); }} 
+                  className="gap-2 cursor-pointer transition-colors"
+                >
                   🇬🇷 Ελληνικά
                 </DropdownMenuItem>
               </DropdownMenuContent>
