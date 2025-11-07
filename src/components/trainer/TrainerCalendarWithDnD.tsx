@@ -67,6 +67,7 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
   const [bulkEditMode, setBulkEditMode] = useState(false);
   const [selectedClassIds, setSelectedClassIds] = useState<Set<string>>(new Set());
   const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [bulkEditOptions, setBulkEditOptions] = useState<BulkEditOptions>({});
 
   // Generate calendar events from classes (recurring weekly events)
@@ -274,6 +275,83 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
     }
   };
 
+  const handleBulkDelete = () => {
+    if (selectedClassIds.size === 0) {
+      toast({
+        title: 'Καμία Επιλογή',
+        description: 'Παρακαλώ επιλέξτε τουλάχιστον μία τάξη για διαγραφή',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setShowBulkDeleteDialog(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedClassIds.size === 0) return;
+
+    try {
+      // First, delete all bookings for the selected classes
+      const { error: bookingsError } = await supabase
+        .from('bookings')
+        .delete()
+        .in('class_id', Array.from(selectedClassIds));
+
+      if (bookingsError) {
+        console.error('Error deleting bookings:', bookingsError);
+        // Continue anyway as bookings might not exist
+      }
+
+      // Delete waitlist entries
+      const { error: waitlistError } = await supabase
+        .from('waitlist')
+        .delete()
+        .in('class_id', Array.from(selectedClassIds));
+
+      if (waitlistError) {
+        console.error('Error deleting waitlist entries:', waitlistError);
+        // Continue anyway as waitlist entries might not exist
+      }
+
+      // Delete class status changes
+      const { error: statusError } = await supabase
+        .from('class_status_changes')
+        .delete()
+        .in('class_id', Array.from(selectedClassIds));
+
+      if (statusError) {
+        console.error('Error deleting status changes:', statusError);
+        // Continue anyway
+      }
+
+      // Finally, delete the classes
+      const { error: classesError } = await supabase
+        .from('classes')
+        .delete()
+        .in('id', Array.from(selectedClassIds))
+        .eq('trainer_id', trainerId);
+
+      if (classesError) throw classesError;
+
+      toast({
+        title: 'Επιτυχής Διαγραφή',
+        description: `${selectedClassIds.size} τάξεις διαγράφηκαν επιτυχώς μαζί με όλες τις κρατήσεις τους`,
+      });
+
+      setShowBulkDeleteDialog(false);
+      deselectAllClasses();
+      setBulkEditMode(false);
+      onClassesChange();
+    } catch (error: any) {
+      console.error('Error deleting classes:', error);
+      toast({
+        title: 'Σφάλμα',
+        description: error.message || 'Αποτυχία διαγραφής τάξεων',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const eventStyleGetter = (event: ClassEvent) => {
     const isSelected = selectedClassIds.has(event.resource.id);
     
@@ -361,14 +439,24 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
                 </div>
               </div>
               {selectedClassIds.size > 0 && (
-                <Button 
-                  onClick={handleBulkEdit} 
-                  className="w-full"
-                  variant="default"
-                >
-                  <Move className="h-4 w-4 mr-2" />
-                  Εφαρμογή Μαζικών Αλλαγών ({selectedClassIds.size} τάξεις)
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleBulkEdit} 
+                    className="flex-1"
+                    variant="default"
+                  >
+                    <Move className="h-4 w-4 mr-2" />
+                    Επεξεργασία ({selectedClassIds.size})
+                  </Button>
+                  <Button 
+                    onClick={handleBulkDelete} 
+                    className="flex-1"
+                    variant="destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Διαγραφή ({selectedClassIds.size})
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -414,6 +502,63 @@ export const TrainerCalendarWithDnD = ({ trainerId, classes, onClassesChange }: 
           />
         </CardContent>
       </Card>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent className="bg-card border-border max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Επιβεβαίωση Μαζικής Διαγραφής
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p className="text-lg font-semibold">
+                Θέλετε να διαγράψετε {selectedClassIds.size} {selectedClassIds.size === 1 ? 'τάξη' : 'τάξεις'};
+              </p>
+
+              <div className="bg-muted p-4 rounded-md space-y-2 max-h-60 overflow-y-auto">
+                <p className="font-semibold text-foreground">Τάξεις προς διαγραφή:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {classes
+                    .filter(c => selectedClassIds.has(c.id))
+                    .map(c => (
+                      <li key={c.id} className="text-sm">
+                        <strong>{c.name}</strong> - {['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'][c.day_of_week]} στις {c.time.substring(0, 5)}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+
+              <div className="bg-destructive/10 border border-destructive/30 p-4 rounded-lg space-y-2">
+                <p className="text-destructive font-bold flex items-center gap-2">
+                  ⚠️ ΠΡΟΣΟΧΗ - Αυτή η ενέργεια ΔΕΝ μπορεί να αναιρεθεί!
+                </p>
+                <ul className="text-sm space-y-1 text-destructive">
+                  <li>• Οι τάξεις θα διαγραφούν οριστικά</li>
+                  <li>• ΟΛΕΣ οι κρατήσεις για αυτές τις τάξεις θα διαγραφούν</li>
+                  <li>• Οι λίστες αναμονής θα διαγραφούν</li>
+                  <li>• Το ιστορικό αλλαγών κατάστασης θα διαγραφεί</li>
+                  <li>• Οι χρήστες ΔΕΝ θα ειδοποιηθούν αυτόματα</li>
+                </ul>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Σύσταση: Ειδοποιήστε τους μαθητές σας πριν διαγράψετε τις τάξεις.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Ακύρωση</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Διαγραφή {selectedClassIds.size} {selectedClassIds.size === 1 ? 'Τάξης' : 'Τάξεων'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Bulk Edit Dialog */}
       <Dialog open={showBulkEditDialog} onOpenChange={setShowBulkEditDialog}>
