@@ -22,7 +22,29 @@ export default function Auth() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/');
+        // Get user role and redirect accordingly
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        if (roleData) {
+          switch (roleData.role) {
+            case 'admin':
+              navigate('/admin');
+              break;
+            case 'trainer':
+              navigate('/trainer/schedule');
+              break;
+            case 'member':
+            default:
+              navigate('/customer/bookings');
+              break;
+          }
+        } else {
+          navigate('/');
+        }
       }
     };
     checkUser();
@@ -39,8 +61,33 @@ export default function Auth() {
           password,
         });
         if (error) throw error;
-        toast({ title: t('auth.welcomeBack') });
-        navigate('/');
+        
+        // Get user role and redirect accordingly
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          toast({ title: t('auth.welcomeBack') });
+          
+          if (roleData) {
+            switch (roleData.role) {
+              case 'admin':
+                navigate('/admin');
+                break;
+              case 'trainer':
+                navigate('/trainer/schedule');
+                break;
+              case 'member':
+              default:
+                navigate('/customer/bookings');
+                break;
+            }
+          }
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -52,7 +99,7 @@ export default function Auth() {
         });
         if (error) throw error;
         toast({ title: t('auth.createAccount') });
-        navigate('/');
+        navigate('/customer/bookings');
       }
     } catch (error: any) {
       toast({

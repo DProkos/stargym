@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Navigation } from '@/components/Navigation';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Calendar, BookOpen } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
 
 export default function Admin() {
   const { t } = useLanguage();
@@ -77,11 +78,18 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation user={user} isAdmin={isAdmin} />
-      
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebarAdmin />
+        
+        <div className="flex-1">
+          <header className="h-16 border-b border-border flex items-center px-6">
+            <SidebarTrigger />
+            <h1 className="ml-4 text-2xl font-bold">{t('admin.dashboard')}</h1>
+          </header>
+
+          <main className="p-6">
+            <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('dashboard.overview')}
@@ -201,8 +209,10 @@ export default function Admin() {
               </Card>
             </TabsContent>
           </Tabs>
+            </div>
+          </main>
         </div>
-      </section>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }

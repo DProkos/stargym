@@ -19,6 +19,10 @@ const translations = {
     'nav.logout': 'Logout',
     'nav.dashboard': 'Dashboard',
     'nav.myBookings': 'My Bookings',
+    'nav.customer': 'Customer Portal',
+    'nav.trainer': 'Trainer Portal',
+    'nav.admin': 'Admin Portal',
+    'nav.profile': 'Profile',
     
     // Hero
     'hero.title': 'Transform Your Body',
@@ -77,6 +81,17 @@ const translations = {
     'dashboard.manageClasses': 'Manage Classes',
     'dashboard.viewBookings': 'View Bookings',
     
+    // Trainer
+    'trainer.schedule': 'My Schedule',
+    'trainer.classes': 'My Classes',
+    
+    // Admin
+    'admin.dashboard': 'Dashboard',
+    'admin.members': 'Members',
+    'admin.bookings': 'Bookings',
+    'admin.trainers': 'Trainers',
+    'admin.classes': 'Classes',
+    
     // Booking
     'booking.selectDate': 'Select Date',
     'booking.confirm': 'Confirm Booking',
@@ -103,6 +118,10 @@ const translations = {
     'nav.logout': 'Αποσύνδεση',
     'nav.dashboard': 'Πίνακας Ελέγχου',
     'nav.myBookings': 'Οι Κρατήσεις Μου',
+    'nav.customer': 'Πύλη Πελάτη',
+    'nav.trainer': 'Πύλη Προπονητή',
+    'nav.admin': 'Πύλη Διαχειριστή',
+    'nav.profile': 'Προφίλ',
     
     // Hero
     'hero.title': 'Μεταμόρφωσε το Σώμα σου',
@@ -160,6 +179,17 @@ const translations = {
     'dashboard.manageMembers': 'Διαχείριση Μελών',
     'dashboard.manageClasses': 'Διαχείριση Μαθημάτων',
     'dashboard.viewBookings': 'Προβολή Κρατήσεων',
+    
+    // Trainer
+    'trainer.schedule': 'Το Πρόγραμμά Μου',
+    'trainer.classes': 'Τα Μαθήματά Μου',
+    
+    // Admin
+    'admin.dashboard': 'Πίνακας Ελέγχου',
+    'admin.members': 'Μέλη',
+    'admin.bookings': 'Κρατήσεις',
+    'admin.trainers': 'Προπονητές',
+    'admin.classes': 'Μαθήματα',
     
     // Booking
     'booking.selectDate': 'Επιλογή Ημερομηνίας',
