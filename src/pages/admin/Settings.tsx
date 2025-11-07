@@ -715,6 +715,7 @@ export default function Settings() {
                           <TableHead>Status</TableHead>
                           <TableHead>Sent Count</TableHead>
                           <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -734,6 +735,17 @@ export default function Settings() {
                             <TableCell>{campaign.sent_count || 0}</TableCell>
                             <TableCell>
                               {new Date(campaign.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              {campaign.status === 'sent' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => navigate(`/admin/campaign-analytics/${campaign.id}`)}
+                                >
+                                  View Analytics
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
