@@ -33,12 +33,43 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
     isFull: boolean;
   } | null>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [isInWaitlist, setIsInWaitlist] = useState(false);
+  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen && selectedDate) {
       checkAvailability(selectedDate);
+      checkWaitlistStatus(selectedDate);
     }
-  }, [isOpen]);
+  }, [isOpen, selectedDate]);
+
+  const checkWaitlistStatus = async (date: Date) => {
+    if (!date || !classItem?.id || !userId) return;
+    
+    try {
+      const dateString = date.toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('position')
+        .eq('user_id', userId)
+        .eq('class_id', classItem.id)
+        .eq('booking_date', dateString)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setIsInWaitlist(true);
+        setWaitlistPosition(data.position);
+      } else {
+        setIsInWaitlist(false);
+        setWaitlistPosition(null);
+      }
+    } catch (error) {
+      console.error('Failed to check waitlist status:', error);
+    }
+  };
 
   const checkAvailability = async (date: Date) => {
     if (!date || !classItem?.id) return;
@@ -77,8 +108,91 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
     setSelectedDate(date);
     if (date) {
       await checkAvailability(date);
+      await checkWaitlistStatus(date);
     } else {
       setAvailability(null);
+      setIsInWaitlist(false);
+      setWaitlistPosition(null);
+    }
+  };
+
+  const handleJoinWaitlist = async () => {
+    if (!selectedDate) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please select a date',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('waitlist')
+        .insert({
+          user_id: userId,
+          class_id: classItem.id,
+          booking_date: selectedDate.toISOString().split('T')[0],
+          position: 0, // Will be set by trigger
+        });
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          toast({
+            title: 'Already in Waitlist',
+            description: 'You are already on the waitlist for this class',
+            variant: 'destructive',
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({ 
+          title: 'Joined Waitlist',
+          description: 'You have been added to the waitlist. We will notify you via email when a spot opens.',
+        });
+        await checkWaitlistStatus(selectedDate);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to join waitlist',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLeaveWaitlist = async () => {
+    if (!selectedDate) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('waitlist')
+        .delete()
+        .eq('user_id', userId)
+        .eq('class_id', classItem.id)
+        .eq('booking_date', selectedDate.toISOString().split('T')[0]);
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Left Waitlist',
+        description: 'You have been removed from the waitlist',
+      });
+      setIsInWaitlist(false);
+      setWaitlistPosition(null);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to leave waitlist',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -219,13 +333,41 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId }: BookingModa
             </Alert>
           )}
 
-          <Button 
-            onClick={handleConfirmBooking} 
-            disabled={!selectedDate || loading || availability?.isFull || checkingAvailability}
-            className="w-full"
-          >
-            {loading ? '...' : availability?.isFull ? 'Πλήρης' : t('booking.confirm')}
-          </Button>
+          {isInWaitlist && waitlistPosition && (
+            <Alert className="border-amber-500">
+              <AlertDescription className="text-amber-600">
+                Είστε στη λίστα αναμονής - Θέση #{waitlistPosition}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {availability?.isFull && !isInWaitlist ? (
+            <Button 
+              onClick={handleJoinWaitlist} 
+              disabled={!selectedDate || loading}
+              variant="outline"
+              className="w-full"
+            >
+              {loading ? '...' : 'Εγγραφή σε Λίστα Αναμονής'}
+            </Button>
+          ) : isInWaitlist ? (
+            <Button 
+              onClick={handleLeaveWaitlist} 
+              disabled={loading}
+              variant="destructive"
+              className="w-full"
+            >
+              {loading ? '...' : 'Αποχώρηση από Λίστα Αναμονής'}
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleConfirmBooking} 
+              disabled={!selectedDate || loading || availability?.isFull || checkingAvailability}
+              className="w-full"
+            >
+              {loading ? '...' : t('booking.confirm')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

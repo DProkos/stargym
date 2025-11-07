@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.send-mass-email]
 verify_jwt = false
 
+[functions.notify-waitlist]
+verify_jwt = false
+
 [functions.admin-update-user]
 verify_jwt = true
 

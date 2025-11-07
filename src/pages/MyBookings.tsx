@@ -69,6 +69,13 @@ export default function MyBookings() {
   };
 
   const handleCancelBooking = async (bookingId: string) => {
+    // Get booking details before canceling
+    const { data: bookingData } = await supabase
+      .from('bookings')
+      .select('class_id, booking_date')
+      .eq('id', bookingId)
+      .single();
+
     const { error } = await supabase
       .from('bookings')
       .update({ status: 'cancelled' })
@@ -79,6 +86,21 @@ export default function MyBookings() {
     } else {
       toast({ title: 'Booking cancelled successfully' });
       if (user) loadBookings(user.id);
+
+      // Notify waitlist if booking was cancelled and had booking details
+      if (bookingData) {
+        try {
+          await supabase.functions.invoke('notify-waitlist', {
+            body: {
+              class_id: bookingData.class_id,
+              booking_date: bookingData.booking_date,
+            }
+          });
+        } catch (error) {
+          console.error('Failed to notify waitlist:', error);
+          // Don't show error to user - this is a background operation
+        }
+      }
     }
   };
 
