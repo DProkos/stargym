@@ -34,6 +34,9 @@ import CustomerProfile from "./pages/customer/CustomerProfile";
 import TrainerClasses from "./pages/trainer/TrainerClasses";
 import CRM from "./pages/admin/CRM";
 import CRMCustomerDetail from "./pages/admin/CRMCustomerDetail";
+import Invoices from "./pages/admin/Invoices";
+import InvoiceSettings from "./pages/admin/InvoiceSettings";
+import Packages from "./pages/admin/Packages";
 
 const queryClient = new QueryClient();
 
@@ -164,6 +167,21 @@ const App = () => (
             <Route path="/admin/crm/customer/:id" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <CRMCustomerDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/invoices" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Invoices />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/invoice-settings" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <InvoiceSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/packages" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Packages />
               </ProtectedRoute>
             } />
             

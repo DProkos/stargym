@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Calendar, DollarSign, Settings, LogOut, Home, Edit, UserCog, BookText, Mail, UsersRound, Clock } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, DollarSign, Settings, LogOut, Home, Edit, UserCog, BookText, Mail, UsersRound, Clock, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,7 @@ export function AppSidebarAdmin() {
     { title: t('admin.dashboard'), url: "/admin", icon: LayoutDashboard },
     { title: t('admin.members'), url: "/admin/members", icon: Users },
     { title: 'CRM', url: "/admin/crm", icon: UsersRound },
+    { title: 'Τιμολόγηση', url: "/admin/invoices", icon: FileText },
     { title: 'Bulk User Management', url: "/admin/bulk-users", icon: UserCog },
     { title: t('admin.bookings'), url: "/admin/bookings", icon: Calendar },
     { title: t('admin.trainers'), url: "/admin/trainers", icon: UserCog },

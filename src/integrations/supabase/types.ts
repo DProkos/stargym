@@ -598,6 +598,166 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_items: {
+        Row: {
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          sort_order: number
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          sort_order?: number
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          sort_order?: number
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_settings: {
+        Row: {
+          bank_details: string | null
+          company_address: string | null
+          company_email: string | null
+          company_logo_url: string | null
+          company_name: string
+          company_phone: string | null
+          company_tax_id: string | null
+          default_payment_terms: string | null
+          default_tax_rate: number
+          footer_text: string | null
+          id: string
+          invoice_prefix: string
+          next_invoice_number: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bank_details?: string | null
+          company_address?: string | null
+          company_email?: string | null
+          company_logo_url?: string | null
+          company_name?: string
+          company_phone?: string | null
+          company_tax_id?: string | null
+          default_payment_terms?: string | null
+          default_tax_rate?: number
+          footer_text?: string | null
+          id?: string
+          invoice_prefix?: string
+          next_invoice_number?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bank_details?: string | null
+          company_address?: string | null
+          company_email?: string | null
+          company_logo_url?: string | null
+          company_name?: string
+          company_phone?: string | null
+          company_tax_id?: string | null
+          default_payment_terms?: string | null
+          default_tax_rate?: number
+          footer_text?: string | null
+          id?: string
+          invoice_prefix?: string
+          next_invoice_number?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string
+          discount_amount: number
+          due_date: string
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          paid_at: string | null
+          payment_terms: string | null
+          status: string
+          subtotal: number
+          tax_amount: number
+          tax_rate: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id: string
+          discount_amount?: number
+          due_date: string
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_terms?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          discount_amount?: number
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_terms?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_tiers: {
         Row: {
           created_at: string | null
@@ -787,6 +947,45 @@ export type Database = {
         }
         Relationships: []
       }
+      service_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_months: number | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          sessions_included: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          sessions_included?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          sessions_included?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trainers: {
         Row: {
           bio: string | null
@@ -944,6 +1143,7 @@ export type Database = {
       }
     }
     Functions: {
+      generate_invoice_number: { Args: never; Returns: string }
       get_cron_jobs: {
         Args: never
         Returns: {
