@@ -245,7 +245,7 @@ export default function Auth() {
           }
         }
       } else {
-        // Check if signup is enabled
+        // Check if signup is enabled (should not reach here, but extra safety)
         if (!signupEnabled) {
           toast({
             title: 'Registration Disabled',
@@ -465,7 +465,7 @@ export default function Auth() {
               </button>
             </div>
           )}
-          {!isForgotPassword && !isLogin && (
+          {!isForgotPassword && signupEnabled && !isLogin && (
             <div className="mt-4 text-center">
               <button
                 type="button"
