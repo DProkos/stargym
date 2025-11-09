@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Tags, Workflow, Mail, Search, Filter, Plus, TrendingUp, Activity } from 'lucide-react';
+import { Users, Tags, Workflow, Mail, Search, Filter, Plus, TrendingUp, Activity, UserCog, UsersRound } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Customer {
@@ -266,6 +266,14 @@ export default function CRM() {
                 <Users className="h-4 w-4 mr-2" />
                 Πελάτες
               </TabsTrigger>
+              <TabsTrigger value="members">
+                <UsersRound className="h-4 w-4 mr-2" />
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="bulk">
+                <UserCog className="h-4 w-4 mr-2" />
+                Bulk Management
+              </TabsTrigger>
               <TabsTrigger value="segments">
                 <Filter className="h-4 w-4 mr-2" />
                 Segments
@@ -354,6 +362,38 @@ export default function CRM() {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="members" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Διαχείριση Μελών</CardTitle>
+                  <CardDescription>
+                    Προβολή και διαχείριση όλων των μελών
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => navigate('/admin/members')}>
+                    Άνοιγμα Members Management
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bulk" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bulk User Management</CardTitle>
+                  <CardDescription>
+                    Μαζική διαχείριση χρηστών
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => navigate('/admin/bulk-users')}>
+                    Άνοιγμα Bulk Management
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>

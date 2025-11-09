@@ -42,10 +42,8 @@ export function AppSidebarAdmin() {
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
     { title: t('admin.dashboard'), url: "/admin", icon: LayoutDashboard },
-    { title: t('admin.members'), url: "/admin/members", icon: Users },
     { title: 'CRM', url: "/admin/crm", icon: UsersRound },
     { title: 'Τιμολόγηση', url: "/admin/invoices", icon: FileText },
-    { title: 'Bulk User Management', url: "/admin/bulk-users", icon: UserCog },
     { title: t('admin.bookings'), url: "/admin/bookings", icon: Calendar },
     { title: t('admin.trainers'), url: "/admin/trainers", icon: UserCog },
     { title: t('admin.classes'), url: "/admin/classes", icon: BookText },
