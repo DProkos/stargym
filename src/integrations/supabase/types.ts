@@ -222,6 +222,271 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_interactions: {
+        Row: {
+          created_at: string
+          created_by: string
+          customer_id: string
+          description: string | null
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          customer_id: string
+          description?: string | null
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          description?: string | null
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_interactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_notes: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          customer_id: string
+          id: string
+          is_pinned: boolean
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          customer_id: string
+          id?: string
+          is_pinned?: boolean
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          id?: string
+          is_pinned?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_workflow_executions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          error_message: string | null
+          executed_actions: Json | null
+          id: string
+          status: string
+          workflow_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          error_message?: string | null
+          executed_actions?: Json | null
+          id?: string
+          status: string
+          workflow_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          error_message?: string | null
+          executed_actions?: Json | null
+          id?: string
+          status?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_workflow_executions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_workflow_executions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "crm_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_workflows: {
+        Row: {
+          actions: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          name: string
+          total_runs: number
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name: string
+          total_runs?: number
+          trigger_config?: Json
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name?: string
+          total_runs?: number
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_segments: {
+        Row: {
+          conditions: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_tag_assignments: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          customer_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_tag_assignments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "customer_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_tags: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       email_events: {
         Row: {
           campaign_id: string
@@ -479,27 +744,45 @@ export type Database = {
       }
       profiles: {
         Row: {
+          acquisition_source: string | null
           created_at: string | null
+          customer_status: string | null
           email: string
           full_name: string | null
           id: string
+          last_booking_date: string | null
+          lifetime_value: number | null
+          notes_summary: string | null
           phone: string | null
+          total_bookings: number | null
           updated_at: string | null
         }
         Insert: {
+          acquisition_source?: string | null
           created_at?: string | null
+          customer_status?: string | null
           email: string
           full_name?: string | null
           id: string
+          last_booking_date?: string | null
+          lifetime_value?: number | null
+          notes_summary?: string | null
           phone?: string | null
+          total_bookings?: number | null
           updated_at?: string | null
         }
         Update: {
+          acquisition_source?: string | null
           created_at?: string | null
+          customer_status?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          last_booking_date?: string | null
+          lifetime_value?: number | null
+          notes_summary?: string | null
           phone?: string | null
+          total_bookings?: number | null
           updated_at?: string | null
         }
         Relationships: []

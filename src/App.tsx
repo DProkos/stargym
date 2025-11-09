@@ -32,6 +32,8 @@ import CronJobs from "./pages/admin/CronJobs";
 import TrainerProfile from "./pages/trainer/TrainerProfile";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import TrainerClasses from "./pages/trainer/TrainerClasses";
+import CRM from "./pages/admin/CRM";
+import CRMCustomerDetail from "./pages/admin/CRMCustomerDetail";
 
 const queryClient = new QueryClient();
 
@@ -152,6 +154,16 @@ const App = () => (
             <Route path="/admin/cron-jobs" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <CronJobs />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/crm" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <CRM />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/crm/customer/:id" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <CRMCustomerDetail />
               </ProtectedRoute>
             } />
             

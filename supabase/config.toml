@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.admin-toggle-user-status]
 verify_jwt = true
+
+[functions.crm-workflow-executor]
+verify_jwt = true
