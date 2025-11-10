@@ -33,7 +33,6 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({
     totalInvoices: 0,
-    totalSales: 0,
     totalRevenue: 0,
     paidInvoices: 0,
     pendingAmount: 0
@@ -101,8 +100,6 @@ export default function Invoices() {
 
     if (invoices) {
       const totalInvoices = invoices.length;
-      const totalSales = invoices
-        .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
       const totalRevenue = invoices
         .filter(i => i.status === 'paid')
         .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
@@ -113,7 +110,6 @@ export default function Invoices() {
 
       setStats({
         totalInvoices,
-        totalSales,
         totalRevenue,
         paidInvoices,
         pendingAmount
@@ -158,7 +154,7 @@ export default function Invoices() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -170,21 +166,6 @@ export default function Invoices() {
                   <div className="text-2xl font-bold">{stats.totalInvoices}</div>
                   <FileText className="h-8 w-8 text-primary/50" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Συνολικές Πωλήσεις
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">€{stats.totalSales.toFixed(2)}</div>
-                  <DollarSign className="h-8 w-8 text-blue-500/50" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Όλα τα τιμολόγια</p>
               </CardContent>
             </Card>
 
