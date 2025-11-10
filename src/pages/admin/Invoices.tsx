@@ -185,7 +185,7 @@ export default function Invoices() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">€0.00{stats.totalRevenue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">€{stats.totalRevenue.toFixed(2)}</div>
                   <DollarSign className="h-8 w-8 text-green-500/50" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">{stats.paidInvoices} πληρωμένα</p>
