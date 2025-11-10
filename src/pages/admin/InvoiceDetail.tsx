@@ -41,6 +41,7 @@ export default function InvoiceDetail() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [customers, setCustomers] = useState<any[]>([]);
   const [packages, setPackages] = useState<ServicePackage[]>([]);
   const [invoiceSettings, setInvoiceSettings] = useState<any>(null);
@@ -413,6 +414,41 @@ export default function InvoiceDetail() {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (isNew) {
+      toast({ 
+        title: 'Σφάλμα',
+        description: 'Παρακαλώ αποθηκεύστε πρώτα το τιμολόγιο',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setIsSending(true);
+
+      const { data, error } = await supabase.functions.invoke('send-invoice-email', {
+        body: { invoice_id: id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Επιτυχία',
+        description: `Το τιμολόγιο στάλθηκε στον πελάτη: ${data.recipient}`,
+      });
+    } catch (error: any) {
+      console.error('Error sending invoice email:', error);
+      toast({
+        title: 'Σφάλμα',
+        description: error.message || 'Αποτυχία αποστολής email',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const { subtotal, taxAmount, total } = calculateTotals();
 
   if (loading) {
@@ -433,6 +469,10 @@ export default function InvoiceDetail() {
               <Button variant="outline" onClick={handleDownloadPDF} disabled={isNew}>
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
+              </Button>
+              <Button variant="outline" onClick={handleSendEmail} disabled={isNew || isSending}>
+                <Send className="h-4 w-4 mr-2" />
+                {isSending ? 'Αποστολή...' : 'Αποστολή Email'}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 <Save className="h-4 w-4 mr-2" />
