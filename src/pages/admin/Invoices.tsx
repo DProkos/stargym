@@ -33,6 +33,7 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({
     totalInvoices: 0,
+    totalSales: 0,
     totalRevenue: 0,
     paidInvoices: 0,
     pendingAmount: 0
@@ -100,16 +101,19 @@ export default function Invoices() {
 
     if (invoices) {
       const totalInvoices = invoices.length;
+      const totalSales = invoices
+        .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
       const totalRevenue = invoices
         .filter(i => i.status === 'paid')
-        .reduce((sum, i) => sum + parseFloat(String(i.total_amount)), 0);
+        .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
       const paidInvoices = invoices.filter(i => i.status === 'paid').length;
       const pendingAmount = invoices
         .filter(i => i.status === 'sent' || i.status === 'overdue')
-        .reduce((sum, i) => sum + parseFloat(String(i.total_amount)), 0);
+        .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
 
       setStats({
         totalInvoices,
+        totalSales,
         totalRevenue,
         paidInvoices,
         pendingAmount
@@ -172,7 +176,22 @@ export default function Invoices() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Συνολικά Έσοδα
+                  Συνολικές Πωλήσεις
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">€{stats.totalSales.toFixed(2)}</div>
+                  <DollarSign className="h-8 w-8 text-blue-500/50" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Όλα τα τιμολόγια</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Εισπραγμένα Έσοδα
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -180,20 +199,7 @@ export default function Invoices() {
                   <div className="text-2xl font-bold">€{stats.totalRevenue.toFixed(2)}</div>
                   <DollarSign className="h-8 w-8 text-green-500/50" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Πληρωμένα
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">{stats.paidInvoices}</div>
-                  <Calendar className="h-8 w-8 text-green-500/50" />
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">{stats.paidInvoices} πληρωμένα</p>
               </CardContent>
             </Card>
 
@@ -208,6 +214,7 @@ export default function Invoices() {
                   <div className="text-2xl font-bold">€{stats.pendingAmount.toFixed(2)}</div>
                   <DollarSign className="h-8 w-8 text-orange-500/50" />
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">Προς είσπραξη</p>
               </CardContent>
             </Card>
           </div>
