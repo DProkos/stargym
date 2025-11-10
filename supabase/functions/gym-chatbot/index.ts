@@ -1,17 +1,44 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from 'npm:zod@3.23.8';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const chatbotSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string().max(10000, { message: "Message content too long" }),
+  })).max(50, { message: "Too many messages in conversation" }),
+  language: z.enum(['en', 'el']).optional().default('en'),
+});
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, language } = await req.json();
+    // Validate input
+    const requestBody = await req.json();
+    const validationResult = chatbotSchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationResult.error.format() }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { messages, language } = validationResult.data;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not configured");
+      return new Response(
+        JSON.stringify({ error: 'Service configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const systemPrompts: Record<string, string> = {
       en: `You are a helpful AI assistant for Star Gym, a premium fitness center. 
@@ -54,7 +81,7 @@ Be friendly, concise, and helpful. If you don't know something specific, suggest
 Να είσαι φιλικός, συνοπτικός και εξυπηρετικός. Αν δεν γνωρίζεις κάτι συγκεκριμένο, πρότεινε να επικοινωνήσουν απευθείας με το γυμναστήριο ή να επισκεφθούν την ιστοσελίδα.`
     };
 
-    const selectedPrompt = (language === 'el' || language === 'en') ? systemPrompts[language] : systemPrompts.en;
+    const selectedPrompt = systemPrompts[language];
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -85,8 +112,7 @@ Be friendly, concise, and helpful. If you don't know something specific, suggest
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      console.error("AI gateway error:", response.status);
       return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -98,7 +124,7 @@ Be friendly, concise, and helpful. If you don't know something specific, suggest
     });
   } catch (e) {
     console.error("Chatbot error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Service error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

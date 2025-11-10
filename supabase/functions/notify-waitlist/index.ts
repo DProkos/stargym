@@ -1,15 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'npm:zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface NotifyRequest {
-  class_id: string;
-  booking_date: string;
-}
+const notifySchema = z.object({
+  class_id: z.string().uuid({ message: "Invalid class ID format" }),
+  booking_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Invalid date format, use YYYY-MM-DD" }),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,11 +22,58 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { class_id, booking_date }: NotifyRequest = await req.json();
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log(`Checking waitlist for class ${class_id} on ${booking_date}`);
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = createClient(supabaseUrl, token);
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Get the first person in waitlist (lowest position) who hasn't been notified
+    // Check if user has admin or trainer role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'trainer'])
+      .maybeSingle();
+
+    if (roleError || !roleData) {
+      console.error('Unauthorized waitlist notification attempt by user:', user.id);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input
+    const requestBody = await req.json();
+    const validationResult = notifySchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationResult.error.format() }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { class_id, booking_date } = validationResult.data;
+
+    console.log(`Checking waitlist for class ${class_id} on ${booking_date} by user ${user.id}`);
+
+    // Get the first person in waitlist who hasn't been notified
     const { data: waitlistEntry, error: waitlistError } = await supabase
       .from('waitlist')
       .select('id, user_id, position, profiles(email, full_name)')
@@ -34,7 +82,7 @@ serve(async (req) => {
       .eq('notified', false)
       .order('position', { ascending: true })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (waitlistError || !waitlistEntry) {
       console.log('No one in waitlist or already notified');
@@ -52,7 +100,10 @@ serve(async (req) => {
       .single();
 
     if (classError || !classData) {
-      throw new Error('Failed to fetch class details');
+      return new Response(
+        JSON.stringify({ error: 'Class not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const userProfile = waitlistEntry.profiles as any;
@@ -60,11 +111,13 @@ serve(async (req) => {
     const userName = userProfile?.full_name || 'Member';
 
     if (!userEmail) {
-      console.error('User email not found');
-      throw new Error('User email not found');
+      console.error('User email not found for waitlist entry');
+      return new Response(
+        JSON.stringify({ error: 'User email not found' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Format the date nicely
     const formattedDate = new Date(booking_date).toLocaleDateString('el-GR', {
       weekday: 'long',
       year: 'numeric',
@@ -72,7 +125,6 @@ serve(async (req) => {
       day: 'numeric'
     });
 
-    // Send email notification
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Διαθέσιμη Θέση στην Τάξη!</h2>
@@ -96,7 +148,6 @@ serve(async (req) => {
       </div>
     `;
 
-    // Call send-email function
     const { error: emailError } = await supabase.functions.invoke('send-email', {
       body: {
         to: userEmail,
@@ -108,10 +159,12 @@ serve(async (req) => {
 
     if (emailError) {
       console.error('Error sending email:', emailError);
-      throw emailError;
+      return new Response(
+        JSON.stringify({ error: 'Failed to send notification' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Mark as notified
     const { error: updateError } = await supabase
       .from('waitlist')
       .update({ notified: true })
@@ -119,10 +172,9 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating waitlist:', updateError);
-      throw updateError;
     }
 
-    console.log(`Successfully notified ${userEmail} about available spot`);
+    console.log(`Successfully notified ${userEmail} about available spot by ${user.id}`);
 
     return new Response(
       JSON.stringify({ 
@@ -135,7 +187,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error in notify-waitlist:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Failed to send notification' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

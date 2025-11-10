@@ -7,13 +7,13 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-mass-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.notify-waitlist]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-class-reminders]
 verify_jwt = false

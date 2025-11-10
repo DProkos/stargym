@@ -1,15 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from 'npm:zod@3.23.8';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface WorkflowAction {
-  type: "send_email" | "add_tag" | "update_status" | "add_note";
-  config: any;
-}
+const workflowSchema = z.object({
+  workflowId: z.string().uuid({ message: "Invalid workflow ID format" }),
+  customerId: z.string().uuid({ message: "Invalid customer ID format" }),
+  triggerData: z.record(z.any()).optional(),
+});
+
+const actionSchema = z.object({
+  type: z.enum(["send_email", "add_tag", "update_status", "add_note"]),
+  config: z.record(z.any()),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -21,9 +28,56 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { workflowId, customerId, triggerData } = await req.json();
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log(`Executing workflow ${workflowId} for customer ${customerId}`);
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = createClient(supabaseUrl, token);
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError || !roleData) {
+      console.error('Unauthorized workflow execution attempt by user:', user.id);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input
+    const requestBody = await req.json();
+    const validationResult = workflowSchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationResult.error.format() }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { workflowId, customerId, triggerData } = validationResult.data;
+
+    console.log(`Executing workflow ${workflowId} for customer ${customerId} by admin ${user.id}`);
 
     // Get workflow
     const { data: workflow, error: workflowError } = await supabase
@@ -33,7 +87,10 @@ serve(async (req) => {
       .single();
 
     if (workflowError || !workflow) {
-      throw new Error("Workflow not found");
+      return new Response(
+        JSON.stringify({ error: "Workflow not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (!workflow.is_active) {
@@ -51,14 +108,43 @@ serve(async (req) => {
       .single();
 
     if (customerError || !customer) {
-      throw new Error("Customer not found");
+      return new Response(
+        JSON.stringify({ error: "Customer not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const executedActions: any[] = [];
-    const actions = workflow.actions as WorkflowAction[];
+    const actions = workflow.actions as any[];
+
+    // Validate and limit actions
+    if (!Array.isArray(actions) || actions.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "No valid actions in workflow" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (actions.length > 20) {
+      return new Response(
+        JSON.stringify({ error: "Too many actions in workflow (max 20)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Execute each action in the workflow
     for (const action of actions) {
+      // Validate action structure
+      const actionValidation = actionSchema.safeParse(action);
+      if (!actionValidation.success) {
+        executedActions.push({ 
+          type: action.type || 'unknown', 
+          status: "failed", 
+          error: "Invalid action format" 
+        });
+        continue;
+      }
+
       try {
         switch (action.type) {
           case "send_email":
@@ -83,6 +169,7 @@ serve(async (req) => {
 
           default:
             console.warn(`Unknown action type: ${action.type}`);
+            executedActions.push({ type: action.type, status: "skipped", error: "Unknown action type" });
         }
       } catch (actionError) {
         console.error(`Error executing action ${action.type}:`, actionError);
@@ -115,7 +202,7 @@ serve(async (req) => {
       title: `Workflow Executed: ${workflow.name}`,
       description: `Workflow triggered by ${workflow.trigger_type}`,
       metadata: { workflowId, triggerData, executedActions },
-      created_by: workflow.created_by,
+      created_by: user.id,
     });
 
     return new Response(
@@ -124,9 +211,8 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Error executing workflow:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Failed to execute workflow" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
@@ -135,7 +221,14 @@ serve(async (req) => {
 async function executeEmailAction(supabase: any, customer: any, config: any) {
   const { subject, template } = config;
   
-  // Replace placeholders in template
+  // Validate and sanitize config
+  if (!subject || typeof subject !== 'string' || subject.length > 200) {
+    throw new Error('Invalid email subject');
+  }
+  if (!template || typeof template !== 'string' || template.length > 100000) {
+    throw new Error('Invalid email template');
+  }
+
   let emailBody = template
     .replace(/{{name}}/g, customer.full_name || "Customer")
     .replace(/{{email}}/g, customer.email);
@@ -153,7 +246,10 @@ async function executeEmailAction(supabase: any, customer: any, config: any) {
 async function executeAddTagAction(supabase: any, customerId: string, config: any) {
   const { tagId, adminUserId } = config;
 
-  // Check if tag assignment already exists
+  if (!tagId || typeof tagId !== 'string') {
+    throw new Error('Invalid tag ID');
+  }
+
   const { data: existing } = await supabase
     .from("customer_tag_assignments")
     .select("id")
@@ -173,6 +269,10 @@ async function executeAddTagAction(supabase: any, customerId: string, config: an
 async function executeUpdateStatusAction(supabase: any, customerId: string, config: any) {
   const { status } = config;
 
+  if (!status || typeof status !== 'string' || status.length > 50) {
+    throw new Error('Invalid status');
+  }
+
   await supabase
     .from("profiles")
     .update({ customer_status: status })
@@ -181,6 +281,10 @@ async function executeUpdateStatusAction(supabase: any, customerId: string, conf
 
 async function executeAddNoteAction(supabase: any, customerId: string, config: any) {
   const { noteContent, adminUserId } = config;
+
+  if (!noteContent || typeof noteContent !== 'string' || noteContent.length > 5000) {
+    throw new Error('Invalid note content');
+  }
 
   await supabase.from("crm_notes").insert({
     customer_id: customerId,

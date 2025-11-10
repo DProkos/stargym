@@ -1,14 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'npm:zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface MassEmailRequest {
-  campaignId: string;
-}
+const massEmailSchema = z.object({
+  campaignId: z.string().uuid({ message: "Invalid campaign ID format" }),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,7 +21,54 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { campaignId }: MassEmailRequest = await req.json();
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = createClient(supabaseUrl, token);
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError || !roleData) {
+      console.error('Unauthorized mass email attempt by user:', user.id);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input
+    const requestBody = await req.json();
+    const validationResult = massEmailSchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationResult.error.format() }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { campaignId } = validationResult.data;
 
     // Get campaign details
     const { data: campaign, error: campaignError } = await supabase
@@ -30,7 +78,10 @@ serve(async (req) => {
       .single();
 
     if (campaignError || !campaign) {
-      throw new Error('Campaign not found');
+      return new Response(
+        JSON.stringify({ error: 'Campaign not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Get all active subscribers
@@ -40,7 +91,11 @@ serve(async (req) => {
       .eq('subscribed', true);
 
     if (subscribersError) {
-      throw new Error('Failed to fetch subscribers');
+      console.error('Failed to fetch subscribers:', subscribersError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch subscribers' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Get SMTP settings
@@ -58,7 +113,11 @@ serve(async (req) => {
       ]);
 
     if (settingsError) {
-      throw new Error('Failed to fetch SMTP settings');
+      console.error('Failed to fetch SMTP settings:', settingsError);
+      return new Response(
+        JSON.stringify({ error: 'Configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const smtpConfig: Record<string, string> = {};
@@ -67,20 +126,24 @@ serve(async (req) => {
     });
 
     if (!smtpConfig.smtp_host || !smtpConfig.smtp_user || !smtpConfig.smtp_password) {
-      throw new Error('SMTP not configured');
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    console.log(`Starting mass email campaign ${campaignId} by admin ${user.id} to ${subscribers.length} subscribers`);
 
     // Start background task for sending emails
     const sendEmailsTask = async () => {
       let sentCount = 0;
-      const batchSize = 50; // Send in batches to avoid rate limits
+      const batchSize = 50;
 
       for (let i = 0; i < subscribers.length; i += batchSize) {
         const batch = subscribers.slice(i, i + batchSize);
         
         for (const subscriber of batch) {
           try {
-            // Personalize content
             const personalizedHtml = campaign.html_content
               .replace(/\{name\}/g, subscriber.name || 'Subscriber')
               .replace(/\{email\}/g, subscriber.email);
@@ -89,7 +152,6 @@ serve(async (req) => {
               ?.replace(/\{name\}/g, subscriber.name || 'Subscriber')
               .replace(/\{email\}/g, subscriber.email);
 
-            // Call send-email function
             await supabase.functions.invoke('send-email', {
               body: {
                 to: subscriber.email,
@@ -102,20 +164,17 @@ serve(async (req) => {
             sentCount++;
             console.log(`Sent email ${sentCount}/${subscribers.length} to ${subscriber.email}`);
             
-            // Small delay to avoid overwhelming the SMTP server
             await new Promise(resolve => setTimeout(resolve, 100));
           } catch (error) {
             console.error(`Failed to send to ${subscriber.email}:`, error);
           }
         }
 
-        // Delay between batches
         if (i + batchSize < subscribers.length) {
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
 
-      // Update campaign status
       await supabase
         .from('newsletter_campaigns')
         .update({
@@ -128,10 +187,8 @@ serve(async (req) => {
       console.log(`Campaign ${campaignId} completed. Sent ${sentCount}/${subscribers.length} emails`);
     };
 
-    // Start background task for sending emails (run in background)
     sendEmailsTask();
 
-    // Return immediate response
     return new Response(
       JSON.stringify({
         success: true,
@@ -143,7 +200,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error starting mass email:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Failed to start mass email campaign' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

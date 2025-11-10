@@ -1,17 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'npm:zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface EmailRequest {
-  to: string;
-  subject: string;
-  html: string;
-  text?: string;
-}
+const emailSchema = z.object({
+  to: z.string().email({ message: "Invalid email address" }).max(255),
+  subject: z.string().min(1).max(200),
+  html: z.string().max(100000),
+  text: z.string().max(50000).optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,6 +23,55 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = createClient(supabaseUrl, token);
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError || !roleData) {
+      console.error('Unauthorized email send attempt by user:', user.id);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input
+    const requestBody = await req.json();
+    const validationResult = emailSchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationResult.error.format() }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { to, subject, html, text } = validationResult.data;
 
     // Get SMTP settings from database
     const { data: settings, error: settingsError } = await supabase
@@ -39,7 +89,10 @@ serve(async (req) => {
 
     if (settingsError) {
       console.error('Error fetching SMTP settings:', settingsError);
-      throw new Error('Failed to fetch SMTP settings');
+      return new Response(
+        JSON.stringify({ error: 'Configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const smtpConfig: Record<string, string> = {};
@@ -47,12 +100,12 @@ serve(async (req) => {
       smtpConfig[s.setting_key] = s.setting_value || '';
     });
 
-    // Validate SMTP configuration
     if (!smtpConfig.smtp_host || !smtpConfig.smtp_user || !smtpConfig.smtp_password) {
-      throw new Error('SMTP not configured. Please configure SMTP settings in admin panel.');
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-
-    const { to, subject, html, text }: EmailRequest = await req.json();
 
     // Create email message in RFC 5322 format
     const from = `${smtpConfig.smtp_from_name} <${smtpConfig.smtp_from_email}>`;
@@ -79,7 +132,7 @@ serve(async (req) => {
     const port = parseInt(smtpConfig.smtp_port || '587');
     const secure = smtpConfig.smtp_secure === 'true';
     
-    console.log(`Connecting to SMTP: ${smtpConfig.smtp_host}:${port}`);
+    console.log(`Sending email to ${to} by admin user ${user.id}`);
     
     const conn = await Deno.connect({
       hostname: smtpConfig.smtp_host,
@@ -89,7 +142,6 @@ serve(async (req) => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    // Helper functions
     const send = async (data: string) => {
       await conn.write(encoder.encode(data + '\r\n'));
     };
@@ -101,19 +153,15 @@ serve(async (req) => {
     };
 
     // SMTP conversation
-    await receive(); // Welcome message
-    
+    await receive();
     await send(`EHLO ${smtpConfig.smtp_host}`);
     await receive();
 
     if (!secure && port === 587) {
       await send('STARTTLS');
       await receive();
-      // Note: Actual TLS upgrade would require additional implementation
-      console.warn('TLS upgrade requested but not fully implemented in this basic version');
     }
 
-    // Encode credentials in base64
     const authPlain = btoa(`\0${smtpConfig.smtp_user}\0${smtpConfig.smtp_password}`);
     await send('AUTH PLAIN ' + authPlain);
     await receive();
@@ -134,7 +182,7 @@ serve(async (req) => {
     await send('QUIT');
     conn.close();
 
-    console.log(`Email sent successfully to ${to}`);
+    console.log(`Email sent successfully to ${to} by admin ${user.id}`);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Email sent successfully' }),
@@ -143,7 +191,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error sending email:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Failed to send email' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
