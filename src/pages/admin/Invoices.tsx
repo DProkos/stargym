@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Plus, Search, Download, Eye, DollarSign, Calendar } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 interface Invoice {
   id: string;
   invoice_number: string;
@@ -24,7 +23,6 @@ interface Invoice {
     email: string;
   };
 }
-
 export default function Invoices() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -33,116 +31,111 @@ export default function Invoices() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({
     totalInvoices: 0,
+    totalSales: 0,
     totalRevenue: 0,
     paidInvoices: 0,
     pendingAmount: 0
   });
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   useEffect(() => {
     checkAuth();
   }, []);
-
   useEffect(() => {
     if (isAdmin) {
       loadInvoices();
       loadStats();
     }
   }, [isAdmin]);
-
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) {
       navigate('/auth');
       return;
     }
-
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id);
-
+    const {
+      data: roles
+    } = await supabase.from('user_roles').select('role').eq('user_id', session.user.id);
     const hasAdminRole = roles?.some(r => r.role === 'admin');
     if (!hasAdminRole) {
       navigate('/');
       return;
     }
-
     setIsAdmin(true);
     setLoading(false);
   };
-
   const loadInvoices = async () => {
-    const { data, error } = await supabase
-      .from('invoices')
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from('invoices').select(`
         *,
         profiles:customer_id (
           full_name,
           email
         )
-      `)
-      .order('issue_date', { ascending: false });
-
+      `).order('issue_date', {
+      ascending: false
+    });
     if (error) {
-      toast({ title: 'Error loading invoices', variant: 'destructive' });
+      toast({
+        title: 'Error loading invoices',
+        variant: 'destructive'
+      });
       return;
     }
-
     setInvoices(data || []);
   };
-
   const loadStats = async () => {
-    const { data: invoices } = await supabase
-      .from('invoices')
-      .select('status, total_amount');
-
+    const {
+      data: invoices
+    } = await supabase.from('invoices').select('status, total_amount');
     if (invoices) {
       const totalInvoices = invoices.length;
-      const totalRevenue = invoices
-        .filter(i => i.status === 'paid')
-        .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
+      const totalSales = invoices.reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
+      const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
       const paidInvoices = invoices.filter(i => i.status === 'paid').length;
-      const pendingAmount = invoices
-        .filter(i => i.status === 'sent' || i.status === 'overdue')
-        .reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
-
+      const pendingAmount = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((sum, i) => sum + parseFloat(String(i.total_amount || 0)), 0);
       setStats({
         totalInvoices,
+        totalSales,
         totalRevenue,
         paidInvoices,
         pendingAmount
       });
     }
   };
-
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'paid': return 'default';
-      case 'sent': return 'secondary';
-      case 'overdue': return 'destructive';
-      case 'draft': return 'outline';
-      case 'cancelled': return 'secondary';
-      default: return 'default';
+      case 'paid':
+        return 'default';
+      case 'sent':
+        return 'secondary';
+      case 'overdue':
+        return 'destructive';
+      case 'draft':
+        return 'outline';
+      case 'cancelled':
+        return 'secondary';
+      default:
+        return 'default';
     }
   };
-
   const filteredInvoices = invoices.filter(invoice => {
-    const matchesSearch = 
-      invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) || invoice.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || invoice.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
   if (loading || !isAdmin) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
-
-  return (
-    <SidebarProvider>
+  return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
         <main className="flex-1 p-6 overflow-auto">
@@ -154,7 +147,7 @@ export default function Invoices() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -172,12 +165,27 @@ export default function Invoices() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Συνολικές Πωλήσεις
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">€{stats.totalSales.toFixed(2)}</div>
+                  <DollarSign className="h-8 w-8 text-blue-500/50" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Όλα τα τιμολόγια</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Εισπραγμένα Έσοδα
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">€{stats.totalRevenue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">€0.00{stats.totalRevenue.toFixed(2)}</div>
                   <DollarSign className="h-8 w-8 text-green-500/50" />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">{stats.paidInvoices} πληρωμένα</p>
@@ -226,12 +234,7 @@ export default function Invoices() {
               <div className="flex gap-4 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Αναζήτηση τιμολογίων..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                  <Input placeholder="Αναζήτηση τιμολογίων..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[180px]">
@@ -249,12 +252,7 @@ export default function Invoices() {
               </div>
 
               <div className="space-y-2">
-                {filteredInvoices.map((invoice) => (
-                  <div
-                    key={invoice.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
-                    onClick={() => navigate(`/admin/invoices/${invoice.id}`)}
-                  >
+                {filteredInvoices.map(invoice => <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer" onClick={() => navigate(`/admin/invoices/${invoice.id}`)}>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium">{invoice.invoice_number}</span>
@@ -274,35 +272,25 @@ export default function Invoices() {
                       <div className="text-right mr-4">
                         <p className="text-lg font-bold">€{parseFloat(String(invoice.total_amount)).toFixed(2)}</p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/admin/invoices/${invoice.id}`);
-                        }}
-                      >
+                      <Button variant="ghost" size="sm" onClick={e => {
+                    e.stopPropagation();
+                    navigate(`/admin/invoices/${invoice.id}`);
+                  }}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // PDF download will be handled in detail page
-                          navigate(`/admin/invoices/${invoice.id}?download=true`);
-                        }}
-                      >
+                      <Button variant="ghost" size="sm" onClick={e => {
+                    e.stopPropagation();
+                    // PDF download will be handled in detail page
+                    navigate(`/admin/invoices/${invoice.id}?download=true`);
+                  }}>
                         <Download className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
           </Card>
         </main>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
