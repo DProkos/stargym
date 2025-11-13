@@ -639,6 +639,7 @@ export type Database = {
       invoice_settings: {
         Row: {
           bank_details: string | null
+          brand_color: string | null
           company_address: string | null
           company_email: string | null
           company_logo_url: string | null
@@ -656,6 +657,7 @@ export type Database = {
         }
         Insert: {
           bank_details?: string | null
+          brand_color?: string | null
           company_address?: string | null
           company_email?: string | null
           company_logo_url?: string | null
@@ -673,6 +675,7 @@ export type Database = {
         }
         Update: {
           bank_details?: string | null
+          brand_color?: string | null
           company_address?: string | null
           company_email?: string | null
           company_logo_url?: string | null

@@ -20,6 +20,7 @@ interface InvoiceSettings {
   company_email: string;
   company_tax_id: string;
   company_logo_url: string;
+  brand_color: string;
   invoice_prefix: string;
   next_invoice_number: number;
   default_tax_rate: number;
@@ -97,6 +98,7 @@ export default function InvoiceSettings() {
         company_email: settings.company_email,
         company_tax_id: settings.company_tax_id,
         company_logo_url: settings.company_logo_url,
+        brand_color: settings.brand_color,
         invoice_prefix: settings.invoice_prefix,
         default_tax_rate: settings.default_tax_rate,
         default_payment_terms: settings.default_payment_terms,
@@ -200,31 +202,56 @@ export default function InvoiceSettings() {
               </CardContent>
             </Card>
 
-            {/* Logo Upload */}
+            {/* Logo Upload & Brand Color */}
             <Card>
               <CardHeader>
-                <CardTitle>Logo Εταιρείας</CardTitle>
+                <CardTitle>Logo & Χρώματα Εταιρείας</CardTitle>
                 <CardDescription>
-                  Το logo θα εμφανίζεται στην κορυφή κάθε τιμολογίου
+                  Το logo και το χρώμα θα εμφανίζονται στα PDF τιμολόγια
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ImageUpload
-                  currentImageUrl={settings.company_logo_url || ''}
-                  onImageUploaded={handleLogoUpload}
-                  bucket="cms-images"
-                  folder="logos"
-                />
-                {settings.company_logo_url && (
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground mb-2">Current Logo:</p>
-                    <img
-                      src={settings.company_logo_url}
-                      alt="Company Logo"
-                      className="max-w-xs h-auto border rounded"
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Brand Color</Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="color"
+                      value={settings.brand_color || '#667eea'}
+                      onChange={(e) => setSettings({ ...settings, brand_color: e.target.value })}
+                      className="w-20 h-10"
+                    />
+                    <Input
+                      type="text"
+                      value={settings.brand_color || '#667eea'}
+                      onChange={(e) => setSettings({ ...settings, brand_color: e.target.value })}
+                      placeholder="#667eea"
+                      className="flex-1"
                     />
                   </div>
-                )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Το χρώμα που θα χρησιμοποιείται για headers και πίνακες στα PDF
+                  </p>
+                </div>
+                
+                <div>
+                  <Label>Company Logo</Label>
+                  <ImageUpload
+                    currentImageUrl={settings.company_logo_url || ''}
+                    onImageUploaded={handleLogoUpload}
+                    bucket="cms-images"
+                    folder="logos"
+                  />
+                  {settings.company_logo_url && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground mb-2">Current Logo:</p>
+                      <img
+                        src={settings.company_logo_url}
+                        alt="Company Logo"
+                        className="max-w-xs h-auto border rounded"
+                      />
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 

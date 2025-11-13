@@ -4,6 +4,27 @@ import { z } from 'https://esm.sh/zod@3.25.76';
 import { jsPDF } from 'https://esm.sh/jspdf@2.5.1';
 import 'https://esm.sh/jspdf-autotable@3.8.2';
 
+// Helper function to convert hex to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 102, g: 126, b: 234 };
+}
+
+// Helper function to convert blob to base64
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -105,10 +126,10 @@ serve(async (req) => {
       );
     }
 
-    // Fetch invoice settings for company details
+    // Fetch invoice settings with logo URL and brand color
     const { data: settings, error: settingsError } = await supabase
       .from('invoice_settings')
-      .select('*')
+      .select('*, company_logo_url, brand_color')
       .single();
 
     if (settingsError) {
@@ -239,9 +260,26 @@ serve(async (req) => {
     // Generate PDF
     const doc = new jsPDF();
     
-    // Add company logo and header
-    doc.setFillColor(102, 126, 234);
+    // Get brand color or default
+    const brandColor = settings?.brand_color || '#667eea';
+    const rgbColor = hexToRgb(brandColor);
+    
+    // Add company logo and header with brand color
+    doc.setFillColor(rgbColor.r, rgbColor.g, rgbColor.b);
     doc.rect(0, 0, 210, 40, 'F');
+    
+    // Add logo if available
+    if (settings?.company_logo_url) {
+      try {
+        const logoResponse = await fetch(settings.company_logo_url);
+        const logoBlob = await logoResponse.blob();
+        const logoBase64 = await blobToBase64(logoBlob);
+        doc.addImage(logoBase64, 'PNG', 15, 8, 30, 24);
+      } catch (error) {
+        console.error('Failed to load logo:', error);
+      }
+    }
+    
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.text('ΤΙΜΟΛΟΓΙΟ', 105, 20, { align: 'center' });
@@ -288,7 +326,7 @@ serve(async (req) => {
       head: [['Περιγραφή', 'Ποσότητα', 'Τιμή Μονάδας', 'Σύνολο']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [102, 126, 234] },
+      headStyles: { fillColor: [rgbColor.r, rgbColor.g, rgbColor.b] },
     });
     
     // Totals
