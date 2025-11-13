@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://esm.sh/zod@3.25.76';
+import { jsPDF } from 'https://esm.sh/jspdf@2.5.1';
+import 'https://esm.sh/jspdf-autotable@3.8.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -234,6 +236,83 @@ serve(async (req) => {
 Ευχαριστούμε για την εμπιστοσύνη σας!
     `;
 
+    // Generate PDF
+    const doc = new jsPDF();
+    
+    // Add company logo and header
+    doc.setFillColor(102, 126, 234);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text('ΤΙΜΟΛΟΓΙΟ', 105, 20, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text(invoice.invoice_number, 105, 30, { align: 'center' });
+    
+    // Company details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    let yPos = 50;
+    doc.text(settings?.company_name || 'Vigor Track', 20, yPos);
+    if (settings?.company_address) {
+      yPos += 6;
+      doc.text(settings.company_address, 20, yPos);
+    }
+    if (settings?.company_phone) {
+      yPos += 6;
+      doc.text(`Τηλ: ${settings.company_phone}`, 20, yPos);
+    }
+    if (settings?.company_email) {
+      yPos += 6;
+      doc.text(`Email: ${settings.company_email}`, 20, yPos);
+    }
+    if (settings?.company_tax_id) {
+      yPos += 6;
+      doc.text(`ΑΦΜ: ${settings.company_tax_id}`, 20, yPos);
+    }
+    
+    // Invoice details
+    doc.text(`Ημ/νία Έκδοσης: ${new Date(invoice.issue_date).toLocaleDateString('el-GR')}`, 140, 50);
+    doc.text(`Ημ/νία Λήξης: ${new Date(invoice.due_date).toLocaleDateString('el-GR')}`, 140, 56);
+    doc.text(`Πελάτης: ${invoice.customer?.full_name || ''}`, 140, 62);
+    
+    // Items table
+    const tableData = items?.map(item => [
+      item.description,
+      item.quantity.toString(),
+      `€${parseFloat(item.unit_price).toFixed(2)}`,
+      `€${parseFloat(item.total_price).toFixed(2)}`
+    ]) || [];
+    
+    (doc as any).autoTable({
+      startY: yPos + 15,
+      head: [['Περιγραφή', 'Ποσότητα', 'Τιμή Μονάδας', 'Σύνολο']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [102, 126, 234] },
+    });
+    
+    // Totals
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.text(`Υποσύνολο: €${parseFloat(invoice.subtotal).toFixed(2)}`, 140, finalY);
+    if (invoice.discount_amount > 0) {
+      doc.text(`Έκπτωση: -€${parseFloat(invoice.discount_amount).toFixed(2)}`, 140, finalY + 6);
+    }
+    doc.text(`ΦΠΑ (${invoice.tax_rate}%): €${parseFloat(invoice.tax_amount).toFixed(2)}`, 140, finalY + 12);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Συνολικό Ποσό: €${parseFloat(invoice.total_amount).toFixed(2)}`, 140, finalY + 20);
+    
+    // Notes and payment terms
+    if (invoice.notes) {
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text('Σημειώσεις:', 20, finalY + 30);
+      doc.text(invoice.notes, 20, finalY + 36, { maxWidth: 170 });
+    }
+    
+    // Get PDF as base64
+    const pdfBase64 = doc.output('datauristring').split(',')[1];
+
     // Call the send-email function
     const emailResponse = await supabase.functions.invoke('send-email', {
       body: {
@@ -241,6 +320,11 @@ serve(async (req) => {
         subject: `Τιμολόγιο ${invoice.invoice_number} - ${settings?.company_name || 'Vigor Track'}`,
         html,
         text: textContent,
+        attachments: [{
+          filename: `${invoice.invoice_number}.pdf`,
+          content: pdfBase64,
+          contentType: 'application/pdf',
+        }],
       },
       headers: {
         Authorization: authHeader,

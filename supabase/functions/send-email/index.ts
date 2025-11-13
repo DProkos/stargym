@@ -12,6 +12,11 @@ const emailSchema = z.object({
   subject: z.string().min(1).max(200),
   html: z.string().max(100000),
   text: z.string().max(50000).optional(),
+  attachments: z.array(z.object({
+    filename: z.string(),
+    content: z.string(), // base64 encoded
+    contentType: z.string(),
+  })).optional(),
 });
 
 serve(async (req) => {
@@ -71,7 +76,7 @@ serve(async (req) => {
       );
     }
 
-    const { to, subject, html, text } = validationResult.data;
+    const { to, subject, html, text, attachments } = validationResult.data;
 
     // Get SMTP settings from database
     const { data: settings, error: settingsError } = await supabase
@@ -126,6 +131,18 @@ serve(async (req) => {
     emailBody += `--${boundary}\r\n`;
     emailBody += `Content-Type: text/html; charset=UTF-8\r\n\r\n`;
     emailBody += `${html}\r\n\r\n`;
+    
+    // Add attachments if present
+    if (attachments && attachments.length > 0) {
+      for (const attachment of attachments) {
+        emailBody += `--${boundary}\r\n`;
+        emailBody += `Content-Type: ${attachment.contentType}\r\n`;
+        emailBody += `Content-Transfer-Encoding: base64\r\n`;
+        emailBody += `Content-Disposition: attachment; filename="${attachment.filename}"\r\n\r\n`;
+        emailBody += `${attachment.content}\r\n\r\n`;
+      }
+    }
+    
     emailBody += `--${boundary}--`;
 
     // Connect to SMTP server
