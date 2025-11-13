@@ -9,11 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Download, Send, Plus, X, Package } from 'lucide-react';
+import { ArrowLeft, Save, Download, Send, Plus, X, Package, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { generateInvoicePDF, downloadPDF } from '@/utils/invoicePDFGenerator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import InvoiceEmailPreview from '@/components/admin/InvoiceEmailPreview';
 
 interface InvoiceItem {
   id?: string;
@@ -46,6 +47,9 @@ export default function InvoiceDetail() {
   const [packages, setPackages] = useState<ServicePackage[]>([]);
   const [invoiceSettings, setInvoiceSettings] = useState<any>(null);
   const [showPackagesDialog, setShowPackagesDialog] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewEmailHtml, setPreviewEmailHtml] = useState('');
+  const [previewPdfUrl, setPreviewPdfUrl] = useState('');
 
   // Invoice fields
   const [customerId, setCustomerId] = useState('');
@@ -72,6 +76,15 @@ export default function InvoiceDetail() {
       handleDownloadPDF();
     }
   }, [autoDownload, id, isNew]);
+
+  // Cleanup PDF preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewPdfUrl) {
+        URL.revokeObjectURL(previewPdfUrl);
+      }
+    };
+  }, [previewPdfUrl]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -437,6 +450,8 @@ export default function InvoiceDetail() {
         title: 'Επιτυχία',
         description: `Το τιμολόγιο στάλθηκε στον πελάτη: ${data.recipient}`,
       });
+      
+      setShowPreview(false);
     } catch (error: any) {
       console.error('Error sending invoice email:', error);
       toast({
@@ -446,6 +461,176 @@ export default function InvoiceDetail() {
       });
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const generateEmailPreview = async () => {
+    if (isNew) {
+      toast({ 
+        title: 'Σφάλμα',
+        description: 'Παρακαλώ αποθηκεύστε πρώτα το τιμολόγιο',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      // Get current invoice data
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          customer:profiles!customer_id(email, full_name)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      const customer = customers.find(c => c.id === invoice.customer_id);
+      
+      // Generate email HTML
+      const itemsHtml = items.map(item => `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.description}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">€${parseFloat(String(item.unit_price)).toFixed(2)}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">€${parseFloat(String(item.total_price)).toFixed(2)}</td>
+        </tr>
+      `).join('');
+
+      const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Τιμολόγιο ${invoice.invoice_number}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, ${invoiceSettings?.brand_color || '#667eea'} 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">Τιμολόγιο</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">${invoice.invoice_number}</p>
+          </div>
+          
+          <div style="background: white; padding: 30px; border: 1px solid #ddd; border-top: none;">
+            <div style="margin-bottom: 30px;">
+              <p><strong>Αγαπητέ/ή ${customer?.full_name || 'πελάτη'},</strong></p>
+              <p>Σας αποστέλλουμε το τιμολόγιό σας. Παρακαλούμε βρείτε τις λεπτομέρειες παρακάτω:</p>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+              <div>
+                <h3 style="margin: 0 0 10px 0; color: ${invoiceSettings?.brand_color || '#667eea'};">Στοιχεία Εταιρείας</h3>
+                <p style="margin: 5px 0;"><strong>${invoiceSettings?.company_name || 'Vigor Track'}</strong></p>
+                ${invoiceSettings?.company_address ? `<p style="margin: 5px 0;">${invoiceSettings.company_address}</p>` : ''}
+                ${invoiceSettings?.company_phone ? `<p style="margin: 5px 0;">Τηλ: ${invoiceSettings.company_phone}</p>` : ''}
+                ${invoiceSettings?.company_email ? `<p style="margin: 5px 0;">Email: ${invoiceSettings.company_email}</p>` : ''}
+                ${invoiceSettings?.company_tax_id ? `<p style="margin: 5px 0;">ΑΦΜ: ${invoiceSettings.company_tax_id}</p>` : ''}
+              </div>
+              <div style="text-align: right;">
+                <p style="margin: 5px 0;"><strong>Ημερομηνία Έκδοσης:</strong> ${new Date(invoice.issue_date).toLocaleDateString('el-GR')}</p>
+                <p style="margin: 5px 0;"><strong>Ημερομηνία Λήξης:</strong> ${new Date(invoice.due_date).toLocaleDateString('el-GR')}</p>
+                <p style="margin: 5px 0;"><strong>Κατάσταση:</strong> <span style="color: ${invoice.status === 'paid' ? '#10b981' : '#f59e0b'};">${invoice.status === 'paid' ? 'Πληρωμένο' : invoice.status === 'sent' ? 'Απεσταλμένο' : invoice.status === 'draft' ? 'Πρόχειρο' : 'Ληξιπρόθεσμο'}</span></p>
+              </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+              <thead>
+                <tr style="background-color: #f8f9fa;">
+                  <th style="padding: 12px; text-align: left; border-bottom: 2px solid ${invoiceSettings?.brand_color || '#667eea'};">Περιγραφή</th>
+                  <th style="padding: 12px; text-align: center; border-bottom: 2px solid ${invoiceSettings?.brand_color || '#667eea'};">Ποσότητα</th>
+                  <th style="padding: 12px; text-align: right; border-bottom: 2px solid ${invoiceSettings?.brand_color || '#667eea'};">Τιμή Μονάδας</th>
+                  <th style="padding: 12px; text-align: right; border-bottom: 2px solid ${invoiceSettings?.brand_color || '#667eea'};">Σύνολο</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+            </table>
+
+            <div style="text-align: right; margin-bottom: 30px;">
+              <p style="margin: 5px 0;"><strong>Υποσύνολο:</strong> €${subtotal.toFixed(2)}</p>
+              ${discountAmount > 0 ? `<p style="margin: 5px 0;"><strong>Έκπτωση:</strong> -€${discountAmount.toFixed(2)}</p>` : ''}
+              <p style="margin: 5px 0;"><strong>ΦΠΑ (${taxRate}%):</strong> €${taxAmount.toFixed(2)}</p>
+              <p style="margin: 15px 0 0 0; font-size: 20px; color: ${invoiceSettings?.brand_color || '#667eea'};"><strong>Συνολικό Ποσό:</strong> €${total.toFixed(2)}</p>
+            </div>
+
+            ${notes ? `
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+              <h4 style="margin: 0 0 10px 0; color: ${invoiceSettings?.brand_color || '#667eea'};">Σημειώσεις:</h4>
+              <p style="margin: 0;">${notes}</p>
+            </div>
+            ` : ''}
+
+            ${paymentTerms ? `
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+              <h4 style="margin: 0 0 10px 0; color: #856404;">Όροι Πληρωμής:</h4>
+              <p style="margin: 0;">${paymentTerms}</p>
+            </div>
+            ` : ''}
+
+            ${invoiceSettings?.bank_details ? `
+            <div style="margin-top: 20px; padding: 15px; background-color: #e7f3ff; border-radius: 5px; border-left: 4px solid ${invoiceSettings?.brand_color || '#667eea'};">
+              <h4 style="margin: 0 0 10px 0; color: ${invoiceSettings?.brand_color || '#667eea'};">Τραπεζικά Στοιχεία:</h4>
+              <p style="margin: 0; white-space: pre-line;">${invoiceSettings.bank_details}</p>
+            </div>
+            ` : ''}
+          </div>
+
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px; text-align: center; color: #666;">
+            <p style="margin: 0; font-size: 14px;">Ευχαριστούμε για την εμπιστοσύνη σας!</p>
+            ${invoiceSettings?.footer_text ? `<p style="margin: 10px 0 0 0; font-size: 12px;">${invoiceSettings.footer_text}</p>` : ''}
+          </div>
+        </body>
+        </html>
+      `;
+
+      setPreviewEmailHtml(emailHtml);
+
+      // Generate PDF preview
+      const invoiceNumber = invoice.invoice_number;
+      const invoiceData = {
+        invoice_number: invoiceNumber,
+        issue_date: issueDate,
+        due_date: dueDate,
+        customer: {
+          full_name: customer?.full_name || '',
+          email: customer?.email || '',
+          phone: customer?.phone
+        },
+        items: items,
+        subtotal,
+        tax_rate: taxRate,
+        tax_amount: taxAmount,
+        discount_amount: discountAmount,
+        total_amount: total,
+        notes,
+        payment_terms: paymentTerms
+      };
+
+      const companySettings = {
+        company_name: invoiceSettings?.company_name || 'Vigor Track',
+        company_address: invoiceSettings?.company_address || '',
+        company_phone: invoiceSettings?.company_phone || '',
+        company_email: invoiceSettings?.company_email || '',
+        company_tax_id: invoiceSettings?.company_tax_id || '',
+        company_logo_url: invoiceSettings?.company_logo_url || '',
+        footer_text: invoiceSettings?.footer_text || '',
+        bank_details: invoiceSettings?.bank_details || ''
+      };
+
+      const pdfBlob = await generateInvoicePDF(invoiceData, companySettings);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPreviewPdfUrl(pdfUrl);
+
+      setShowPreview(true);
+    } catch (error: any) {
+      console.error('Error generating preview:', error);
+      toast({
+        title: 'Σφάλμα',
+        description: 'Αποτυχία δημιουργίας προεπισκόπησης',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -468,11 +653,11 @@ export default function InvoiceDetail() {
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleDownloadPDF} disabled={isNew}>
                 <Download className="h-4 w-4 mr-2" />
-                Download PDF
+                Λήψη PDF
               </Button>
-              <Button variant="outline" onClick={handleSendEmail} disabled={isNew || isSending}>
-                <Send className="h-4 w-4 mr-2" />
-                {isSending ? 'Αποστολή...' : 'Αποστολή Email'}
+              <Button variant="outline" onClick={generateEmailPreview} disabled={isNew}>
+                <Eye className="h-4 w-4 mr-2" />
+                Προεπισκόπηση Email
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 <Save className="h-4 w-4 mr-2" />
@@ -737,6 +922,16 @@ export default function InvoiceDetail() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Email Preview Dialog */}
+          <InvoiceEmailPreview
+            open={showPreview}
+            onOpenChange={setShowPreview}
+            emailHtml={previewEmailHtml}
+            pdfUrl={previewPdfUrl}
+            onSend={handleSendEmail}
+            isSending={isSending}
+          />
         </main>
       </div>
     </SidebarProvider>
