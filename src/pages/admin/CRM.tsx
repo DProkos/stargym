@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Tags, Workflow, Mail, Search, Filter, Plus, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet } from 'lucide-react';
+import { Users, Search, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MemberRow } from '@/components/MemberRow';
 import {
@@ -33,25 +33,6 @@ interface Customer {
   tags?: { id: string; name: string; color: string }[];
 }
 
-interface Segment {
-  id: string;
-  name: string;
-  description: string;
-  conditions: any;
-  is_active: boolean;
-  created_at: string;
-}
-
-interface CRMWorkflow {
-  id: string;
-  name: string;
-  description: string;
-  trigger_type: string;
-  is_active: boolean;
-  total_runs: number;
-  last_run_at: string;
-}
-
 interface Member {
   id: string;
   email: string;
@@ -64,8 +45,6 @@ export default function CRM() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [segments, setSegments] = useState<Segment[]>([]);
-  const [workflows, setWorkflows] = useState<CRMWorkflow[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [stats, setStats] = useState({
@@ -128,8 +107,6 @@ export default function CRM() {
   const loadData = async () => {
     await Promise.all([
       loadCustomers(),
-      loadSegments(),
-      loadWorkflows(),
       loadStats(),
       loadMembers()
     ]);
@@ -176,34 +153,6 @@ export default function CRM() {
     }));
 
     setCustomers(customersWithTags);
-  };
-
-  const loadSegments = async () => {
-    const { data, error } = await supabase
-      .from('customer_segments')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      showToast({ title: 'Error loading segments', variant: 'destructive' });
-      return;
-    }
-
-    setSegments(data || []);
-  };
-
-  const loadWorkflows = async () => {
-    const { data, error } = await supabase
-      .from('crm_workflows')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      showToast({ title: 'Error loading workflows', variant: 'destructive' });
-      return;
-    }
-
-    setWorkflows(data || []);
   };
 
   const loadStats = async () => {
@@ -379,18 +328,6 @@ export default function CRM() {
                 <UsersRound className="h-4 w-4 mr-2" />
                 Members
               </TabsTrigger>
-              <TabsTrigger value="segments">
-                <Filter className="h-4 w-4 mr-2" />
-                Segments
-              </TabsTrigger>
-              <TabsTrigger value="workflows">
-                <Workflow className="h-4 w-4 mr-2" />
-                Workflows
-              </TabsTrigger>
-              <TabsTrigger value="campaigns">
-                <Mail className="h-4 w-4 mr-2" />
-                Campaigns
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="customers" className="space-y-4">
@@ -527,110 +464,6 @@ export default function CRM() {
                       ))
                     )}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="segments" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Customer Segments</CardTitle>
-                      <CardDescription>
-                        Δημιουργήστε segments για targeted campaigns
-                      </CardDescription>
-                    </div>
-                    <Button onClick={() => navigate('/admin/crm/segments/new')}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Νέο Segment
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {segments.map((segment) => (
-                      <div
-                        key={segment.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
-                        onClick={() => navigate(`/admin/crm/segments/${segment.id}`)}
-                      >
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{segment.name}</span>
-                            {segment.is_active && <Badge>Active</Badge>}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{segment.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="workflows" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Automated Workflows</CardTitle>
-                      <CardDescription>
-                        Αυτοματοποιήστε email campaigns και actions
-                      </CardDescription>
-                    </div>
-                    <Button onClick={() => navigate('/admin/crm/workflows/new')}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Νέο Workflow
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {workflows.map((workflow) => (
-                      <div
-                        key={workflow.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
-                        onClick={() => navigate(`/admin/crm/workflows/${workflow.id}`)}
-                      >
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{workflow.name}</span>
-                            {workflow.is_active && <Badge variant="default">Active</Badge>}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{workflow.description}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Trigger: {workflow.trigger_type} • Runs: {workflow.total_runs}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="campaigns" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Email Campaigns</CardTitle>
-                      <CardDescription>
-                        Στείλτε targeted email campaigns σε segments
-                      </CardDescription>
-                    </div>
-                    <Button onClick={() => navigate('/admin/newsletter-composer')}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Νέα Campaign
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Χρησιμοποιήστε τον Newsletter Composer για να δημιουργήσετε campaigns.
-                    Μπορείτε να στοχεύσετε συγκεκριμένα segments από εκεί.
-                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
