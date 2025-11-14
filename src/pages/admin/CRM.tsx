@@ -9,8 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Tags, Workflow, Mail, Search, Filter, Plus, TrendingUp, Activity, UsersRound } from 'lucide-react';
+import { Users, Tags, Workflow, Mail, Search, Filter, Plus, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MemberRow } from '@/components/MemberRow';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface Customer {
   id: string;
@@ -44,6 +52,14 @@ interface CRMWorkflow {
   last_run_at: string;
 }
 
+interface Member {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  created_at: string;
+}
+
 export default function CRM() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -58,7 +74,10 @@ export default function CRM() {
     totalLifetimeValue: 0,
     avgBookingsPerCustomer: 0
   });
-  const { toast } = useToast();
+  const [members, setMembers] = useState<Member[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const { toast: showToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,6 +89,19 @@ export default function CRM() {
       loadData();
     }
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (memberSearchQuery) {
+      const filtered = members.filter(
+        (member) =>
+          member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+          member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())
+      );
+      setFilteredMembers(filtered);
+    } else {
+      setFilteredMembers(members);
+    }
+  }, [memberSearchQuery, members]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -98,8 +130,24 @@ export default function CRM() {
       loadCustomers(),
       loadSegments(),
       loadWorkflows(),
-      loadStats()
+      loadStats(),
+      loadMembers()
     ]);
+  };
+
+  const loadMembers = async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load members:', error);
+      toast.error('Failed to load members');
+    } else {
+      setMembers(data || []);
+      setFilteredMembers(data || []);
+    }
   };
 
   const loadCustomers = async () => {
@@ -118,7 +166,7 @@ export default function CRM() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ title: 'Error loading customers', variant: 'destructive' });
+      showToast({ title: 'Error loading customers', variant: 'destructive' });
       return;
     }
 
@@ -137,7 +185,7 @@ export default function CRM() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ title: 'Error loading segments', variant: 'destructive' });
+      showToast({ title: 'Error loading segments', variant: 'destructive' });
       return;
     }
 
@@ -151,7 +199,7 @@ export default function CRM() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ title: 'Error loading workflows', variant: 'destructive' });
+      showToast({ title: 'Error loading workflows', variant: 'destructive' });
       return;
     }
 
@@ -176,6 +224,67 @@ export default function CRM() {
         avgBookingsPerCustomer
       });
     }
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Email', 'Full Name', 'Phone', 'Created At'];
+    const rows = filteredMembers.map(member => [
+      member.email,
+      member.full_name || 'N/A',
+      member.phone || 'N/A',
+      new Date(member.created_at).toLocaleDateString()
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `members_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success(`Exported ${filteredMembers.length} members to CSV`);
+  };
+
+  const exportToExcel = () => {
+    const headers = ['Email', 'Full Name', 'Phone', 'Created At'];
+    const rows = filteredMembers.map(member => [
+      member.email,
+      member.full_name || 'N/A',
+      member.phone || 'N/A',
+      new Date(member.created_at).toLocaleDateString()
+    ]);
+
+    let htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    htmlContent += '<head><meta charset="utf-8"/></head><body>';
+    htmlContent += '<table border="1">';
+    htmlContent += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+    htmlContent += '<tbody>';
+    rows.forEach(row => {
+      htmlContent += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+    });
+    htmlContent += '</tbody></table></body></html>';
+
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `members_${new Date().toISOString().split('T')[0]}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success(`Exported ${filteredMembers.length} members to Excel`);
   };
 
   const filteredCustomers = customers.filter(customer => {
@@ -365,15 +474,59 @@ export default function CRM() {
             <TabsContent value="members" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Διαχείριση Μελών</CardTitle>
-                  <CardDescription>
-                    Προβολή και διαχείριση όλων των μελών
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        All Members ({filteredMembers.length})
+                      </CardTitle>
+                      <CardDescription>
+                        Manage member roles and permissions
+                      </CardDescription>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-2" />
+                          Export
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={exportToCSV}>
+                          <FileSpreadsheet className="h-4 w-4 mr-2" />
+                          Export as CSV
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={exportToExcel}>
+                          <FileSpreadsheet className="h-4 w-4 mr-2" />
+                          Export as Excel
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => navigate('/admin/members')}>
-                    Άνοιγμα Members Management
-                  </Button>
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search members..."
+                        value={memberSearchQuery}
+                        onChange={(e) => setMemberSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {filteredMembers.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {memberSearchQuery ? 'No members found matching your search' : 'No members yet'}
+                      </div>
+                    ) : (
+                      filteredMembers.map((member) => (
+                        <MemberRow key={member.id} member={member} onRoleUpdate={loadMembers} />
+                      ))
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
