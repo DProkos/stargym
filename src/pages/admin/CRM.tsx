@@ -41,7 +41,7 @@ interface Member {
   created_at: string;
 }
 
-export default function CRM() {
+export default function UserManagement() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -253,9 +253,9 @@ export default function CRM() {
         <AppSidebarAdmin />
         <main className="flex-1 p-6 overflow-auto">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-2">CRM & Customer Management</h1>
+            <h1 className="text-3xl font-bold mb-2">Διαχείριση Χρηστών</h1>
             <p className="text-muted-foreground">
-              Διαχειριστείτε πελάτες, segments, και automated workflows
+              Διαχειριστείτε τους χρήστες και τα δικαιώματά τους
             </p>
           </div>
 

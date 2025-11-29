@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, Save, Plus, X } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, Save, Plus, X, Shield, Key, UserCog } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -50,14 +50,23 @@ interface Tag {
   color: string;
 }
 
-export default function CRMCustomerDetail() {
+interface UserRole {
+  id: string;
+  role: string;
+  created_at: string;
+}
+
+export default function UserDetail() {
   const { id } = useParams<{ id: string }>();
   const [customer, setCustomer] = useState<CustomerDetail | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [roles, setRoles] = useState<UserRole[]>([]);
   const [newNote, setNewNote] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -74,7 +83,8 @@ export default function CRMCustomerDetail() {
       loadNotes(),
       loadInteractions(),
       loadTags(),
-      loadAllTags()
+      loadAllTags(),
+      loadRoles()
     ]);
     setLoading(false);
   };
@@ -137,6 +147,18 @@ export default function CRMCustomerDetail() {
 
     if (!error && data) {
       setAllTags(data);
+    }
+  };
+
+  const loadRoles = async () => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setRoles(data);
     }
   };
 
@@ -221,6 +243,135 @@ export default function CRMCustomerDetail() {
     loadTags();
   };
 
+  const handleAddRole = async (newRole: string) => {
+    if (!id) return;
+
+    if (roles.some(r => r.role === newRole)) {
+      toast({ title: 'Ο χρήστης έχει ήδη αυτό το ρόλο', variant: 'destructive' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('user_roles')
+      .insert({ 
+        user_id: id, 
+        role: newRole as 'admin' | 'trainer' | 'member'
+      });
+
+    if (error) {
+      toast({ title: 'Σφάλμα προσθήκης ρόλου', variant: 'destructive' });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    await supabase.from('admin_activity_log').insert({
+      admin_id: session?.user?.id,
+      action_type: 'role_added',
+      target_user_id: id,
+      details: { role: newRole, user_email: customer?.email }
+    });
+
+    toast({ title: `Ρόλος "${newRole}" προστέθηκε επιτυχώς` });
+    loadRoles();
+  };
+
+  const handleRemoveRole = async (roleId: string, roleName: string) => {
+    if (!confirm(`Είστε σίγουροι ότι θέλετε να αφαιρέσετε τον ρόλο "${roleName}";`)) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('id', roleId);
+
+    if (error) {
+      toast({ title: 'Σφάλμα αφαίρεσης ρόλου', variant: 'destructive' });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    await supabase.from('admin_activity_log').insert({
+      admin_id: session?.user?.id,
+      action_type: 'role_removed',
+      target_user_id: id,
+      details: { role: roleName, user_email: customer?.email }
+    });
+
+    toast({ title: `Ρόλος "${roleName}" αφαιρέθηκε επιτυχώς` });
+    loadRoles();
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast({ title: 'Ο κωδικός πρέπει να είναι τουλάχιστον 6 χαρακτήρες', variant: 'destructive' });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const { error } = await supabase.functions.invoke('admin-update-user', {
+      body: { userId: id, password: newPassword }
+    });
+
+    if (error) {
+      toast({ title: 'Σφάλμα αλλαγής κωδικού', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    await supabase.from('admin_activity_log').insert({
+      admin_id: session?.user?.id,
+      action_type: 'password_reset',
+      target_user_id: id,
+      details: { user_email: customer?.email }
+    });
+
+    setNewPassword('');
+    toast({ title: 'Ο κωδικός άλλαξε επιτυχώς' });
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!newEmail || !newEmail.includes('@')) {
+      toast({ title: 'Παρακαλώ εισάγετε έγκυρο email', variant: 'destructive' });
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const { error } = await supabase.functions.invoke('admin-update-user', {
+      body: { userId: id, email: newEmail }
+    });
+
+    if (error) {
+      toast({ title: 'Σφάλμα αλλαγής email', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    await supabase.from('admin_activity_log').insert({
+      admin_id: session?.user?.id,
+      action_type: 'email_updated',
+      target_user_id: id,
+      details: { old_email: customer?.email, new_email: newEmail }
+    });
+
+    setNewEmail('');
+    toast({ title: 'Το email άλλαξε επιτυχώς' });
+    loadCustomerData();
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-destructive/20 text-destructive';
+      case 'trainer':
+        return 'bg-primary/20 text-primary';
+      case 'member':
+        return 'bg-accent/20 text-accent-foreground';
+      default:
+        return '';
+    }
+  };
+
   if (loading || !customer) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -235,7 +386,7 @@ export default function CRMCustomerDetail() {
           <div className="mb-6">
             <Button variant="ghost" onClick={() => navigate('/admin/crm')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Πίσω στο CRM
+              Πίσω στους Χρήστες
             </Button>
           </div>
 
@@ -335,11 +486,132 @@ export default function CRMCustomerDetail() {
                 </CardContent>
               </Card>
 
-              <Tabs defaultValue="notes" className="space-y-4">
+              <Tabs defaultValue="roles" className="space-y-4">
                 <TabsList>
-                  <TabsTrigger value="notes">Notes</TabsTrigger>
-                  <TabsTrigger value="interactions">Interactions</TabsTrigger>
+                  <TabsTrigger value="roles">Δικαιώματα</TabsTrigger>
+                  <TabsTrigger value="security">Ασφάλεια</TabsTrigger>
+                  <TabsTrigger value="notes">Σημειώσεις</TabsTrigger>
+                  <TabsTrigger value="interactions">Αλληλεπιδράσεις</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="roles">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5" />
+                            Ρόλοι Χρήστη
+                          </CardTitle>
+                          <CardDescription>
+                            Διαχείριση ρόλων και δικαιωμάτων
+                          </CardDescription>
+                        </div>
+                        <Select onValueChange={handleAddRole}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Προσθήκη ρόλου" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="trainer">Trainer</SelectItem>
+                            <SelectItem value="member">Member</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {roles.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-4">
+                          Δεν υπάρχουν ρόλοι
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {roles.map((roleItem) => (
+                            <div key={roleItem.id} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <Badge className={getRoleBadgeColor(roleItem.role)}>
+                                  {roleItem.role}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  Προστέθηκε: {new Date(roleItem.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveRole(roleItem.id, roleItem.role)}
+                              >
+                                Αφαίρεση
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="security">
+                  <div className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Key className="h-5 w-5" />
+                          Αλλαγή Κωδικού
+                        </CardTitle>
+                        <CardDescription>
+                          Ορίστε νέο κωδικό για τον χρήστη
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label>Νέος Κωδικός (τουλάχιστον 6 χαρακτήρες)</Label>
+                          <Input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Εισάγετε νέο κωδικό..."
+                          />
+                        </div>
+                        <Button onClick={handleResetPassword} disabled={!newPassword}>
+                          <Key className="h-4 w-4 mr-2" />
+                          Αλλαγή Κωδικού
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Mail className="h-5 w-5" />
+                          Αλλαγή Email
+                        </CardTitle>
+                        <CardDescription>
+                          Ενημερώστε τη διεύθυνση email του χρήστη
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <Label>Τρέχον Email</Label>
+                          <Input value={customer.email} disabled />
+                        </div>
+                        <div>
+                          <Label>Νέο Email</Label>
+                          <Input
+                            type="email"
+                            value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)}
+                            placeholder="Εισάγετε νέο email..."
+                          />
+                        </div>
+                        <Button onClick={handleUpdateEmail} disabled={!newEmail}>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Αλλαγή Email
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
 
                 <TabsContent value="notes">
                   <Card>
