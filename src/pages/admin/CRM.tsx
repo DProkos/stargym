@@ -39,6 +39,7 @@ interface Member {
   full_name: string | null;
   phone: string | null;
   created_at: string;
+  roles?: string[];
 }
 
 export default function UserManagement() {
@@ -56,6 +57,7 @@ export default function UserManagement() {
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const { toast: showToast } = useToast();
   const navigate = useNavigate();
 
@@ -70,17 +72,26 @@ export default function UserManagement() {
   }, [isAdmin]);
 
   useEffect(() => {
+    let filtered = members;
+
+    // Apply search filter
     if (memberSearchQuery) {
-      const filtered = members.filter(
+      filtered = filtered.filter(
         (member) =>
           member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
           member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())
       );
-      setFilteredMembers(filtered);
-    } else {
-      setFilteredMembers(members);
     }
-  }, [memberSearchQuery, members]);
+
+    // Apply role filter
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(
+        (member) => member.roles?.includes(roleFilter)
+      );
+    }
+
+    setFilteredMembers(filtered);
+  }, [memberSearchQuery, roleFilter, members]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -113,18 +124,35 @@ export default function UserManagement() {
   };
 
   const loadMembers = async () => {
-    const { data, error } = await supabase
+    // First, get all profiles
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Failed to load members:', error);
+    if (profilesError) {
+      console.error('Failed to load members:', profilesError);
       toast.error('Failed to load members');
-    } else {
-      setMembers(data || []);
-      setFilteredMembers(data || []);
+      return;
     }
+
+    // Then, get all user roles
+    const { data: userRoles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id, role');
+
+    if (rolesError) {
+      console.error('Failed to load roles:', rolesError);
+    }
+
+    // Combine profiles with their roles
+    const membersWithRoles = profiles?.map(profile => ({
+      ...profile,
+      roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || []
+    })) || [];
+
+    setMembers(membersWithRoles);
+    setFilteredMembers(membersWithRoles);
   };
 
   const loadCustomers = async () => {
@@ -176,11 +204,12 @@ export default function UserManagement() {
   };
 
   const exportToCSV = () => {
-    const headers = ['Email', 'Full Name', 'Phone', 'Created At'];
+    const headers = ['Email', 'Full Name', 'Phone', 'Roles', 'Created At'];
     const rows = filteredMembers.map(member => [
       member.email,
       member.full_name || 'N/A',
       member.phone || 'N/A',
+      member.roles?.join(', ') || 'No roles',
       new Date(member.created_at).toLocaleDateString()
     ]);
 
@@ -204,11 +233,12 @@ export default function UserManagement() {
   };
 
   const exportToExcel = () => {
-    const headers = ['Email', 'Full Name', 'Phone', 'Created At'];
+    const headers = ['Email', 'Full Name', 'Phone', 'Roles', 'Created At'];
     const rows = filteredMembers.map(member => [
       member.email,
       member.full_name || 'N/A',
       member.phone || 'N/A',
+      member.roles?.join(', ') || 'No roles',
       new Date(member.created_at).toLocaleDateString()
     ]);
 
@@ -442,15 +472,36 @@ export default function UserManagement() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search members..."
-                        value={memberSearchQuery}
-                        onChange={(e) => setMemberSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
+                  <div className="mb-4 space-y-4">
+                    <div className="flex gap-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Αναζήτηση χρηστών (email, όνομα)..."
+                          value={memberSearchQuery}
+                          onChange={(e) => setMemberSearchQuery(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="w-[200px]">
+                          <SelectValue placeholder="Φίλτρο Ρόλου" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Όλοι οι Ρόλοι</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="trainer">Trainer</SelectItem>
+                          <SelectItem value="member">Member</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Αποτελέσματα: {filteredMembers.length} από {members.length} χρήστες</span>
+                      {roleFilter !== 'all' && (
+                        <Badge variant="secondary" className="ml-2">
+                          Φίλτρο: {roleFilter}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2">

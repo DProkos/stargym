@@ -19,6 +19,7 @@ interface MemberRowProps {
     id: string;
     full_name: string | null;
     email: string;
+    roles?: string[];
   };
   onRoleUpdate: () => void;
 }
@@ -27,12 +28,16 @@ type Role = 'admin' | 'trainer' | 'member';
 
 export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   const navigate = useNavigate();
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<Role[]>(member.roles as Role[] || []);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadRoles();
-  }, [member.id]);
+    if (member.roles) {
+      setRoles(member.roles as Role[]);
+    } else {
+      loadRoles();
+    }
+  }, [member.id, member.roles]);
 
   const loadRoles = async () => {
     const { data } = await supabase
