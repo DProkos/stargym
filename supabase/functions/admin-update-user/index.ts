@@ -62,20 +62,37 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { userId, password } = await req.json();
+    const { userId, password, email } = await req.json();
 
-    if (!userId || !password) {
-      throw new Error('Missing required fields: userId and password');
+    if (!userId) {
+      throw new Error('Missing required field: userId');
     }
 
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters');
+    // Prepare update object
+    const updateData: any = {};
+    
+    if (password) {
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters');
+      }
+      updateData.password = password;
+    }
+    
+    if (email) {
+      if (!email.includes('@')) {
+        throw new Error('Invalid email address');
+      }
+      updateData.email = email;
     }
 
-    // Update user password using admin client
+    if (Object.keys(updateData).length === 0) {
+      throw new Error('No update data provided');
+    }
+
+    // Update user using admin client
     const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
-      { password }
+      updateData
     );
 
     if (error) {
@@ -83,10 +100,11 @@ serve(async (req) => {
       throw error;
     }
 
-    console.log(`Password updated successfully for user ${userId} by admin ${user.id}`);
+    const updateType = password && email ? 'password and email' : password ? 'password' : 'email';
+    console.log(`${updateType} updated successfully for user ${userId} by admin ${user.id}`);
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Password updated successfully' }),
+      JSON.stringify({ success: true, message: `User ${updateType} updated successfully` }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

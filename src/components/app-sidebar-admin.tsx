@@ -42,7 +42,7 @@ export function AppSidebarAdmin() {
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
     { title: t('admin.dashboard'), url: "/admin", icon: LayoutDashboard },
-    { title: 'CRM', url: "/admin/crm", icon: UsersRound },
+    { title: 'Χρήστες', url: "/admin/crm", icon: UsersRound },
     { title: 'Τιμολόγηση', url: "/admin/invoices", icon: FileText },
     { title: t('admin.bookings'), url: "/admin/bookings", icon: Calendar },
     { title: t('admin.trainers'), url: "/admin/trainers", icon: UserCog },
