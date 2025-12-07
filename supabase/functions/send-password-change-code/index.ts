@@ -118,14 +118,22 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email using send-email function
-    const { error: emailError } = await supabase.functions.invoke('send-email', {
-      body: {
+    // Send email using send-email function with internal call header
+    const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'X-Internal-Call': 'true',
+      },
+      body: JSON.stringify({
         to: user.email,
         subject: '🔒 Κωδικός Επαλήθευσης για Αλλαγή Password',
         html: emailHtml,
-      },
+      }),
     });
+    
+    const emailError = !emailResponse.ok ? await emailResponse.text() : null;
 
     if (emailError) {
       console.error('Error sending email:', emailError);
