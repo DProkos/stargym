@@ -40,6 +40,7 @@ import Packages from "./pages/admin/Packages";
 import InvoiceDetail from "./pages/admin/InvoiceDetail";
 import PageBuilder from "./pages/admin/PageBuilder";
 import DynamicPage from "./pages/DynamicPage";
+import ResetPassword from "./pages/ResetPassword";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/classes" element={<Classes />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
