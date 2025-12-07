@@ -45,9 +45,10 @@ export default function NewsletterComposer() {
       .from('user_roles')
       .select('role')
       .eq('user_id', session.user.id)
-      .single();
+      .eq('role', 'admin')
+      .maybeSingle();
 
-    if (roleData?.role !== 'admin') {
+    if (!roleData) {
       navigate('/');
       return;
     }
