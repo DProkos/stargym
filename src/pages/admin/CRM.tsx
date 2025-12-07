@@ -1,24 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Users, Search, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet, Plus } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MemberRow } from '@/components/MemberRow';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Users, Search, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MemberRow } from "@/components/MemberRow";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface Customer {
   id: string;
@@ -46,18 +46,18 @@ export default function UserManagement() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [stats, setStats] = useState({
     totalCustomers: 0,
     activeCustomers: 0,
     totalLifetimeValue: 0,
-    avgBookingsPerCustomer: 0
+    avgBookingsPerCustomer: 0,
   });
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
-  const [memberSearchQuery, setMemberSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const { toast: showToast } = useToast();
   const navigate = useNavigate();
 
@@ -79,35 +79,32 @@ export default function UserManagement() {
       filtered = filtered.filter(
         (member) =>
           member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
-          member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())
+          member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase()),
       );
     }
 
     // Apply role filter
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(
-        (member) => member.roles?.includes(roleFilter)
-      );
+    if (roleFilter !== "all") {
+      filtered = filtered.filter((member) => member.roles?.includes(roleFilter));
     }
 
     setFilteredMembers(filtered);
   }, [memberSearchQuery, roleFilter, members]);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
-      navigate('/auth');
+      navigate("/auth");
       return;
     }
 
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id);
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
 
-    const hasAdminRole = roles?.some(r => r.role === 'admin');
+    const hasAdminRole = roles?.some((r) => r.role === "admin");
     if (!hasAdminRole) {
-      navigate('/');
+      navigate("/");
       return;
     }
 
@@ -116,40 +113,35 @@ export default function UserManagement() {
   };
 
   const loadData = async () => {
-    await Promise.all([
-      loadCustomers(),
-      loadStats(),
-      loadMembers()
-    ]);
+    await Promise.all([loadCustomers(), loadStats(), loadMembers()]);
   };
 
   const loadMembers = async () => {
     // First, get all profiles
     const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (profilesError) {
-      console.error('Failed to load members:', profilesError);
-      toast.error('Failed to load members');
+      console.error("Failed to load members:", profilesError);
+      toast.error("Failed to load members");
       return;
     }
 
     // Then, get all user roles
-    const { data: userRoles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('user_id, role');
+    const { data: userRoles, error: rolesError } = await supabase.from("user_roles").select("user_id, role");
 
     if (rolesError) {
-      console.error('Failed to load roles:', rolesError);
+      console.error("Failed to load roles:", rolesError);
     }
 
     // Combine profiles with their roles
-    const membersWithRoles = profiles?.map(profile => ({
-      ...profile,
-      roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || []
-    })) || [];
+    const membersWithRoles =
+      profiles?.map((profile) => ({
+        ...profile,
+        roles: userRoles?.filter((r) => r.user_id === profile.id).map((r) => r.role) || [],
+      })) || [];
 
     setMembers(membersWithRoles);
     setFilteredMembers(membersWithRoles);
@@ -157,8 +149,9 @@ export default function UserManagement() {
 
   const loadCustomers = async () => {
     const { data, error } = await supabase
-      .from('profiles')
-      .select(`
+      .from("profiles")
+      .select(
+        `
         *,
         customer_tag_assignments!customer_tag_assignments_customer_id_fkey (
           customer_tags (
@@ -167,17 +160,18 @@ export default function UserManagement() {
             color
           )
         )
-      `)
-      .order('created_at', { ascending: false });
+      `,
+      )
+      .order("created_at", { ascending: false });
 
     if (error) {
-      showToast({ title: 'Error loading customers', variant: 'destructive' });
+      showToast({ title: "Error loading customers", variant: "destructive" });
       return;
     }
 
-    const customersWithTags = data.map(customer => ({
+    const customersWithTags = data.map((customer) => ({
       ...customer,
-      tags: customer.customer_tag_assignments?.map((ta: any) => ta.customer_tags).filter(Boolean) || []
+      tags: customer.customer_tag_assignments?.map((ta: any) => ta.customer_tags).filter(Boolean) || [],
     }));
 
     setCustomers(customersWithTags);
@@ -185,91 +179,91 @@ export default function UserManagement() {
 
   const loadStats = async () => {
     const { data: profiles } = await supabase
-      .from('profiles')
-      .select('customer_status, lifetime_value, total_bookings');
+      .from("profiles")
+      .select("customer_status, lifetime_value, total_bookings");
 
     if (profiles) {
       const totalCustomers = profiles.length;
-      const activeCustomers = profiles.filter(p => p.customer_status === 'active').length;
+      const activeCustomers = profiles.filter((p) => p.customer_status === "active").length;
       const totalLifetimeValue = profiles.reduce((sum, p) => sum + (p.lifetime_value || 0), 0);
-      const avgBookingsPerCustomer = profiles.reduce((sum, p) => sum + (p.total_bookings || 0), 0) / totalCustomers || 0;
+      const avgBookingsPerCustomer =
+        profiles.reduce((sum, p) => sum + (p.total_bookings || 0), 0) / totalCustomers || 0;
 
       setStats({
         totalCustomers,
         activeCustomers,
         totalLifetimeValue,
-        avgBookingsPerCustomer
+        avgBookingsPerCustomer,
       });
     }
   };
 
   const exportToCSV = () => {
-    const headers = ['Email', 'Full Name', 'Phone', 'Roles', 'Created At'];
-    const rows = filteredMembers.map(member => [
+    const headers = ["Email", "Full Name", "Phone", "Roles", "Created At"];
+    const rows = filteredMembers.map((member) => [
       member.email,
-      member.full_name || 'N/A',
-      member.phone || 'N/A',
-      member.roles?.join(', ') || 'No roles',
-      new Date(member.created_at).toLocaleDateString()
+      member.full_name || "N/A",
+      member.phone || "N/A",
+      member.roles?.join(", ") || "No roles",
+      new Date(member.created_at).toLocaleDateString(),
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `members_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `members_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.success(`Exported ${filteredMembers.length} members to CSV`);
   };
 
   const exportToExcel = () => {
-    const headers = ['Email', 'Full Name', 'Phone', 'Roles', 'Created At'];
-    const rows = filteredMembers.map(member => [
+    const headers = ["Email", "Full Name", "Phone", "Roles", "Created At"];
+    const rows = filteredMembers.map((member) => [
       member.email,
-      member.full_name || 'N/A',
-      member.phone || 'N/A',
-      member.roles?.join(', ') || 'No roles',
-      new Date(member.created_at).toLocaleDateString()
+      member.full_name || "N/A",
+      member.phone || "N/A",
+      member.roles?.join(", ") || "No roles",
+      new Date(member.created_at).toLocaleDateString(),
     ]);
 
-    let htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    let htmlContent =
+      '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
     htmlContent += '<head><meta charset="utf-8"/></head><body>';
     htmlContent += '<table border="1">';
-    htmlContent += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
-    htmlContent += '<tbody>';
-    rows.forEach(row => {
-      htmlContent += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+    htmlContent += "<thead><tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr></thead>";
+    htmlContent += "<tbody>";
+    rows.forEach((row) => {
+      htmlContent += "<tr>" + row.map((cell) => `<td>${cell}</td>`).join("") + "</tr>";
     });
-    htmlContent += '</tbody></table></body></html>';
+    htmlContent += "</tbody></table></body></html>";
 
-    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
-    const link = document.createElement('a');
+    const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `members_${new Date().toISOString().split('T')[0]}.xls`);
-    link.style.visibility = 'hidden';
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `members_${new Date().toISOString().split("T")[0]}.xls`);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.success(`Exported ${filteredMembers.length} members to Excel`);
   };
 
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         customer.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || customer.customer_status === statusFilter;
+  const filteredCustomers = customers.filter((customer) => {
+    const matchesSearch =
+      customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || customer.customer_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -284,18 +278,14 @@ export default function UserManagement() {
         <main className="flex-1 p-6 overflow-auto">
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2">Διαχείριση Χρηστών</h1>
-            <p className="text-muted-foreground">
-              Διαχειριστείτε τους χρήστες και τα δικαιώματά τους
-            </p>
+            <p className="text-muted-foreground">Διαχειριστείτε τους χρήστες και τα δικαιώματά τους</p>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Συνολικοί Πελάτες
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Συνολικοί Πελάτες</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -307,9 +297,7 @@ export default function UserManagement() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Ενεργοί Πελάτες
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Ενεργοί Πελάτες</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -321,9 +309,7 @@ export default function UserManagement() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Lifetime Value
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Lifetime Value</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -335,9 +321,7 @@ export default function UserManagement() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Μ.Ο. Κρατήσεις/Πελάτη
-                </CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Μ.Ο. Κρατήσεις/Πελάτη</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -366,13 +350,11 @@ export default function UserManagement() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>Πελάτες</CardTitle>
-                      <CardDescription>
-                        Διαχειριστείτε και παρακολουθήστε τους πελάτες σας
-                      </CardDescription>
+                      <CardDescription>Διαχειριστείτε και παρακολουθήστε τους πελάτες σας</CardDescription>
                     </div>
-                    <Button onClick={() => navigate('/admin/crm/customer/new')}>
+                    <Button onClick={() => navigate("/admin/crm/customer/new")}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Νέος Πελάτης
+                      Νέος Χρήστης
                     </Button>
                   </div>
                 </CardHeader>
@@ -409,26 +391,22 @@ export default function UserManagement() {
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{customer.full_name || 'No Name'}</span>
-                            <Badge variant={customer.customer_status === 'active' ? 'default' : 'secondary'}>
+                            <span className="font-medium">{customer.full_name || "No Name"}</span>
+                            <Badge variant={customer.customer_status === "active" ? "default" : "secondary"}>
                               {customer.customer_status}
                             </Badge>
                           </div>
                           <p className="text-sm text-muted-foreground">{customer.email}</p>
                           <div className="flex gap-2 mt-2">
-                            {customer.tags?.map(tag => (
-                              <Badge
-                                key={tag.id}
-                                style={{ backgroundColor: tag.color }}
-                                className="text-white"
-                              >
+                            {customer.tags?.map((tag) => (
+                              <Badge key={tag.id} style={{ backgroundColor: tag.color }} className="text-white">
                                 {tag.name}
                               </Badge>
                             ))}
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium">€{customer.lifetime_value?.toFixed(2) || '0.00'}</p>
+                          <p className="text-sm font-medium">€{customer.lifetime_value?.toFixed(2) || "0.00"}</p>
                           <p className="text-xs text-muted-foreground">{customer.total_bookings || 0} κρατήσεις</p>
                         </div>
                       </div>
@@ -447,9 +425,7 @@ export default function UserManagement() {
                         <Users className="h-5 w-5" />
                         All Members ({filteredMembers.length})
                       </CardTitle>
-                      <CardDescription>
-                        Manage member roles and permissions
-                      </CardDescription>
+                      <CardDescription>Manage member roles and permissions</CardDescription>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -496,8 +472,10 @@ export default function UserManagement() {
                       </Select>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Αποτελέσματα: {filteredMembers.length} από {members.length} χρήστες</span>
-                      {roleFilter !== 'all' && (
+                      <span>
+                        Αποτελέσματα: {filteredMembers.length} από {members.length} χρήστες
+                      </span>
+                      {roleFilter !== "all" && (
                         <Badge variant="secondary" className="ml-2">
                           Φίλτρο: {roleFilter}
                         </Badge>
@@ -507,7 +485,7 @@ export default function UserManagement() {
                   <div className="space-y-2">
                     {filteredMembers.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
-                        {memberSearchQuery ? 'No members found matching your search' : 'No members yet'}
+                        {memberSearchQuery ? "No members found matching your search" : "No members yet"}
                       </div>
                     ) : (
                       filteredMembers.map((member) => (
