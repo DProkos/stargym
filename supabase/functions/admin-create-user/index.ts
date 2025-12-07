@@ -156,10 +156,13 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error in admin-create-user function:', error);
+    const isAuthError = error.message?.includes('Unauthorized') || error.message?.includes('authorization');
+    const status = isAuthError ? 403 : 400;
+    const message = isAuthError ? "Unauthorized: Admin access required" : "Failed to create user. Please check input and try again.";
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       {
-        status: error.message.includes('Unauthorized') ? 403 : 400,
+        status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
