@@ -9,7 +9,7 @@ import heroImage from '@/assets/hero-gym.jpg';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { usePageSections } from '@/hooks/usePageSections';
 import { DynamicPageSections } from '@/components/DynamicSection';
-import GymGallery3D from '@/components/GymGallery3D';
+
 export default function Home() {
   const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
@@ -82,19 +82,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* 3D Gallery Section */}
-      <GymGallery3D 
-        images={[
-          { src: heroImage, alt: 'Αίθουσα Βαρών' },
-          { src: heroImage, alt: 'Χώρος Cardio' },
-          { src: heroImage, alt: 'Αίθουσα Group Fitness' },
-          { src: heroImage, alt: 'Χώρος Stretching' },
-          { src: heroImage, alt: 'Locker Rooms' },
-        ]}
-        title="Περιηγηθείτε στο χώρο μας"
-        subtitle="Ανακαλύψτε τους σύγχρονους χώρους του γυμναστηρίου μας"
-      />
 
       {/* Features Section */}
       <section className="py-20 px-4">

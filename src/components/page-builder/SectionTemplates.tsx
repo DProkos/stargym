@@ -179,6 +179,18 @@ const TemplatePreview = ({ template }: { template: SectionTemplate }) => {
         </div>
       );
     
+    case 'gallery':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2`}>
+          <div className="text-[7px] font-bold text-center mb-1 truncate">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="flex gap-1 justify-center items-end">
+            <div className="w-6 h-8 bg-gradient-to-br from-primary/40 to-primary/20 rounded opacity-60 transform -rotate-6" />
+            <div className="w-8 h-10 bg-gradient-to-br from-primary/50 to-primary/30 rounded shadow-lg transform scale-110 z-10" />
+            <div className="w-6 h-8 bg-gradient-to-br from-primary/40 to-primary/20 rounded opacity-60 transform rotate-6" />
+          </div>
+        </div>
+      );
+    
     default:
       return (
         <div className="w-full h-24 rounded-md bg-muted flex items-center justify-center">
@@ -433,6 +445,30 @@ const SECTION_TEMPLATES: SectionTemplate[] = [
       subtitle_el: 'Δείτε το σύγχρονο γυμναστήριό μας',
       background_color: 'default',
       text_color: 'default'
+    }
+  },
+  // 3D Gallery Templates
+  {
+    id: 'gallery-3d-tour',
+    name: '3D Gallery Περιήγηση',
+    description: 'Εντυπωσιακό 3D carousel με φωτογραφίες του χώρου',
+    section_type: 'gallery',
+    icon: ImageIcon,
+    category: 'Gallery',
+    preview_data: {
+      title_en: 'Explore Our Space',
+      title_el: 'Περιηγηθείτε στο χώρο μας',
+      subtitle_en: 'Discover our modern gym facilities',
+      subtitle_el: 'Ανακαλύψτε τους σύγχρονους χώρους του γυμναστηρίου μας',
+      background_color: 'default',
+      text_color: 'default',
+      settings: {
+        images: [
+          { src: '', alt: 'Αίθουσα Βαρών' },
+          { src: '', alt: 'Χώρος Cardio' },
+          { src: '', alt: 'Αίθουσα Group Fitness' }
+        ]
+      }
     }
   }
 ];

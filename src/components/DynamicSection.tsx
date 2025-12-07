@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import GymGallery3D from '@/components/GymGallery3D';
 
 interface ServicePackage {
   id: string;
@@ -398,6 +399,18 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
 
     case 'packages':
       return <PackagesSection section={section} bgClass={bgClass} title={title} subtitle={subtitle} language={language} />;
+
+    case 'gallery':
+      const galleryImages = section.settings?.images || [];
+      // Filter out images with no src
+      const validImages = galleryImages.filter((img: { src: string; alt: string }) => img.src);
+      return (
+        <GymGallery3D 
+          images={validImages}
+          title={title}
+          subtitle={subtitle}
+        />
+      );
 
     case 'contact_form':
       // This will be handled by the Contact page itself
