@@ -155,7 +155,6 @@ export default function Admin() {
 
           <Tabs defaultValue="members" className="w-full">
             <TabsList className="grid w-full md:w-auto grid-cols-4">
-              <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
               <TabsTrigger value="calendar" className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" />
                 Calendar
@@ -164,40 +163,6 @@ export default function Admin() {
               <TabsTrigger value="classes">{t('dashboard.classes')}</TabsTrigger>
               <TabsTrigger value="bookings">{t('dashboard.bookings')}</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="overview" className="mt-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="bg-gradient-card border-border">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">{t('dashboard.members')}</CardTitle>
-                    <Users className="h-4 w-4 text-primary" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.members}</div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-card border-border">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">{t('dashboard.classes')}</CardTitle>
-                    <Calendar className="h-4 w-4 text-primary" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.classes}</div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-card border-border">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">{t('dashboard.bookings')}</CardTitle>
-                    <BookOpen className="h-4 w-4 text-primary" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.bookings}</div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
 
             <TabsContent value="calendar" className="mt-6">
               <BookingCalendar 
