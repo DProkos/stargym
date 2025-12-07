@@ -68,6 +68,7 @@ export default function UserDetail() {
   const [newNote, setNewNote] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sendingWelcome, setSendingWelcome] = useState(false);
   const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
@@ -406,6 +407,58 @@ export default function UserDetail() {
     toast({ title: 'Ο κωδικός άλλαξε επιτυχώς' });
   };
 
+  const handleSendPasswordResetEmail = async () => {
+    if (!customer) return;
+    
+    setSendingPasswordReset(true);
+    try {
+      // Generate a temporary password reset token/code
+      const resetCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      // Send email with reset instructions
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: customer.email,
+          subject: 'Επαναφορά Κωδικού Πρόσβασης',
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #6366f1;">Επαναφορά Κωδικού</h1>
+              <p>Αγαπητέ/ή ${customer.full_name || 'χρήστη'},</p>
+              <p>Λάβαμε αίτημα επαναφοράς του κωδικού σας.</p>
+              <p>Παρακαλούμε επικοινωνήστε με τη διαχείριση για να λάβετε τον νέο σας κωδικό ή χρησιμοποιήστε την επιλογή "Ξέχασα τον κωδικό μου" στη σελίδα σύνδεσης.</p>
+              <p>Αν δεν ζητήσατε επαναφορά κωδικού, παρακαλώ αγνοήστε αυτό το email.</p>
+              <br>
+              <p>Με εκτίμηση,<br>Η ομάδα διαχείρισης</p>
+            </div>
+          `,
+          text: `Αγαπητέ/ή ${customer.full_name || 'χρήστη'}, Λάβαμε αίτημα επαναφοράς του κωδικού σας. Παρακαλούμε επικοινωνήστε με τη διαχείριση.`
+        }
+      });
+
+      if (error) throw error;
+
+      // Log the interaction
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.from('crm_interactions').insert({
+          customer_id: id,
+          interaction_type: 'email',
+          title: 'Password Reset Email Sent',
+          description: 'Στάλθηκε email για επαναφορά κωδικού',
+          created_by: session.user.id
+        });
+      }
+
+      toast({ title: 'Το email επαναφοράς κωδικού στάλθηκε!' });
+      loadInteractions();
+    } catch (error: any) {
+      console.error('Error sending password reset email:', error);
+      toast({ title: 'Σφάλμα αποστολής email', description: error.message, variant: 'destructive' });
+    } finally {
+      setSendingPasswordReset(false);
+    }
+  };
+
   const handleUpdateEmail = async () => {
     if (!newEmail || !newEmail.includes('@')) {
       toast({ title: 'Παρακαλώ εισάγετε έγκυρο email', variant: 'destructive' });
@@ -710,10 +763,24 @@ export default function UserDetail() {
                             placeholder="Εισάγετε νέο κωδικό..."
                           />
                         </div>
-                        <Button onClick={handleResetPassword} disabled={!newPassword}>
-                          <Key className="h-4 w-4 mr-2" />
-                          Αλλαγή Κωδικού
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button onClick={handleResetPassword} disabled={!newPassword}>
+                            <Key className="h-4 w-4 mr-2" />
+                            Αλλαγή Κωδικού
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={handleSendPasswordResetEmail}
+                            disabled={sendingPasswordReset}
+                          >
+                            {sendingPasswordReset ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4 mr-2" />
+                            )}
+                            Αποστολή Link Επαναφοράς
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
 
