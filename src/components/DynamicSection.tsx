@@ -416,6 +416,61 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       // This will be handled by the Contact page itself
       return null;
 
+    case 'matterport':
+      const matterportUrl = section.settings?.matterport_url || '';
+      const matterportHeight = section.settings?.height || '600';
+      if (!matterportUrl) {
+        return (
+          <section className={`py-16 px-4 ${bgClass}`}>
+            <div className="container mx-auto text-center">
+              {title && <h2 className="text-3xl font-bold mb-4">{title}</h2>}
+              <p className="text-muted-foreground">
+                {language === 'el' ? 'Παρακαλώ προσθέστε το Matterport URL στο Page Builder' : 'Please add the Matterport URL in Page Builder'}
+              </p>
+            </div>
+          </section>
+        );
+      }
+      // Convert to embed URL if needed
+      let embedUrl = matterportUrl;
+      if (matterportUrl.includes('my.matterport.com/show')) {
+        // Already an embed URL
+        embedUrl = matterportUrl;
+      } else if (matterportUrl.includes('matterport.com')) {
+        // Try to extract model ID and create embed URL
+        const modelMatch = matterportUrl.match(/\/([a-zA-Z0-9]+)(?:\?|$)/);
+        if (modelMatch) {
+          embedUrl = `https://my.matterport.com/show/?m=${modelMatch[1]}`;
+        }
+      } else if (/^[a-zA-Z0-9]+$/.test(matterportUrl)) {
+        // Just the model ID
+        embedUrl = `https://my.matterport.com/show/?m=${matterportUrl}`;
+      }
+      return (
+        <section className={`py-16 px-4 ${bgClass}`}>
+          <div className="container mx-auto">
+            {(title || subtitle) && (
+              <div className="text-center mb-8">
+                {title && <h2 className="text-3xl font-bold mb-2">{title}</h2>}
+                {subtitle && <p className="text-xl text-muted-foreground">{subtitle}</p>}
+              </div>
+            )}
+            <div className="rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                src={embedUrl}
+                width="100%"
+                height={matterportHeight}
+                frameBorder="0"
+                allowFullScreen
+                allow="xr-spatial-tracking"
+                className="w-full"
+                title={title || '3D Virtual Tour'}
+              />
+            </div>
+          </div>
+        </section>
+      );
+
     default:
       return (
         <section className={`py-16 px-4 ${bgClass}`}>

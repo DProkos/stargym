@@ -88,6 +88,7 @@ const SECTION_TYPES = [
   { type: 'cta', label: 'Call to Action', icon: Sparkles },
   { type: 'image', label: 'Image', icon: ImageIcon },
   { type: 'packages', label: 'Πακέτα Υπηρεσιών', icon: Package },
+  { type: 'matterport', label: '3D Tour (Matterport)', icon: Eye },
   { type: 'contact_form', label: 'Contact Form', icon: Phone },
   { type: 'contact_info', label: 'Contact Info', icon: Phone },
 ];

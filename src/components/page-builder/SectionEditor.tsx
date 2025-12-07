@@ -641,6 +641,49 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
           </div>
         );
 
+      case 'matterport':
+        return (
+          <div className="space-y-4">
+            {renderLanguageTabs()}
+            <div>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
+              <Input
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
+                placeholder="3D Tour του Γυμναστηρίου..."
+              />
+            </div>
+            <div>
+              <Label>Υπότιτλος ({activeLang.toUpperCase()})</Label>
+              <Input
+                value={getCurrentSubtitle()}
+                onChange={(e) => updateSubtitle(e.target.value)}
+                placeholder="Εξερευνήστε τους χώρους μας εικονικά..."
+              />
+            </div>
+            <div>
+              <Label>Matterport URL ή Model ID</Label>
+              <Input
+                value={localSettings.matterport_url || ''}
+                onChange={(e) => updateSettings('matterport_url', e.target.value)}
+                placeholder="https://my.matterport.com/show/?m=XXXXXX ή απλά το ID"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Εισάγετε το embed URL, το share URL, ή μόνο το Model ID από το Matterport
+              </p>
+            </div>
+            <div>
+              <Label>Ύψος (px)</Label>
+              <Input
+                type="number"
+                value={localSettings.height || '600'}
+                onChange={(e) => updateSettings('height', e.target.value)}
+                placeholder="600"
+              />
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="space-y-4">
