@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Shield, Dumbbell, User2, Settings, Eye, Trash2 } from 'lucide-react';
+import { Shield, Dumbbell, User2, Settings, Eye, Trash2, Mail, Key, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MemberRowProps {
@@ -43,6 +43,8 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sendingWelcome, setSendingWelcome] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
 
   useEffect(() => {
     if (member.roles) {
@@ -176,10 +178,82 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
     }
   };
 
+  const handleSendWelcomeEmail = async () => {
+    setSendingWelcome(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: member.email,
+          subject: 'Καλωσόρισμα στο γυμναστήριό μας!',
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #6366f1;">Καλωσόρισμα!</h1>
+              <p>Αγαπητέ/ή ${member.full_name || 'χρήστη'},</p>
+              <p>Καλώς ήρθατε στην οικογένεια του γυμναστηρίου μας!</p>
+              <p>Είμαστε ενθουσιασμένοι που σας έχουμε μαζί μας.</p>
+              <p>Μπορείτε να συνδεθείτε στην πλατφόρμα μας για να:</p>
+              <ul>
+                <li>Κάνετε κρατήσεις σε μαθήματα</li>
+                <li>Δείτε το πρόγραμμα</li>
+                <li>Διαχειριστείτε τη συνδρομή σας</li>
+              </ul>
+              <br>
+              <p>Με εκτίμηση,<br>Η ομάδα του γυμναστηρίου</p>
+            </div>
+          `,
+          text: `Καλωσόρισμα ${member.full_name || 'χρήστη'}! Καλώς ήρθατε στην οικογένεια του γυμναστηρίου μας!`
+        }
+      });
+
+      if (error) throw error;
+      toast.success(`Το Welcome email στάλθηκε στο ${member.email}`);
+    } catch (error: any) {
+      console.error('Error sending welcome email:', error);
+      toast.error('Αποτυχία αποστολής email');
+    } finally {
+      setSendingWelcome(false);
+    }
+  };
+
+  const handleSendPasswordReset = async () => {
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: member.email,
+          subject: 'Επαναφορά Κωδικού Πρόσβασης',
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #6366f1;">Επαναφορά Κωδικού</h1>
+              <p>Αγαπητέ/ή ${member.full_name || 'χρήστη'},</p>
+              <p>Λάβαμε αίτημα επαναφοράς του κωδικού σας.</p>
+              <p>Παρακαλούμε επικοινωνήστε με τη διαχείριση για να λάβετε τον νέο σας κωδικό ή χρησιμοποιήστε την επιλογή "Ξέχασα τον κωδικό μου" στη σελίδα σύνδεσης.</p>
+              <p>Αν δεν ζητήσατε επαναφορά κωδικού, παρακαλώ αγνοήστε αυτό το email.</p>
+              <br>
+              <p>Με εκτίμηση,<br>Η ομάδα διαχείρισης</p>
+            </div>
+          `,
+          text: `Αγαπητέ/ή ${member.full_name || 'χρήστη'}, Λάβαμε αίτημα επαναφοράς του κωδικού σας. Παρακαλούμε επικοινωνήστε με τη διαχείριση.`
+        }
+      });
+
+      if (error) throw error;
+      toast.success(`Το email επαναφοράς κωδικού στάλθηκε στο ${member.email}`);
+    } catch (error: any) {
+      console.error('Error sending password reset email:', error);
+      toast.error('Αποτυχία αποστολής email');
+    } finally {
+      setSendingReset(false);
+    }
+  };
+
   return (
     <>
       <div className="flex items-center justify-between p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors">
-        <div className="flex-1">
+        <div 
+          className="flex-1 cursor-pointer"
+          onClick={() => navigate(`/admin/crm/customer/${member.id}`)}
+        >
           <p className="font-semibold">{member.full_name || 'No name'}</p>
           <p className="text-sm text-muted-foreground">{member.email}</p>
         </div>
@@ -201,7 +275,28 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(`/admin/users/${member.id}`)}
+            onClick={handleSendWelcomeEmail}
+            disabled={sendingWelcome}
+            title="Αποστολή Welcome Email"
+          >
+            {sendingWelcome ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSendPasswordReset}
+            disabled={sendingReset}
+            title="Αποστολή Reset Password Email"
+          >
+            {sendingReset ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/admin/crm/customer/${member.id}`)}
+            title="Προβολή Λεπτομερειών"
           >
             <Eye className="h-4 w-4" />
           </Button>
