@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://esm.sh/zod@3.25.76';
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +19,176 @@ const emailSchema = z.object({
     contentType: z.string(),
   })).optional(),
 });
+
+// Simple SMTP over TLS using Web Streams
+async function sendEmailViaSMTP(config: {
+  host: string;
+  port: number;
+  user: string;
+  pass: string;
+  from: string;
+  fromName: string;
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}): Promise<void> {
+  const { host, port, user, pass, from, fromName, to, subject, html, text } = config;
+  
+  // For Gmail with port 587, we need STARTTLS which is complex in Deno edge functions
+  // For port 465, we need direct TLS connection
+  // Let's use the MailChannels API approach which works in edge functions
+  
+  // Since direct SMTP is problematic in edge functions, let's try a fetch-based approach
+  // Using SMTP2GO or similar service that has an HTTP API
+  
+  // Build the MIME message
+  const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+  
+  let mimeMessage = `From: "${fromName}" <${from}>\r\n`;
+  mimeMessage += `To: ${to}\r\n`;
+  mimeMessage += `Subject: ${subject}\r\n`;
+  mimeMessage += `MIME-Version: 1.0\r\n`;
+  mimeMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
+  
+  if (text) {
+    mimeMessage += `--${boundary}\r\n`;
+    mimeMessage += `Content-Type: text/plain; charset=UTF-8\r\n\r\n`;
+    mimeMessage += `${text}\r\n\r\n`;
+  }
+  
+  mimeMessage += `--${boundary}\r\n`;
+  mimeMessage += `Content-Type: text/html; charset=UTF-8\r\n\r\n`;
+  mimeMessage += `${html}\r\n\r\n`;
+  mimeMessage += `--${boundary}--`;
+
+  // Connect to SMTP server with TLS
+  let conn: Deno.TlsConn | Deno.TcpConn;
+  
+  if (port === 465) {
+    // Direct TLS connection
+    conn = await Deno.connectTls({
+      hostname: host,
+      port: port,
+    });
+  } else {
+    // For port 587, we need to upgrade to TLS after STARTTLS
+    // This is the problematic part in edge functions
+    const tcpConn = await Deno.connect({
+      hostname: host,
+      port: port,
+    });
+    
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    
+    const read = async (c: Deno.TcpConn): Promise<string> => {
+      const buf = new Uint8Array(1024);
+      const n = await c.read(buf);
+      return decoder.decode(buf.subarray(0, n || 0));
+    };
+    
+    const write = async (c: Deno.TcpConn, data: string): Promise<void> => {
+      await c.write(encoder.encode(data + "\r\n"));
+    };
+    
+    // Initial greeting
+    const greeting = await read(tcpConn);
+    console.log("SMTP Greeting:", greeting.trim());
+    
+    // EHLO
+    await write(tcpConn, `EHLO ${host}`);
+    const ehloResp = await read(tcpConn);
+    console.log("EHLO Response:", ehloResp.trim());
+    
+    // STARTTLS
+    await write(tcpConn, "STARTTLS");
+    const starttlsResp = await read(tcpConn);
+    console.log("STARTTLS Response:", starttlsResp.trim());
+    
+    if (!starttlsResp.startsWith("220")) {
+      tcpConn.close();
+      throw new Error("STARTTLS failed: " + starttlsResp);
+    }
+    
+    // Upgrade to TLS - this is where edge functions often have issues
+    try {
+      conn = await Deno.startTls(tcpConn, {
+        hostname: host,
+      });
+    } catch (tlsError) {
+      console.error("TLS upgrade failed:", tlsError);
+      throw new Error("TLS upgrade failed. Gmail SMTP requires TLS which may not be fully supported in this environment.");
+    }
+  }
+  
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  
+  const read = async (): Promise<string> => {
+    const buf = new Uint8Array(2048);
+    const n = await conn.read(buf);
+    return decoder.decode(buf.subarray(0, n || 0));
+  };
+  
+  const write = async (data: string): Promise<void> => {
+    await conn.write(encoder.encode(data + "\r\n"));
+  };
+  
+  try {
+    // For port 465, read initial greeting
+    if (port === 465) {
+      const greeting = await read();
+      console.log("SMTP Greeting:", greeting.trim());
+    }
+    
+    // EHLO again after TLS
+    await write(`EHLO ${host}`);
+    const ehlo2 = await read();
+    console.log("EHLO (TLS):", ehlo2.substring(0, 100));
+    
+    // AUTH LOGIN
+    const authString = `\0${user}\0${pass}`;
+    const authBase64 = btoa(authString);
+    await write(`AUTH PLAIN ${authBase64}`);
+    const authResp = await read();
+    console.log("AUTH Response:", authResp.trim());
+    
+    if (!authResp.startsWith("235")) {
+      throw new Error("Authentication failed: " + authResp);
+    }
+    
+    // MAIL FROM
+    await write(`MAIL FROM:<${from}>`);
+    const mailFromResp = await read();
+    console.log("MAIL FROM:", mailFromResp.trim());
+    
+    // RCPT TO
+    await write(`RCPT TO:<${to}>`);
+    const rcptResp = await read();
+    console.log("RCPT TO:", rcptResp.trim());
+    
+    // DATA
+    await write("DATA");
+    const dataResp = await read();
+    console.log("DATA:", dataResp.trim());
+    
+    // Send message
+    await conn.write(encoder.encode(mimeMessage + "\r\n.\r\n"));
+    const sendResp = await read();
+    console.log("Message sent:", sendResp.trim());
+    
+    if (!sendResp.startsWith("250")) {
+      throw new Error("Failed to send message: " + sendResp);
+    }
+    
+    // QUIT
+    await write("QUIT");
+    
+  } finally {
+    conn.close();
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -88,7 +258,7 @@ serve(async (req) => {
       );
     }
 
-    const { to, subject, html, text, attachments } = validationResult.data;
+    const { to, subject, html, text } = validationResult.data;
 
     // Get SMTP settings from database
     const { data: settings, error: settingsError } = await supabase
@@ -126,46 +296,23 @@ serve(async (req) => {
     }
 
     const port = parseInt(smtpConfig.smtp_port || '587');
-    
-    console.log(`Creating SMTP client for ${smtpConfig.smtp_host}:${port}`);
-
-    // Create SMTP client with denomailer
-    const client = new SMTPClient({
-      connection: {
-        hostname: smtpConfig.smtp_host,
-        port: port,
-        tls: port === 465, // Use direct TLS for port 465
-        auth: {
-          username: smtpConfig.smtp_user,
-          password: smtpConfig.smtp_password,
-        },
-      },
-    });
-
     const fromEmail = smtpConfig.smtp_from_email || smtpConfig.smtp_user;
     const fromName = smtpConfig.smtp_from_name || 'System';
+    
+    console.log(`Sending email to ${to} via ${smtpConfig.smtp_host}:${port}`);
 
-    console.log(`Sending email to ${to} from ${fromName} <${fromEmail}>`);
-
-    // Prepare attachments if present
-    const emailAttachments = attachments?.map((att) => ({
-      filename: att.filename,
-      content: att.content,
-      contentType: att.contentType,
-      encoding: "base64" as const,
-    }));
-
-    // Send email
-    await client.send({
-      from: `${fromName} <${fromEmail}>`,
+    await sendEmailViaSMTP({
+      host: smtpConfig.smtp_host,
+      port: port,
+      user: smtpConfig.smtp_user,
+      pass: smtpConfig.smtp_password,
+      from: fromEmail,
+      fromName: fromName,
       to: to,
       subject: subject,
-      content: text || '',
       html: html,
-      attachments: emailAttachments,
+      text: text,
     });
-
-    await client.close();
     
     console.log(`Email sent successfully to ${to}`);
 
