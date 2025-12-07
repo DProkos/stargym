@@ -37,11 +37,35 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navPages, setNavPages] = useState<NavPage[]>([]);
+  const [siteName, setSiteName] = useState('Star Gym');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     loadNavigationPages();
+    loadSiteSettings();
   }, []);
+
+  const loadSiteSettings = async () => {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['site_name', 'logo_url']);
+
+    if (error) {
+      console.error('Error loading site settings:', error);
+      return;
+    }
+
+    data?.forEach(setting => {
+      if (setting.setting_key === 'site_name' && setting.setting_value) {
+        setSiteName(setting.setting_value);
+      }
+      if (setting.setting_key === 'logo_url' && setting.setting_value) {
+        setLogoUrl(setting.setting_value);
+      }
+    });
+  };
 
   const loadNavigationPages = async () => {
     // Get all unique page keys that have sections in the database
@@ -82,8 +106,12 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <Dumbbell className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">Star Gym</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={siteName} className="h-8 w-auto object-contain" />
+            ) : (
+              <Dumbbell className="h-8 w-8 text-primary" />
+            )}
+            <span className="text-xl font-bold">{siteName}</span>
           </Link>
 
           {/* Desktop Navigation */}
