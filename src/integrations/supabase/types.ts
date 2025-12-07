@@ -74,6 +74,51 @@ export type Database = {
         }
         Relationships: []
       }
+      automations: {
+        Row: {
+          automation_type: string
+          config: Json | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          name: string
+          next_run_at: string | null
+          schedule: string
+          updated_at: string
+        }
+        Insert: {
+          automation_type: string
+          config?: Json | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name: string
+          next_run_at?: string | null
+          schedule?: string
+          updated_at?: string
+        }
+        Update: {
+          automation_type?: string
+          config?: Json | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          name?: string
+          next_run_at?: string | null
+          schedule?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string

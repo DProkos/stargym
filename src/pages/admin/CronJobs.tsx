@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
@@ -13,43 +15,74 @@ import {
   Clock, 
   Play, 
   RefreshCw, 
-  CheckCircle, 
-  XCircle, 
+  Plus,
   Calendar,
-  Terminal,
-  Save
+  Bell,
+  Mail,
+  Users,
+  Save,
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-interface CronJob {
-  jobid: number;
+interface Automation {
+  id: string;
+  name: string;
+  description: string | null;
+  automation_type: string;
   schedule: string;
-  command: string;
-  nodename: string;
-  nodeport: number;
-  database: string;
-  username: string;
-  active: boolean;
-  jobname: string;
+  is_active: boolean;
+  config: any;
+  last_run_at: string | null;
+  created_at: string;
 }
+
+const AUTOMATION_TYPES = [
+  { value: 'class_reminder', label: 'Υπενθύμιση Μαθήματος', icon: Calendar, description: 'Στέλνει υπενθύμιση στα μέλη για επερχόμενα μαθήματα' },
+  { value: 'subscription_reminder', label: 'Υπενθύμιση Συνδρομής', icon: Users, description: 'Στέλνει υπενθύμιση για λήξη συνδρομής' },
+  { value: 'newsletter', label: 'Newsletter', icon: Mail, description: 'Αυτόματη αποστολή newsletter' },
+];
+
+const SCHEDULE_PRESETS = [
+  { value: '0 9 * * *', label: 'Κάθε μέρα στις 9:00' },
+  { value: '0 8 * * *', label: 'Κάθε μέρα στις 8:00' },
+  { value: '0 10 * * *', label: 'Κάθε μέρα στις 10:00' },
+  { value: '0 9 * * 1', label: 'Κάθε Δευτέρα στις 9:00' },
+  { value: '0 9 * * 1-5', label: 'Καθημερινές (Δευ-Παρ) στις 9:00' },
+  { value: '0 9 1 * *', label: 'Κάθε 1η του μήνα στις 9:00' },
+];
 
 export default function CronJobs() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
+  const [automations, setAutomations] = useState<Automation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [executing, setExecuting] = useState(false);
-  const [logs, setLogs] = useState<string>('');
-  const [showLogsDialog, setShowLogsDialog] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState<number | null>(null);
-  const [newSchedule, setNewSchedule] = useState('');
+  const [executing, setExecuting] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    automation_type: 'class_reminder',
+    schedule: '0 9 * * *',
+    is_active: true,
+    config: {},
+  });
 
   useEffect(() => {
     checkAuth();
@@ -67,115 +100,216 @@ export default function CronJobs() {
       .select('role')
       .eq('user_id', session.user.id)
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (!roleData) {
       navigate('/');
       return;
     }
 
-    loadCronJobs();
+    loadAutomations();
   };
 
-  const loadCronJobs = async () => {
+  const loadAutomations = async () => {
     setLoading(true);
     try {
-      // Query cron.job table directly with type assertion
       const { data, error } = await supabase
-        .from('cron.job' as any)
+        .from('automations')
         .select('*')
-        .order('jobid');
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading cron jobs:', error);
-        toast({
-          title: 'Note',
-          description: 'Cron jobs feature requires database functions. Some features may be limited.',
-          variant: 'default',
-        });
-        setCronJobs([]);
-      } else {
-        setCronJobs((data as unknown as CronJob[]) || []);
-      }
+      if (error) throw error;
+      setAutomations(data || []);
     } catch (error) {
-      console.error('Error:', error);
-      setCronJobs([]);
+      console.error('Error loading automations:', error);
+      toast({
+        title: 'Σφάλμα',
+        description: 'Αποτυχία φόρτωσης αυτοματισμών',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleManualExecution = async () => {
-    setExecuting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('send-class-reminders', {
-        body: {}
+  const handleSave = async () => {
+    if (!formData.name || !formData.automation_type) {
+      toast({
+        title: 'Σφάλμα',
+        description: 'Συμπλήρωσε όλα τα υποχρεωτικά πεδία',
+        variant: 'destructive',
       });
+      return;
+    }
 
-      if (error) {
-        throw error;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      if (editingAutomation) {
+        const { error } = await supabase
+          .from('automations')
+          .update({
+            name: formData.name,
+            description: formData.description || null,
+            automation_type: formData.automation_type,
+            schedule: formData.schedule,
+            is_active: formData.is_active,
+            config: formData.config,
+          })
+          .eq('id', editingAutomation.id);
+
+        if (error) throw error;
+        toast({ title: 'Επιτυχία', description: 'Ο αυτοματισμός ενημερώθηκε' });
+      } else {
+        const { error } = await supabase
+          .from('automations')
+          .insert({
+            name: formData.name,
+            description: formData.description || null,
+            automation_type: formData.automation_type,
+            schedule: formData.schedule,
+            is_active: formData.is_active,
+            config: formData.config,
+            created_by: session.user.id,
+          });
+
+        if (error) throw error;
+        toast({ title: 'Επιτυχία', description: 'Ο αυτοματισμός δημιουργήθηκε' });
       }
 
+      setShowDialog(false);
+      setEditingAutomation(null);
+      resetForm();
+      loadAutomations();
+    } catch (error: any) {
+      console.error('Error saving automation:', error);
       toast({
-        title: 'Execution Started',
-        description: 'The reminder job has been triggered successfully',
+        title: 'Σφάλμα',
+        description: error.message || 'Αποτυχία αποθήκευσης',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Είσαι σίγουρος ότι θέλεις να διαγράψεις αυτόν τον αυτοματισμό;')) return;
+
+    try {
+      const { error } = await supabase.from('automations').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Επιτυχία', description: 'Ο αυτοματισμός διαγράφηκε' });
+      loadAutomations();
+    } catch (error: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: error.message || 'Αποτυχία διαγραφής',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleActive = async (automation: Automation) => {
+    try {
+      const { error } = await supabase
+        .from('automations')
+        .update({ is_active: !automation.is_active })
+        .eq('id', automation.id);
+
+      if (error) throw error;
+      loadAutomations();
+    } catch (error) {
+      console.error('Error toggling automation:', error);
+    }
+  };
+
+  const handleExecute = async (automation: Automation) => {
+    setExecuting(automation.id);
+    try {
+      let functionName = '';
+      switch (automation.automation_type) {
+        case 'class_reminder':
+          functionName = 'send-class-reminders';
+          break;
+        case 'subscription_reminder':
+          functionName = 'send-class-reminders'; // TODO: create dedicated function
+          break;
+        case 'newsletter':
+          functionName = 'send-mass-email';
+          break;
+        default:
+          throw new Error('Unknown automation type');
+      }
+
+      const { error } = await supabase.functions.invoke(functionName, {
+        body: { automationId: automation.id },
       });
 
-      // Show result
-      setLogs(JSON.stringify(data, null, 2));
-      setShowLogsDialog(true);
+      if (error) throw error;
+
+      // Update last_run_at
+      await supabase
+        .from('automations')
+        .update({ last_run_at: new Date().toISOString() })
+        .eq('id', automation.id);
+
+      toast({ title: 'Επιτυχία', description: 'Ο αυτοματισμός εκτελέστηκε' });
+      loadAutomations();
     } catch (error: any) {
-      console.error('Execution error:', error);
       toast({
-        title: 'Execution Failed',
-        description: error.message || 'Failed to execute the job',
+        title: 'Σφάλμα',
+        description: error.message || 'Αποτυχία εκτέλεσης',
         variant: 'destructive',
       });
     } finally {
-      setExecuting(false);
+      setExecuting(null);
     }
   };
 
-  const handleUpdateSchedule = async (jobId: number, schedule: string) => {
-    try {
-      // Update directly in cron.job table
-      const { error } = await supabase
-        .from('cron.job' as any)
-        .update({ schedule })
-        .eq('jobid', jobId);
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: 'Schedule Updated',
-        description: 'The cron schedule has been updated successfully',
-      });
-
-      setEditingSchedule(null);
-      loadCronJobs();
-    } catch (error: any) {
-      console.error('Update error:', error);
-      toast({
-        title: 'Update Failed',
-        description: error.message || 'Failed to update schedule',
-        variant: 'destructive',
-      });
-    }
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      automation_type: 'class_reminder',
+      schedule: '0 9 * * *',
+      is_active: true,
+      config: {},
+    });
   };
 
-  const parseCronSchedule = (schedule: string): string => {
+  const openEditDialog = (automation: Automation) => {
+    setEditingAutomation(automation);
+    setFormData({
+      name: automation.name,
+      description: automation.description || '',
+      automation_type: automation.automation_type,
+      schedule: automation.schedule,
+      is_active: automation.is_active,
+      config: automation.config || {},
+    });
+    setShowDialog(true);
+  };
+
+  const openCreateDialog = () => {
+    setEditingAutomation(null);
+    resetForm();
+    setShowDialog(true);
+  };
+
+  const getTypeInfo = (type: string) => {
+    return AUTOMATION_TYPES.find(t => t.value === type) || AUTOMATION_TYPES[0];
+  };
+
+  const parseSchedule = (schedule: string): string => {
+    const preset = SCHEDULE_PRESETS.find(p => p.value === schedule);
+    if (preset) return preset.label;
+    
     const parts = schedule.split(' ');
-    if (parts.length !== 5) return schedule;
-
-    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
-    
-    if (minute === '0' && hour === '9' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
-      return 'Κάθε μέρα στις 9:00 πμ';
+    if (parts.length === 5) {
+      const [minute, hour] = parts;
+      return `${hour}:${minute.padStart(2, '0')}`;
     }
-    
-    return `${hour}:${minute} ${dayOfWeek === '*' ? 'καθημερινά' : `μέρα ${dayOfWeek}`}`;
+    return schedule;
   };
 
   return (
@@ -184,223 +318,273 @@ export default function CronJobs() {
         <AppSidebarAdmin />
         
         <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
-            <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">Cron Jobs Management</h1>
+          <header className="h-16 border-b border-border flex items-center justify-between px-6">
+            <div className="flex items-center">
+              <SidebarTrigger />
+              <h1 className="ml-4 text-2xl font-bold">Αυτοματισμοί & Υπενθυμίσεις</h1>
+            </div>
+            <Button onClick={openCreateDialog} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Νέος Αυτοματισμός
+            </Button>
           </header>
 
           <main className="p-6">
             <div className="max-w-6xl mx-auto space-y-6">
-              {/* Overview Card */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    Automated Tasks Overview
-                  </CardTitle>
-                  <CardDescription>
-                    Manage scheduled tasks and email reminders
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
-                      <CheckCircle className="h-8 w-8 text-green-500" />
-                      <div>
-                        <p className="text-2xl font-bold">{cronJobs.filter(j => j.active).length}</p>
-                        <p className="text-sm text-muted-foreground">Active Jobs</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
-                      <XCircle className="h-8 w-8 text-muted-foreground" />
-                      <div>
-                        <p className="text-2xl font-bold">{cronJobs.filter(j => !j.active).length}</p>
-                        <p className="text-sm text-muted-foreground">Inactive Jobs</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-4 border border-border rounded-lg">
-                      <Calendar className="h-8 w-8 text-primary" />
-                      <div>
-                        <p className="text-2xl font-bold">{cronJobs.length}</p>
-                        <p className="text-sm text-muted-foreground">Total Jobs</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Overview Cards */}
+              <div className="grid gap-4 md:grid-cols-3">
+                {AUTOMATION_TYPES.map(type => {
+                  const count = automations.filter(a => a.automation_type === type.value).length;
+                  const activeCount = automations.filter(a => a.automation_type === type.value && a.is_active).length;
+                  const Icon = type.icon;
+                  return (
+                    <Card key={type.value} className="bg-gradient-card border-border">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-primary/10">
+                            <Icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">{type.label}</p>
+                            <p className="text-2xl font-bold">{activeCount}/{count}</p>
+                            <p className="text-xs text-muted-foreground">ενεργά</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
 
-              {/* Manual Execution Card - Always visible */}
-              <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Terminal className="h-5 w-5 text-primary" />
-                    Class Reminders Job
-                  </CardTitle>
-                  <CardDescription>
-                    Manually trigger the class reminder email job
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Χρονοδιάγραμμα</Label>
-                    <p className="font-mono text-sm mt-1">0 9 * * * (Κάθε μέρα στις 9:00 πμ)</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Λειτουργία</Label>
-                    <p className="text-sm mt-1">Στέλνει υπενθυμίσεις email σε όλα τα μέλη με κρατήσεις για την επόμενη μέρα</p>
-                  </div>
-                  <div className="flex gap-3 pt-4 border-t border-border">
-                    <Button
-                      onClick={handleManualExecution}
-                      disabled={executing}
-                      className="flex items-center gap-2"
-                    >
-                      <Play className="h-4 w-4" />
-                      {executing ? 'Εκτέλεση...' : 'Manual Execution'}
-                    </Button>
-                    <Button
-                      onClick={loadCronJobs}
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      Ανανέωση
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Cron Jobs List */}
+              {/* Automations List */}
               {loading ? (
                 <Card className="bg-gradient-card border-border">
                   <CardContent className="pt-6">
                     <p className="text-center text-muted-foreground">Φόρτωση...</p>
                   </CardContent>
                 </Card>
-              ) : cronJobs.length === 0 ? (
+              ) : automations.length === 0 ? (
                 <Card className="bg-gradient-card border-border">
-                  <CardContent className="pt-6">
-                    <p className="text-center text-muted-foreground">
-                      Cron job is configured and running. Use manual execution above to test.
-                    </p>
+                  <CardContent className="pt-6 text-center">
+                    <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">Δεν υπάρχουν αυτοματισμοί</p>
+                    <Button onClick={openCreateDialog}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Δημιουργία Αυτοματισμού
+                    </Button>
                   </CardContent>
                 </Card>
               ) : (
-                cronJobs.map((job) => (
-                  <Card key={job.jobid} className="bg-gradient-card border-border">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <Terminal className="h-5 w-5 text-primary" />
-                            {job.jobname || `Job #${job.jobid}`}
-                          </CardTitle>
-                          <CardDescription className="mt-2">
-                            {parseCronSchedule(job.schedule)}
-                          </CardDescription>
-                        </div>
-                        <Badge 
-                          variant="outline" 
-                          className={job.active 
-                            ? "bg-green-500/20 text-green-600 border-green-500"
-                            : "bg-muted/20 text-muted-foreground"
-                          }
-                        >
-                          {job.active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Schedule Editor */}
-                      {editingSchedule === job.jobid ? (
-                        <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/20">
-                          <Label htmlFor={`schedule-${job.jobid}`}>
-                            Cron Schedule (format: minute hour day month dayofweek)
-                          </Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id={`schedule-${job.jobid}`}
-                              value={newSchedule}
-                              onChange={(e) => setNewSchedule(e.target.value)}
-                              placeholder="0 9 * * *"
-                              className="font-mono"
-                            />
+                <div className="space-y-4">
+                  {automations.map((automation) => {
+                    const typeInfo = getTypeInfo(automation.automation_type);
+                    const Icon = typeInfo.icon;
+                    return (
+                      <Card key={automation.id} className="bg-gradient-card border-border">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${automation.is_active ? 'bg-primary/10' : 'bg-muted/20'}`}>
+                                <Icon className={`h-5 w-5 ${automation.is_active ? 'text-primary' : 'text-muted-foreground'}`} />
+                              </div>
+                              <div>
+                                <CardTitle className="text-lg">{automation.name}</CardTitle>
+                                <CardDescription>{typeInfo.label}</CardDescription>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Switch
+                                checked={automation.is_active}
+                                onCheckedChange={() => handleToggleActive(automation)}
+                              />
+                              <Badge variant={automation.is_active ? 'default' : 'secondary'}>
+                                {automation.is_active ? 'Ενεργό' : 'Ανενεργό'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {automation.description && (
+                            <p className="text-sm text-muted-foreground">{automation.description}</p>
+                          )}
+                          
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Χρονοδιάγραμμα</p>
+                                <p className="text-sm font-medium">{parseSchedule(automation.schedule)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Τελευταία εκτέλεση</p>
+                                <p className="text-sm font-medium">
+                                  {automation.last_run_at 
+                                    ? new Date(automation.last_run_at).toLocaleString('el-GR')
+                                    : 'Ποτέ'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-4 border-t border-border">
                             <Button
-                              onClick={() => handleUpdateSchedule(job.jobid, newSchedule)}
+                              onClick={() => handleExecute(automation)}
+                              disabled={executing === automation.id}
                               size="sm"
                               className="flex items-center gap-2"
                             >
-                              <Save className="h-4 w-4" />
-                              Save
+                              <Play className="h-4 w-4" />
+                              {executing === automation.id ? 'Εκτέλεση...' : 'Εκτέλεση τώρα'}
                             </Button>
                             <Button
-                              onClick={() => setEditingSchedule(null)}
+                              onClick={() => openEditDialog(automation)}
                               size="sm"
                               variant="outline"
                             >
-                              Cancel
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Επεξεργασία
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(automation.id)}
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            Παραδείγματα: "0 9 * * *" = Κάθε μέρα στις 9πμ, "30 8 * * *" = Κάθε μέρα στις 8:30πμ
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1">
-                            <Label className="text-sm text-muted-foreground">Χρονοδιάγραμμα</Label>
-                            <p className="font-mono text-sm mt-1">{job.schedule}</p>
-                          </div>
-                          <Button
-                            onClick={() => {
-                              setEditingSchedule(job.jobid);
-                              setNewSchedule(job.schedule);
-                            }}
-                            size="sm"
-                            variant="outline"
-                          >
-                            Επεξεργασία
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Command Display */}
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Command</Label>
-                        <Textarea
-                          value={job.command}
-                          readOnly
-                          className="mt-1 font-mono text-xs h-20 resize-none"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               )}
+
+              {/* Refresh Button */}
+              <div className="flex justify-center">
+                <Button onClick={loadAutomations} variant="outline" className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Ανανέωση
+                </Button>
+              </div>
             </div>
           </main>
         </div>
       </div>
 
-      {/* Logs Dialog */}
-      <Dialog open={showLogsDialog} onOpenChange={setShowLogsDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] bg-card border-border">
+      {/* Create/Edit Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-lg bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Terminal className="h-5 w-5 text-primary" />
-              Execution Logs
+            <DialogTitle>
+              {editingAutomation ? 'Επεξεργασία Αυτοματισμού' : 'Νέος Αυτοματισμός'}
             </DialogTitle>
             <DialogDescription>
-              Results from the manual execution
+              Δημιούργησε αυτόματες υπενθυμίσεις για μαθήματα, συνδρομές ή newsletters
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4">
-            <Textarea
-              value={logs}
-              readOnly
-              className="font-mono text-xs h-96 resize-none bg-muted"
-            />
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Όνομα *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="π.χ. Υπενθύμιση μαθημάτων αύριο"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Περιγραφή</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Περιγραφή του αυτοματισμού..."
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Τύπος Αυτοματισμού *</Label>
+              <Select
+                value={formData.automation_type}
+                onValueChange={(value) => setFormData({ ...formData, automation_type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AUTOMATION_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      <div className="flex items-center gap-2">
+                        <type.icon className="h-4 w-4" />
+                        {type.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {getTypeInfo(formData.automation_type).description}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Χρονοδιάγραμμα *</Label>
+              <Select
+                value={formData.schedule}
+                onValueChange={(value) => setFormData({ ...formData, schedule: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCHEDULE_PRESETS.map(preset => (
+                    <SelectItem key={preset.value} value={preset.value}>
+                      {preset.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Προσαρμοσμένο Schedule (Cron format)</Label>
+              <Input
+                value={formData.schedule}
+                onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
+                placeholder="0 9 * * *"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Format: λεπτό ώρα μέρα-μήνα μήνας μέρα-εβδομάδας
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="is_active">Ενεργοποίηση</Label>
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+            </div>
           </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>
+              Ακύρωση
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              {editingAutomation ? 'Αποθήκευση' : 'Δημιουργία'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </SidebarProvider>
