@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://esm.sh/zod@3.25.76';
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -117,99 +118,55 @@ serve(async (req) => {
     });
 
     if (!smtpConfig.smtp_host || !smtpConfig.smtp_user || !smtpConfig.smtp_password) {
+      console.error('SMTP not configured properly');
       return new Response(
         JSON.stringify({ error: 'Email service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create email message in RFC 5322 format
-    const from = `${smtpConfig.smtp_from_name} <${smtpConfig.smtp_from_email}>`;
-    const boundary = `----=_Part_${Date.now()}`;
-    
-    let emailBody = `From: ${from}\r\n`;
-    emailBody += `To: ${to}\r\n`;
-    emailBody += `Subject: ${subject}\r\n`;
-    emailBody += `MIME-Version: 1.0\r\n`;
-    emailBody += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
-    
-    if (text) {
-      emailBody += `--${boundary}\r\n`;
-      emailBody += `Content-Type: text/plain; charset=UTF-8\r\n\r\n`;
-      emailBody += `${text}\r\n\r\n`;
-    }
-    
-    emailBody += `--${boundary}\r\n`;
-    emailBody += `Content-Type: text/html; charset=UTF-8\r\n\r\n`;
-    emailBody += `${html}\r\n\r\n`;
-    
-    // Add attachments if present
-    if (attachments && attachments.length > 0) {
-      for (const attachment of attachments) {
-        emailBody += `--${boundary}\r\n`;
-        emailBody += `Content-Type: ${attachment.contentType}\r\n`;
-        emailBody += `Content-Transfer-Encoding: base64\r\n`;
-        emailBody += `Content-Disposition: attachment; filename="${attachment.filename}"\r\n\r\n`;
-        emailBody += `${attachment.content}\r\n\r\n`;
-      }
-    }
-    
-    emailBody += `--${boundary}--`;
-
-    // Connect to SMTP server
     const port = parseInt(smtpConfig.smtp_port || '587');
-    const secure = smtpConfig.smtp_secure === 'true';
     
-    console.log(`Sending email to ${to}`);
-    
-    const conn = await Deno.connect({
-      hostname: smtpConfig.smtp_host,
-      port: port,
+    console.log(`Creating SMTP client for ${smtpConfig.smtp_host}:${port}`);
+
+    // Create SMTP client with denomailer
+    const client = new SMTPClient({
+      connection: {
+        hostname: smtpConfig.smtp_host,
+        port: port,
+        tls: port === 465, // Use direct TLS for port 465
+        auth: {
+          username: smtpConfig.smtp_user,
+          password: smtpConfig.smtp_password,
+        },
+      },
     });
 
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
+    const fromEmail = smtpConfig.smtp_from_email || smtpConfig.smtp_user;
+    const fromName = smtpConfig.smtp_from_name || 'System';
 
-    const send = async (data: string) => {
-      await conn.write(encoder.encode(data + '\r\n'));
-    };
+    console.log(`Sending email to ${to} from ${fromName} <${fromEmail}>`);
 
-    const receive = async (): Promise<string> => {
-      const buffer = new Uint8Array(1024);
-      const n = await conn.read(buffer);
-      return decoder.decode(buffer.subarray(0, n || 0));
-    };
+    // Prepare attachments if present
+    const emailAttachments = attachments?.map((att) => ({
+      filename: att.filename,
+      content: att.content,
+      contentType: att.contentType,
+      encoding: "base64" as const,
+    }));
 
-    // SMTP conversation
-    await receive();
-    await send(`EHLO ${smtpConfig.smtp_host}`);
-    await receive();
+    // Send email
+    await client.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: to,
+      subject: subject,
+      content: text || '',
+      html: html,
+      attachments: emailAttachments,
+    });
 
-    if (!secure && port === 587) {
-      await send('STARTTLS');
-      await receive();
-    }
-
-    const authPlain = btoa(`\0${smtpConfig.smtp_user}\0${smtpConfig.smtp_password}`);
-    await send('AUTH PLAIN ' + authPlain);
-    await receive();
-
-    await send(`MAIL FROM:<${smtpConfig.smtp_from_email}>`);
-    await receive();
-
-    await send(`RCPT TO:<${to}>`);
-    await receive();
-
-    await send('DATA');
-    await receive();
-
-    await send(emailBody);
-    await send('.');
-    await receive();
-
-    await send('QUIT');
-    conn.close();
-
+    await client.close();
+    
     console.log(`Email sent successfully to ${to}`);
 
     return new Response(
@@ -217,9 +174,9 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Error sending email:', error);
+    console.error('Error sending email:', error.message, error.stack);
     return new Response(
-      JSON.stringify({ error: 'Failed to send email' }),
+      JSON.stringify({ error: 'Failed to send email', details: error.message }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
