@@ -53,15 +53,27 @@ export default function Admin() {
   }, [navigate]);
 
   const loadData = async () => {
-    const [membersData, classesData, bookingsData] = await Promise.all([
+    const [membersData, classesData, bookingsData, rolesData] = await Promise.all([
       supabase.from('profiles').select('*'),
       supabase.from('classes').select('*, trainer:trainers(name)'),
       supabase.from('bookings').select('*, class:classes(name), user:profiles(full_name)'),
+      supabase.from('user_roles').select('user_id, role'),
     ]);
 
-    if (membersData.data) {
-      setMembers(membersData.data);
-      setStats((prev) => ({ ...prev, members: membersData.data.length }));
+    if (membersData.data && rolesData.data) {
+      // Combine profiles with their roles
+      const membersWithRoles = membersData.data.map(profile => ({
+        ...profile,
+        roles: rolesData.data?.filter(r => r.user_id === profile.id).map(r => r.role) || []
+      }));
+      
+      // Filter to show only members (not admins or trainers)
+      const onlyMembers = membersWithRoles.filter(member => 
+        member.roles?.includes('member') && !member.roles?.includes('admin') && !member.roles?.includes('trainer')
+      );
+      
+      setMembers(onlyMembers);
+      setStats((prev) => ({ ...prev, members: onlyMembers.length }));
     }
 
     if (classesData.data) {
