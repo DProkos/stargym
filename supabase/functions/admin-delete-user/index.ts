@@ -73,6 +73,46 @@ serve(async (req) => {
       throw new Error('Cannot delete your own account');
     }
 
+    // Delete related data first to avoid foreign key constraints
+    console.log(`Deleting related data for user ${userId}`);
+
+    // Delete bookings
+    await supabaseAdmin.from('bookings').delete().eq('user_id', userId);
+    
+    // Delete waitlist entries
+    await supabaseAdmin.from('waitlist').delete().eq('user_id', userId);
+    
+    // Delete invoices and invoice items (customer_id)
+    const { data: invoices } = await supabaseAdmin.from('invoices').select('id').eq('customer_id', userId);
+    if (invoices && invoices.length > 0) {
+      const invoiceIds = invoices.map(i => i.id);
+      await supabaseAdmin.from('invoice_items').delete().in('invoice_id', invoiceIds);
+      await supabaseAdmin.from('invoices').delete().eq('customer_id', userId);
+    }
+    
+    // Delete CRM data
+    await supabaseAdmin.from('crm_notes').delete().eq('customer_id', userId);
+    await supabaseAdmin.from('crm_interactions').delete().eq('customer_id', userId);
+    await supabaseAdmin.from('customer_tag_assignments').delete().eq('customer_id', userId);
+    await supabaseAdmin.from('crm_workflow_executions').delete().eq('customer_id', userId);
+    
+    // Delete user subscriptions
+    await supabaseAdmin.from('user_subscriptions').delete().eq('user_id', userId);
+    
+    // Delete password change codes
+    await supabaseAdmin.from('password_change_codes').delete().eq('user_id', userId);
+    
+    // Delete email verification codes
+    await supabaseAdmin.from('email_verification_codes').delete().eq('user_id', userId);
+    
+    // Delete user roles (should cascade, but doing explicitly)
+    await supabaseAdmin.from('user_roles').delete().eq('user_id', userId);
+    
+    // Delete profile
+    await supabaseAdmin.from('profiles').delete().eq('id', userId);
+
+    console.log(`Related data deleted, now deleting auth user ${userId}`);
+
     // Delete user using admin API
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
