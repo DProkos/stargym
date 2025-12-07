@@ -10,6 +10,22 @@ import ImageUpload from '@/components/ImageUpload';
 import { Plus, Trash2, Languages, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableGalleryItem } from './SortableGalleryItem';
 
 interface PageSection {
   id: string;
@@ -56,6 +72,13 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
   const [activeLang, setActiveLang] = useState<'el' | 'en'>('el');
   const [isTranslating, setIsTranslating] = useState(false);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     setLocalSettings(section.settings || {});
   }, [section.id]);
@@ -64,6 +87,17 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
     const newSettings = { ...localSettings, [key]: value };
     setLocalSettings(newSettings);
     onUpdate({ settings: newSettings });
+  };
+
+  const handleGalleryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const galleryImages = localSettings.images || [];
+      const oldIndex = galleryImages.findIndex((_: any, i: number) => `gallery-img-${i}` === active.id);
+      const newIndex = galleryImages.findIndex((_: any, i: number) => `gallery-img-${i}` === over.id);
+      const newImages = arrayMove(galleryImages, oldIndex, newIndex);
+      updateSettings('images', newImages);
+    }
   };
 
   const getTitleField = () => activeLang === 'el' ? 'title_el' : 'title_en';
@@ -521,6 +555,7 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
 
       case 'gallery':
         const galleryImages = localSettings.images || [];
+        const galleryItemIds = galleryImages.map((_: any, i: number) => `gallery-img-${i}`);
         return (
           <div className="space-y-4">
             {renderLanguageTabs()}
@@ -543,62 +578,46 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
             <div>
               <Label className="flex items-center justify-between">
                 Φωτογραφίες Gallery
-                <span className="text-xs text-muted-foreground">{galleryImages.length} εικόνες</span>
+                <span className="text-xs text-muted-foreground">{galleryImages.length} εικόνες • Σύρε για αναδιάταξη</span>
               </Label>
-              <div className="space-y-3 mt-2">
-                {galleryImages.map((img: { src: string; alt: string }, index: number) => (
-                  <Card key={index} className="p-3">
-                    <div className="flex gap-3 items-start">
-                      {img.src && (
-                        <img src={img.src} alt={img.alt} className="w-20 h-14 object-cover rounded" />
-                      )}
-                      <div className="flex-1 space-y-2">
-                        <ImageUpload
-                          currentImageUrl={img.src}
-                          onImageUploaded={(url) => {
-                            const newImages = [...galleryImages];
-                            newImages[index].src = url;
-                            updateSettings('images', newImages);
-                          }}
-                          bucket="cms-images"
-                          folder="gallery"
-                        />
-                        <Input
-                          value={img.alt}
-                          onChange={(e) => {
-                            const newImages = [...galleryImages];
-                            newImages[index].alt = e.target.value;
-                            updateSettings('images', newImages);
-                          }}
-                          placeholder="Περιγραφή εικόνας..."
-                        />
-                      </div>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-destructive"
-                        onClick={() => {
-                          updateSettings('images', galleryImages.filter((_: any, i: number) => i !== index));
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleGalleryDragEnd}
+              >
+                <SortableContext items={galleryItemIds} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3 mt-2">
+                    {galleryImages.map((img: { src: string; alt: string }, index: number) => (
+                      <SortableGalleryItem
+                        key={`gallery-img-${index}`}
+                        id={`gallery-img-${index}`}
+                        index={index}
+                        image={img}
+                        onImageUpdate={(idx, field, value) => {
+                          const newImages = [...galleryImages];
+                          newImages[idx][field] = value;
+                          updateSettings('images', newImages);
                         }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    updateSettings('images', [
-                      ...galleryImages,
-                      { src: '', alt: 'Νέα εικόνα' }
-                    ]);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" /> Προσθήκη Εικόνας
-                </Button>
-              </div>
+                        onImageDelete={(idx) => {
+                          updateSettings('images', galleryImages.filter((_: any, i: number) => i !== idx));
+                        }}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+              <Button
+                variant="outline"
+                className="w-full mt-3"
+                onClick={() => {
+                  updateSettings('images', [
+                    ...galleryImages,
+                    { src: '', alt: 'Νέα εικόνα' }
+                  ]);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" /> Προσθήκη Εικόνας
+              </Button>
             </div>
           </div>
         );
