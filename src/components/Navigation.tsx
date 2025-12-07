@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,10 +18,59 @@ interface NavigationProps {
   isAdmin: boolean;
 }
 
+interface NavPage {
+  key: string;
+  label: string;
+  path: string;
+}
+
+// Default navigation structure - will be filtered by what exists in DB
+const DEFAULT_NAV_PAGES: NavPage[] = [
+  { key: 'home', label: 'nav.home', path: '/' },
+  { key: 'classes', label: 'nav.classes', path: '/classes' },
+  { key: 'memberships', label: 'memberships.title', path: '/memberships' },
+  { key: 'pricing', label: 'nav.pricing', path: '/pricing' },
+  { key: 'contact', label: 'nav.contact', path: '/contact' },
+];
+
 export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navPages, setNavPages] = useState<NavPage[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadNavigationPages();
+  }, []);
+
+  const loadNavigationPages = async () => {
+    // Get all unique page keys that have sections in the database
+    const { data, error } = await supabase
+      .from('page_sections')
+      .select('page_key')
+      .eq('is_visible', true);
+
+    if (error) {
+      console.error('Error loading nav pages:', error);
+      // Fallback to defaults if error
+      setNavPages(DEFAULT_NAV_PAGES);
+      return;
+    }
+
+    const existingPageKeys = [...new Set(data?.map(d => d.page_key) || [])];
+    
+    // Filter default nav pages to only include those that exist in DB
+    const filteredPages = DEFAULT_NAV_PAGES.filter(
+      page => existingPageKeys.includes(page.key)
+    );
+
+    // Always include home if it doesn't exist (as it's the main page)
+    if (!filteredPages.find(p => p.key === 'home')) {
+      filteredPages.unshift(DEFAULT_NAV_PAGES[0]);
+    }
+
+    setNavPages(filteredPages);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -39,21 +88,15 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="hover:text-primary transition-colors">
-              {t('nav.home')}
-            </Link>
-            <Link to="/classes" className="hover:text-primary transition-colors">
-              {t('nav.classes')}
-            </Link>
-            <Link to="/memberships" className="hover:text-primary transition-colors">
-              {t('memberships.title')}
-            </Link>
-            <Link to="/pricing" className="hover:text-primary transition-colors">
-              {t('nav.pricing')}
-            </Link>
-            <Link to="/contact" className="hover:text-primary transition-colors">
-              {t('nav.contact')}
-            </Link>
+            {navPages.map((page) => (
+              <Link 
+                key={page.key}
+                to={page.path} 
+                className="hover:text-primary transition-colors"
+              >
+                {t(page.label)}
+              </Link>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -108,21 +151,16 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-card border-t border-border">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            <Link to="/" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {t('nav.home')}
-            </Link>
-            <Link to="/classes" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {t('nav.classes')}
-            </Link>
-            <Link to="/memberships" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {t('memberships.title')}
-            </Link>
-            <Link to="/pricing" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {t('nav.pricing')}
-            </Link>
-            <Link to="/contact" className="hover:text-primary transition-colors" onClick={() => setMobileMenuOpen(false)}>
-              {t('nav.contact')}
-            </Link>
+            {navPages.map((page) => (
+              <Link 
+                key={page.key}
+                to={page.path} 
+                className="hover:text-primary transition-colors" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t(page.label)}
+              </Link>
+            ))}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="justify-start gap-2 w-full transition-all hover:scale-105">
