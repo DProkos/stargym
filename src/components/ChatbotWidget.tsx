@@ -23,7 +23,7 @@ export function ChatbotWidget() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
@@ -168,22 +168,23 @@ export function ChatbotWidget() {
             </CardTitle>
           </CardHeader>
           
-          <CardContent className="flex-1 p-0">
-            <ScrollArea className="h-full p-4" ref={scrollRef}>
-              <div className="space-y-4">
+          <CardContent className="flex-1 p-0 overflow-hidden min-h-0">
+            <ScrollArea className="h-full">
+              <div className="space-y-4 p-4">
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 overflow-hidden ${
+                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
                       }`}
+                      style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                     >
-                      <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.content}</p>
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                     </div>
                   </div>
                 ))}
@@ -194,6 +195,7 @@ export function ChatbotWidget() {
                     </div>
                   </div>
                 )}
+                <div ref={scrollRef} />
               </div>
             </ScrollArea>
           </CardContent>
