@@ -244,7 +244,7 @@ export default function UserManagement() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Συνολικοί Πελάτες</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Συνολικοί Χρηστες</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
