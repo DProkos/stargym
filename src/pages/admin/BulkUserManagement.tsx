@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Users, Shield, Dumbbell, User2, Check, X, Download, FileSpreadsheet, Key, UserX, UserCheck } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Dumbbell, User2, Check, X, Download, FileSpreadsheet, Key, UserX, UserCheck, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
@@ -54,6 +54,8 @@ export default function BulkUserManagement() {
   const [resetPasswordDialog, setResetPasswordDialog] = useState(false);
   const [selectedUserForReset, setSelectedUserForReset] = useState<UserWithRoles | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRoles | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -463,6 +465,78 @@ export default function BulkUserManagement() {
     loadUsers();
   };
 
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const { error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: userToDelete.id },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Ο χρήστης ${userToDelete.email} διαγράφηκε επιτυχώς`);
+      setDeleteConfirmDialog(false);
+      setUserToDelete(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error('Failed to delete user:', error);
+      toast.error(`Αποτυχία διαγραφής: ${error.message}`);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) {
+      toast.error('Επιλέξτε τουλάχιστον έναν χρήστη');
+      return;
+    }
+
+    const confirmMessage = `Είστε σίγουροι ότι θέλετε να διαγράψετε ΟΡΙΣΤΙΚΑ ${selectedUsers.size} χρήστη/ες; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί!`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setProcessing(true);
+    setProgress(0);
+
+    const selectedUserIds = Array.from(selectedUsers);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < selectedUserIds.length; i++) {
+      const userId = selectedUserIds[i];
+      
+      try {
+        const { error } = await supabase.functions.invoke('admin-delete-user', {
+          body: { userId },
+        });
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to delete user ${userId}:`, error);
+        errorCount++;
+      }
+
+      setProgress(((i + 1) / selectedUserIds.length) * 100);
+    }
+
+    setProcessing(false);
+    setProgress(0);
+    setSelectedUsers(new Set());
+
+    if (successCount > 0) {
+      toast.success(`Διαγράφηκαν επιτυχώς ${successCount} χρήστης/ες`);
+    }
+
+    if (errorCount > 0) {
+      toast.error(`Αποτυχία διαγραφής ${errorCount} χρήστη/ων`);
+    }
+
+    loadUsers();
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -603,6 +677,23 @@ export default function BulkUserManagement() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Delete Users Section */}
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="font-semibold text-destructive">Danger Zone</h3>
+                  <Button 
+                    variant="destructive"
+                    onClick={handleBulkDelete} 
+                    disabled={processing || selectedUsers.size === 0}
+                    className="w-full"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Διαγραφή Επιλεγμένων Χρηστών {selectedUsers.size > 0 ? `(${selectedUsers.size})` : ''}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Προσοχή: Η διαγραφή χρήστη είναι οριστική και δεν μπορεί να αναιρεθεί.
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -709,6 +800,17 @@ export default function BulkUserManagement() {
                             </>
                           )}
                         </Button>
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => {
+                            setUserToDelete(user);
+                            setDeleteConfirmDialog(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -759,6 +861,31 @@ export default function BulkUserManagement() {
             </Button>
             <Button onClick={handleSetNewPassword} disabled={!newPassword || newPassword.length < 6}>
               Update Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmDialog} onOpenChange={setDeleteConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Διαγραφή Χρήστη</DialogTitle>
+            <DialogDescription>
+              Είστε σίγουροι ότι θέλετε να διαγράψετε ΟΡΙΣΤΙΚΑ τον χρήστη <strong>{userToDelete?.email}</strong>; 
+              Αυτή η ενέργεια δεν μπορεί να αναιρεθεί και θα διαγραφούν όλα τα δεδομένα του χρήστη.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setDeleteConfirmDialog(false);
+              setUserToDelete(null);
+            }}>
+              Ακύρωση
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Διαγραφή
             </Button>
           </DialogFooter>
         </DialogContent>
