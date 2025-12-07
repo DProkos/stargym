@@ -221,7 +221,7 @@ export default function UserManagement() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">{stats.activeCustomers}</div>
+                  <div className="text-2xl font-bold">{memberUsers.length}</div>
                   <Activity className="h-8 w-8 text-green-500/50" />
                 </div>
               </CardContent>
