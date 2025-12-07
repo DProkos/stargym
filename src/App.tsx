@@ -39,7 +39,7 @@ import InvoiceSettings from "./pages/admin/InvoiceSettings";
 import Packages from "./pages/admin/Packages";
 import InvoiceDetail from "./pages/admin/InvoiceDetail";
 import PageBuilder from "./pages/admin/PageBuilder";
-
+import DynamicPage from "./pages/DynamicPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -57,6 +57,7 @@ const App = () => (
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/memberships" element={<Memberships />} />
+          <Route path="/virtual-tour" element={<DynamicPage pageKeyOverride="virtual-tour" />} />
             
             {/* Customer routes */}
             <Route path="/customer/*" element={
