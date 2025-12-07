@@ -33,6 +33,7 @@ import CustomerProfile from "./pages/customer/CustomerProfile";
 import TrainerClasses from "./pages/trainer/TrainerClasses";
 import CRM from "./pages/admin/CRM";
 import CRMCustomerDetail from "./pages/admin/CRMCustomerDetail";
+import CreateUser from "./pages/admin/CreateUser";
 import Invoices from "./pages/admin/Invoices";
 import InvoiceSettings from "./pages/admin/InvoiceSettings";
 import Packages from "./pages/admin/Packages";
@@ -158,6 +159,11 @@ const App = () => (
             <Route path="/admin/crm" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <CRM />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/crm/customer/new" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <CreateUser />
               </ProtectedRoute>
             } />
             <Route path="/admin/crm/customer/:id" element={
