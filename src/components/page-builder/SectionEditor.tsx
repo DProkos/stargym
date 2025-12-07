@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Languages, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PageSection {
   id: string;
@@ -52,6 +54,7 @@ const ICON_OPTIONS = [
 export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
   const [localSettings, setLocalSettings] = useState(section.settings || {});
   const [activeLang, setActiveLang] = useState<'el' | 'en'>('el');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     setLocalSettings(section.settings || {});
@@ -86,22 +89,144 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
     onUpdate({ [field]: value, content: activeLang === 'el' ? value : section.content });
   };
 
+  const translateText = async (text: string, targetLang: 'el' | 'en'): Promise<string> => {
+    const { data, error } = await supabase.functions.invoke('translate-content', {
+      body: { text, targetLanguage: targetLang }
+    });
+    
+    if (error) throw error;
+    return data.translatedText;
+  };
+
+  const handleBulkTranslate = async (direction: 'el-to-en' | 'en-to-el') => {
+    setIsTranslating(true);
+    const sourceLang = direction === 'el-to-en' ? 'el' : 'en';
+    const targetLang = direction === 'el-to-en' ? 'en' : 'el';
+    
+    try {
+      const updates: Partial<PageSection> = {};
+      
+      // Translate title
+      const sourceTitle = sourceLang === 'el' ? section.title_el : section.title_en;
+      if (sourceTitle) {
+        const translatedTitle = await translateText(sourceTitle, targetLang);
+        if (targetLang === 'el') {
+          updates.title_el = translatedTitle;
+          updates.title = translatedTitle;
+        } else {
+          updates.title_en = translatedTitle;
+        }
+      }
+      
+      // Translate subtitle
+      const sourceSubtitle = sourceLang === 'el' ? section.subtitle_el : section.subtitle_en;
+      if (sourceSubtitle) {
+        const translatedSubtitle = await translateText(sourceSubtitle, targetLang);
+        if (targetLang === 'el') {
+          updates.subtitle_el = translatedSubtitle;
+          updates.subtitle = translatedSubtitle;
+        } else {
+          updates.subtitle_en = translatedSubtitle;
+        }
+      }
+      
+      // Translate content
+      const sourceContent = sourceLang === 'el' ? section.content_el : section.content_en;
+      if (sourceContent) {
+        const translatedContent = await translateText(sourceContent, targetLang);
+        if (targetLang === 'el') {
+          updates.content_el = translatedContent;
+          updates.content = translatedContent;
+        } else {
+          updates.content_en = translatedContent;
+        }
+      }
+      
+      // Translate features if present
+      const features = localSettings.features;
+      if (features && features.length > 0) {
+        const translatedFeatures = await Promise.all(
+          features.map(async (feature: any) => {
+            const sourceFeatureTitle = sourceLang === 'el' 
+              ? (feature.title_el || feature.title) 
+              : (feature.title_en || feature.title);
+            const sourceFeatureDesc = sourceLang === 'el' 
+              ? (feature.description_el || feature.description) 
+              : (feature.description_en || feature.description);
+            
+            const translatedTitle = sourceFeatureTitle 
+              ? await translateText(sourceFeatureTitle, targetLang) 
+              : '';
+            const translatedDesc = sourceFeatureDesc 
+              ? await translateText(sourceFeatureDesc, targetLang) 
+              : '';
+            
+            return {
+              ...feature,
+              [`title_${targetLang}`]: translatedTitle,
+              [`description_${targetLang}`]: translatedDesc,
+              ...(targetLang === 'el' ? { title: translatedTitle, description: translatedDesc } : {})
+            };
+          })
+        );
+        updates.settings = { ...localSettings, features: translatedFeatures };
+        setLocalSettings(updates.settings);
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        onUpdate(updates);
+        toast.success(`Μεταφράστηκε επιτυχώς σε ${targetLang === 'el' ? 'Ελληνικά' : 'Αγγλικά'}`);
+      } else {
+        toast.info('Δεν υπάρχει περιεχόμενο για μετάφραση');
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast.error('Σφάλμα κατά τη μετάφραση');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const renderLanguageTabs = () => (
-    <div className="flex gap-2 mb-4">
-      <Button
-        variant={activeLang === 'el' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setActiveLang('el')}
-      >
-        🇬🇷 Ελληνικά
-      </Button>
-      <Button
-        variant={activeLang === 'en' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => setActiveLang('en')}
-      >
-        🇬🇧 English
-      </Button>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex gap-2">
+        <Button
+          variant={activeLang === 'el' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveLang('el')}
+        >
+          🇬🇷 Ελληνικά
+        </Button>
+        <Button
+          variant={activeLang === 'en' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveLang('en')}
+        >
+          🇬🇧 English
+        </Button>
+      </div>
+      <div className="flex gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleBulkTranslate('el-to-en')}
+          disabled={isTranslating}
+          title="Μετάφραση EL → EN"
+        >
+          {isTranslating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
+          <span className="ml-1 text-xs">EL→EN</span>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleBulkTranslate('en-to-el')}
+          disabled={isTranslating}
+          title="Μετάφραση EN → EL"
+        >
+          {isTranslating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
+          <span className="ml-1 text-xs">EN→EL</span>
+        </Button>
+      </div>
     </div>
   );
 
