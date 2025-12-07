@@ -295,7 +295,7 @@ export default function UserManagement() {
             <TabsList>
               <TabsTrigger value="customers">
                 <Users className="h-4 w-4 mr-2" />
-                Πελάτες
+                Χρήστες
               </TabsTrigger>
               <TabsTrigger value="members">
                 <UsersRound className="h-4 w-4 mr-2" />
