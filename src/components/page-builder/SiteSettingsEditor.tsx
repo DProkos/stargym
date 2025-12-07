@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
+import { Slider } from '@/components/ui/slider';
 import { Palette, Building2, Phone } from 'lucide-react';
 
 interface SiteSetting {
@@ -63,13 +64,33 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               <CardTitle>Logo</CardTitle>
               <CardDescription>Ανεβάστε το logo του site</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <ImageUpload
                 currentImageUrl={getSetting('logo_url')}
                 onImageUploaded={(url) => onUpdate('logo_url', url)}
                 bucket="cms-images"
                 folder="branding"
               />
+              
+              <div className="space-y-2 pt-4 border-t">
+                <Label>Μέγεθος Logo (px)</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[parseInt(getSetting('logo_size') || '32')]}
+                    onValueChange={(value) => onUpdate('logo_size', value[0].toString())}
+                    min={16}
+                    max={64}
+                    step={4}
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-medium w-12 text-right">
+                    {getSetting('logo_size') || '32'}px
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Επιλέξτε το ύψος του logo (16-64px)
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

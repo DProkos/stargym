@@ -39,6 +39,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const [navPages, setNavPages] = useState<NavPage[]>([]);
   const [siteName, setSiteName] = useState('Star Gym');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoSize, setLogoSize] = useState(32);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     const { data, error } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['site_name', 'logo_url']);
+      .in('setting_key', ['site_name', 'logo_url', 'logo_size']);
 
     if (error) {
       console.error('Error loading site settings:', error);
@@ -63,6 +64,9 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       }
       if (setting.setting_key === 'logo_url' && setting.setting_value) {
         setLogoUrl(setting.setting_value);
+      }
+      if (setting.setting_key === 'logo_size' && setting.setting_value) {
+        setLogoSize(parseInt(setting.setting_value) || 32);
       }
     });
   };
@@ -107,9 +111,17 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             {logoUrl ? (
-              <img src={logoUrl} alt={siteName} className="h-8 w-auto object-contain" />
+              <img 
+                src={logoUrl} 
+                alt={siteName} 
+                style={{ height: `${logoSize}px` }}
+                className="w-auto object-contain" 
+              />
             ) : (
-              <Dumbbell className="h-8 w-8 text-primary" />
+              <Dumbbell 
+                style={{ height: `${logoSize}px`, width: `${logoSize}px` }}
+                className="text-primary" 
+              />
             )}
             <span className="text-xl font-bold">{siteName}</span>
           </Link>
