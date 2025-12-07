@@ -40,6 +40,154 @@ interface SectionTemplate {
   category: string;
 }
 
+// Preview component for visual thumbnails
+const TemplatePreview = ({ template }: { template: SectionTemplate }) => {
+  const { section_type, preview_data } = template;
+  
+  const getBgClass = () => {
+    switch (preview_data.background_color) {
+      case 'primary': return 'bg-primary';
+      case 'secondary': return 'bg-secondary';
+      case 'dark': return 'bg-zinc-900';
+      case 'muted': return 'bg-muted';
+      default: return 'bg-background';
+    }
+  };
+  
+  const getTextClass = () => {
+    return preview_data.text_color === 'light' ? 'text-white' : 'text-foreground';
+  };
+
+  // Mini preview based on section type
+  switch (section_type) {
+    case 'hero':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-3 flex flex-col justify-center items-center relative overflow-hidden`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent" />
+          <div className="relative z-10 text-center">
+            <div className="text-[8px] font-bold truncate max-w-full">{preview_data.title_el || preview_data.title_en}</div>
+            <div className="text-[6px] opacity-80 truncate max-w-full">{preview_data.subtitle_el || preview_data.subtitle_en}</div>
+            <div className="mt-1 bg-white/20 rounded px-2 py-0.5 text-[5px]">CTA</div>
+          </div>
+        </div>
+      );
+    
+    case 'features':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2 overflow-hidden`}>
+          <div className="text-[7px] font-bold text-center mb-1 truncate">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="grid grid-cols-2 gap-1">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-primary/20 rounded p-1 flex items-center gap-1">
+                <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                <div className="w-full h-1 bg-current/20 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    
+    case 'cta':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-3 flex flex-col justify-center items-center`}>
+          <div className="text-[8px] font-bold text-center truncate max-w-full">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="text-[6px] opacity-80 text-center truncate max-w-full">{preview_data.subtitle_el || preview_data.subtitle_en}</div>
+          <div className="mt-2 bg-white text-primary rounded px-3 py-0.5 text-[6px] font-medium">
+            {preview_data.settings?.ctaText || 'Button'}
+          </div>
+        </div>
+      );
+    
+    case 'text':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-3`}>
+          <div className="text-[8px] font-bold mb-1 truncate">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="space-y-0.5">
+            <div className="w-full h-1 bg-current/20 rounded" />
+            <div className="w-4/5 h-1 bg-current/20 rounded" />
+            <div className="w-3/4 h-1 bg-current/20 rounded" />
+          </div>
+        </div>
+      );
+    
+    case 'contact_form':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2`}>
+          <div className="text-[7px] font-bold mb-1 truncate">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="space-y-1">
+            <div className="w-full h-2 bg-current/10 rounded border border-current/20" />
+            <div className="w-full h-2 bg-current/10 rounded border border-current/20" />
+            <div className="w-full h-4 bg-current/10 rounded border border-current/20" />
+          </div>
+        </div>
+      );
+    
+    case 'contact_info':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2`}>
+          <div className="text-[7px] font-bold mb-1 truncate">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="grid grid-cols-2 gap-1">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1">
+                <Phone className="w-2 h-2" />
+                <div className="w-8 h-1 bg-current/20 rounded" />
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-2 h-2" />
+                <div className="w-6 h-1 bg-current/20 rounded" />
+              </div>
+            </div>
+            <div className="bg-current/10 rounded h-full" />
+          </div>
+        </div>
+      );
+    
+    case 'packages':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2`}>
+          <div className="text-[7px] font-bold text-center mb-1 truncate">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="flex gap-1 justify-center">
+            {[1, 2, 3].map(i => (
+              <div key={i} className={`w-6 bg-current/10 rounded p-1 ${i === 2 ? 'h-10 border-2 border-primary' : 'h-8'}`}>
+                <div className="w-full h-1 bg-current/30 rounded mb-1" />
+                <div className="w-full h-0.5 bg-current/20 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    
+    case 'header':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-3 flex flex-col justify-center items-center`}>
+          <div className="text-[10px] font-bold truncate max-w-full">{preview_data.title_el || preview_data.title_en}</div>
+          <div className="text-[7px] opacity-60 truncate max-w-full">{preview_data.subtitle_el || preview_data.subtitle_en}</div>
+          <div className="w-8 h-0.5 bg-primary mt-1 rounded" />
+        </div>
+      );
+    
+    case 'image':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2 flex items-center gap-2`}>
+          <div className="w-12 h-full bg-gradient-to-br from-primary/30 to-primary/10 rounded flex items-center justify-center">
+            <ImageIcon className="w-4 h-4 opacity-50" />
+          </div>
+          <div className="flex-1">
+            <div className="text-[7px] font-bold truncate">{preview_data.title_el || preview_data.title_en}</div>
+            <div className="text-[6px] opacity-60 truncate">{preview_data.subtitle_el || preview_data.subtitle_en}</div>
+          </div>
+        </div>
+      );
+    
+    default:
+      return (
+        <div className="w-full h-24 rounded-md bg-muted flex items-center justify-center">
+          <template.icon className="h-6 w-6 text-muted-foreground" />
+        </div>
+      );
+  }
+};
+
 const SECTION_TEMPLATES: SectionTemplate[] = [
   // Hero Templates
   {
@@ -319,25 +467,29 @@ export function SectionTemplates({ activePage, onApplyTemplate }: SectionTemplat
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {SECTION_TEMPLATES.filter(t => t.category === category).map(template => (
-                      <Card key={template.id} className="hover:border-primary/50 transition-colors">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 bg-primary/10 rounded-lg">
-                              <template.icon className="h-5 w-5 text-primary" />
+                      <Card key={template.id} className="hover:border-primary/50 transition-colors group">
+                        <CardContent className="p-3">
+                          {/* Visual Preview Thumbnail */}
+                          <div className="mb-3 border rounded-md overflow-hidden shadow-sm">
+                            <TemplatePreview template={template} />
+                          </div>
+                          
+                          {/* Template Info */}
+                          <div className="flex items-start gap-2 mb-3">
+                            <div className="p-1.5 bg-primary/10 rounded-md flex-shrink-0">
+                              <template.icon className="h-4 w-4 text-primary" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-sm truncate">{template.name}</h4>
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                 {template.description}
                               </p>
-                              <Badge variant="secondary" className="mt-2 text-xs">
-                                {template.section_type}
-                              </Badge>
                             </div>
                           </div>
+                          
                           <Button
                             size="sm"
-                            className="w-full mt-4"
+                            className="w-full"
                             onClick={() => onApplyTemplate(template)}
                           >
                             <Plus className="h-4 w-4 mr-1" />
