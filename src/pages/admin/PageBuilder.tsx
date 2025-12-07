@@ -24,7 +24,8 @@ import {
   Sparkles,
   Phone,
   FileText,
-  FilePlus
+  FilePlus,
+  Package
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -83,6 +84,7 @@ const SECTION_TYPES = [
   { type: 'features', label: 'Features Grid', icon: Square },
   { type: 'cta', label: 'Call to Action', icon: Sparkles },
   { type: 'image', label: 'Image', icon: ImageIcon },
+  { type: 'packages', label: 'Πακέτα Υπηρεσιών', icon: Package },
   { type: 'contact_form', label: 'Contact Form', icon: Phone },
   { type: 'contact_info', label: 'Contact Info', icon: Phone },
 ];
