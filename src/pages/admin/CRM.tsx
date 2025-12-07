@@ -6,30 +6,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { Users, Search, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet, Plus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MemberRow } from "@/components/MemberRow";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-interface Customer {
-  id: string;
-  email: string;
-  full_name: string;
-  phone: string;
-  customer_status: string;
-  lifetime_value: number;
-  total_bookings: number;
-  last_booking_date: string;
-  created_at: string;
-  tags?: {
-    id: string;
-    name: string;
-    color: string;
-  }[];
-}
+
 interface Member {
   id: string;
   email: string;
@@ -41,9 +23,6 @@ interface Member {
 export default function UserManagement() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [stats, setStats] = useState({
     totalCustomers: 0,
     activeCustomers: 0,
@@ -52,11 +31,9 @@ export default function UserManagement() {
   });
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
+  const [filteredStaff, setFilteredStaff] = useState<Member[]>([]);
   const [memberSearchQuery, setMemberSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const {
-    toast: showToast
-  } = useToast();
+  const [staffSearchQuery, setStaffSearchQuery] = useState("");
   const navigate = useNavigate();
   useEffect(() => {
     checkAuth();
@@ -66,20 +43,39 @@ export default function UserManagement() {
       loadData();
     }
   }, [isAdmin]);
+  // Filter staff (admins and trainers)
+  const staffUsers = members.filter(member => 
+    member.roles?.includes('admin') || member.roles?.includes('trainer')
+  );
+
+  // Filter members only (those with member role but NOT admin or trainer)
+  const memberUsers = members.filter(member => 
+    member.roles?.includes('member') && !member.roles?.includes('admin') && !member.roles?.includes('trainer')
+  );
+
+  // Filter staff based on search
   useEffect(() => {
-    let filtered = members;
-
-    // Apply search filter
-    if (memberSearchQuery) {
-      filtered = filtered.filter(member => member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) || member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase()));
+    let filtered = staffUsers;
+    if (staffSearchQuery) {
+      filtered = filtered.filter(member => 
+        member.email.toLowerCase().includes(staffSearchQuery.toLowerCase()) || 
+        member.full_name?.toLowerCase().includes(staffSearchQuery.toLowerCase())
+      );
     }
+    setFilteredStaff(filtered);
+  }, [staffSearchQuery, members]);
 
-    // Apply role filter
-    if (roleFilter !== "all") {
-      filtered = filtered.filter(member => member.roles?.includes(roleFilter));
+  // Filter members based on search
+  useEffect(() => {
+    let filtered = memberUsers;
+    if (memberSearchQuery) {
+      filtered = filtered.filter(member => 
+        member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) || 
+        member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase())
+      );
     }
     setFilteredMembers(filtered);
-  }, [memberSearchQuery, roleFilter, members]);
+  }, [memberSearchQuery, members]);
   const checkAuth = async () => {
     const {
       data: {
@@ -102,7 +98,7 @@ export default function UserManagement() {
     setLoading(false);
   };
   const loadData = async () => {
-    await Promise.all([loadCustomers(), loadStats(), loadMembers()]);
+    await Promise.all([loadStats(), loadMembers()]);
   };
   const loadMembers = async () => {
     // First, get all profiles
@@ -133,36 +129,6 @@ export default function UserManagement() {
       roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || []
     })) || [];
     setMembers(membersWithRoles);
-    setFilteredMembers(membersWithRoles);
-  };
-  const loadCustomers = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("profiles").select(`
-        *,
-        customer_tag_assignments!customer_tag_assignments_customer_id_fkey (
-          customer_tags (
-            id,
-            name,
-            color
-          )
-        )
-      `).order("created_at", {
-      ascending: false
-    });
-    if (error) {
-      showToast({
-        title: "Error loading customers",
-        variant: "destructive"
-      });
-      return;
-    }
-    const customersWithTags = data.map(customer => ({
-      ...customer,
-      tags: customer.customer_tag_assignments?.map((ta: any) => ta.customer_tags).filter(Boolean) || []
-    }));
-    setCustomers(customersWithTags);
   };
   const loadStats = async () => {
     const {
@@ -223,11 +189,6 @@ export default function UserManagement() {
     document.body.removeChild(link);
     toast.success(`Exported ${filteredMembers.length} members to Excel`);
   };
-  const filteredCustomers = customers.filter(customer => {
-    const matchesSearch = customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || customer.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || customer.customer_status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
   if (loading || !isAdmin) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -308,8 +269,8 @@ export default function UserManagement() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Χρήστες</CardTitle>
-                      <CardDescription>Διαχειριστείτε και παρακολουθήστε τους πελάτες σας</CardDescription>
+                      <CardTitle>Χρήστες Προγράμματος ({filteredStaff.length})</CardTitle>
+                      <CardDescription>Διαχειριστές και Εκπαιδευτές</CardDescription>
                     </div>
                     <Button onClick={() => navigate("/admin/crm/customer/new")}>
                       <Plus className="h-4 w-4 mr-2" />
@@ -321,44 +282,20 @@ export default function UserManagement() {
                   <div className="flex gap-4 mb-4">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Αναζήτηση πελατών..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+                      <Input placeholder="Αναζήτηση χρηστών..." value={staffSearchQuery} onChange={e => setStaffSearchQuery(e.target.value)} className="pl-10" />
                     </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Φίλτρο Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Όλοι</SelectItem>
-                        <SelectItem value="active">Ενεργοί</SelectItem>
-                        <SelectItem value="inactive">Ανενεργοί</SelectItem>
-                        <SelectItem value="lead">Leads</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
 
                   <div className="space-y-2">
-                    {filteredCustomers.map(customer => <div key={customer.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer" onClick={() => navigate(`/admin/crm/customer/${customer.id}`)}>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{customer.full_name || "No Name"}</span>
-                            <Badge variant={customer.customer_status === "active" ? "default" : "secondary"}>
-                              {customer.customer_status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{customer.email}</p>
-                          <div className="flex gap-2 mt-2">
-                            {customer.tags?.map(tag => <Badge key={tag.id} style={{
-                          backgroundColor: tag.color
-                        }} className="text-white">
-                                {tag.name}
-                              </Badge>)}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">€{customer.lifetime_value?.toFixed(2) || "0.00"}</p>
-                          <p className="text-xs text-muted-foreground">{customer.total_bookings || 0} κρατήσεις</p>
-                        </div>
-                      </div>)}
+                    {filteredStaff.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        {staffSearchQuery ? "Δεν βρέθηκαν χρήστες" : "Δεν υπάρχουν χρήστες"}
+                      </div>
+                    ) : (
+                      filteredStaff.map(member => (
+                        <MemberRow key={member.id} member={member} onRoleUpdate={loadMembers} />
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -400,32 +337,18 @@ export default function UserManagement() {
                     <div className="flex gap-4">
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Αναζήτηση χρηστών (email, όνομα)..." value={memberSearchQuery} onChange={e => setMemberSearchQuery(e.target.value)} className="pl-10" />
+                        <Input placeholder="Αναζήτηση μελών (email, όνομα)..." value={memberSearchQuery} onChange={e => setMemberSearchQuery(e.target.value)} className="pl-10" />
                       </div>
-                      <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="w-[200px]">
-                          <SelectValue placeholder="Φίλτρο Ρόλου" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Όλοι οι Ρόλοι</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="trainer">Trainer</SelectItem>
-                          <SelectItem value="member">Member</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>
-                        Αποτελέσματα: {filteredMembers.length} από {members.length} χρήστες
+                        Αποτελέσματα: {filteredMembers.length} από {memberUsers.length} μέλη
                       </span>
-                      {roleFilter !== "all" && <Badge variant="secondary" className="ml-2">
-                          Φίλτρο: {roleFilter}
-                        </Badge>}
                     </div>
                   </div>
                   <div className="space-y-2">
                     {filteredMembers.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                        {memberSearchQuery ? "No members found matching your search" : "No members yet"}
+                        {memberSearchQuery ? "Δεν βρέθηκαν μέλη" : "Δεν υπάρχουν μέλη"}
                       </div> : filteredMembers.map(member => <MemberRow key={member.id} member={member} onRoleUpdate={loadMembers} />)}
                   </div>
                 </CardContent>
