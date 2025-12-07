@@ -519,6 +519,90 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
           </div>
         );
 
+      case 'gallery':
+        const galleryImages = localSettings.images || [];
+        return (
+          <div className="space-y-4">
+            {renderLanguageTabs()}
+            <div>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
+              <Input
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
+                placeholder="Gallery title..."
+              />
+            </div>
+            <div>
+              <Label>Υπότιτλος ({activeLang.toUpperCase()})</Label>
+              <Textarea
+                value={getCurrentSubtitle()}
+                onChange={(e) => updateSubtitle(e.target.value)}
+                placeholder="Gallery subtitle..."
+              />
+            </div>
+            <div>
+              <Label className="flex items-center justify-between">
+                Φωτογραφίες Gallery
+                <span className="text-xs text-muted-foreground">{galleryImages.length} εικόνες</span>
+              </Label>
+              <div className="space-y-3 mt-2">
+                {galleryImages.map((img: { src: string; alt: string }, index: number) => (
+                  <Card key={index} className="p-3">
+                    <div className="flex gap-3 items-start">
+                      {img.src && (
+                        <img src={img.src} alt={img.alt} className="w-20 h-14 object-cover rounded" />
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <ImageUpload
+                          currentImageUrl={img.src}
+                          onImageUploaded={(url) => {
+                            const newImages = [...galleryImages];
+                            newImages[index].src = url;
+                            updateSettings('images', newImages);
+                          }}
+                          bucket="cms-images"
+                          folder="gallery"
+                        />
+                        <Input
+                          value={img.alt}
+                          onChange={(e) => {
+                            const newImages = [...galleryImages];
+                            newImages[index].alt = e.target.value;
+                            updateSettings('images', newImages);
+                          }}
+                          placeholder="Περιγραφή εικόνας..."
+                        />
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-destructive"
+                        onClick={() => {
+                          updateSettings('images', galleryImages.filter((_: any, i: number) => i !== index));
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    updateSettings('images', [
+                      ...galleryImages,
+                      { src: '', alt: 'Νέα εικόνα' }
+                    ]);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" /> Προσθήκη Εικόνας
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'contact_form':
       case 'contact_info':
         return (

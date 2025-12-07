@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import GymGallery3D from '@/components/GymGallery3D';
 
 interface PageSection {
   id: string;
@@ -678,6 +679,55 @@ export function LivePreview({ pageKey, sections, siteSettings, onClose, onUpdate
               )}
             </div>
           </section>
+        );
+
+      case 'gallery':
+        const galleryImages = section.settings?.images || [];
+        const validGalleryImages = galleryImages.filter((img: { src: string; alt: string }) => img.src);
+        return (
+          <div key={section.id}>
+            {editMode ? (
+              <section className={`py-16 px-4 ${bgClass}`}>
+                <div className="container mx-auto text-center">
+                  <h2 className="text-3xl font-bold mb-4">
+                    <EditableText
+                      value={getTitle(section)}
+                      onChange={(v) => updateSectionTitle(section, v)}
+                      placeholder="Gallery title..."
+                    />
+                  </h2>
+                  <div className="text-xl text-muted-foreground mb-8">
+                    <EditableText
+                      value={getSubtitle(section)}
+                      onChange={(v) => updateSectionSubtitle(section, v)}
+                      placeholder="Gallery subtitle..."
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {previewLang === 'el' 
+                      ? '(Επεξεργαστείτε τις φωτογραφίες από τον πίνακα αριστερά)' 
+                      : '(Edit photos from the left panel)'}
+                  </p>
+                  {validGalleryImages.length > 0 && (
+                    <div className="flex justify-center gap-2 mt-4 flex-wrap">
+                      {validGalleryImages.slice(0, 5).map((img: { src: string; alt: string }, i: number) => (
+                        <img key={i} src={img.src} alt={img.alt} className="w-16 h-12 object-cover rounded" />
+                      ))}
+                      {validGalleryImages.length > 5 && (
+                        <span className="text-sm text-muted-foreground self-center">+{validGalleryImages.length - 5} more</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </section>
+            ) : (
+              <GymGallery3D 
+                images={validGalleryImages}
+                title={getTitle(section)}
+                subtitle={getSubtitle(section)}
+              />
+            )}
+          </div>
         );
 
       default:
