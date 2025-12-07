@@ -12,14 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, Search, TrendingUp, Activity, UsersRound, Download, FileSpreadsheet, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MemberRow } from "@/components/MemberRow";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-
 interface Customer {
   id: string;
   email: string;
@@ -30,9 +24,12 @@ interface Customer {
   total_bookings: number;
   last_booking_date: string;
   created_at: string;
-  tags?: { id: string; name: string; color: string }[];
+  tags?: {
+    id: string;
+    name: string;
+    color: string;
+  }[];
 }
-
 interface Member {
   id: string;
   email: string;
@@ -41,7 +38,6 @@ interface Member {
   created_at: string;
   roles?: string[];
 }
-
 export default function UserManagement() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -52,77 +48,70 @@ export default function UserManagement() {
     totalCustomers: 0,
     activeCustomers: 0,
     totalLifetimeValue: 0,
-    avgBookingsPerCustomer: 0,
+    avgBookingsPerCustomer: 0
   });
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [memberSearchQuery, setMemberSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  const { toast: showToast } = useToast();
+  const {
+    toast: showToast
+  } = useToast();
   const navigate = useNavigate();
-
   useEffect(() => {
     checkAuth();
   }, []);
-
   useEffect(() => {
     if (isAdmin) {
       loadData();
     }
   }, [isAdmin]);
-
   useEffect(() => {
     let filtered = members;
 
     // Apply search filter
     if (memberSearchQuery) {
-      filtered = filtered.filter(
-        (member) =>
-          member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
-          member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase()),
-      );
+      filtered = filtered.filter(member => member.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) || member.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase()));
     }
 
     // Apply role filter
     if (roleFilter !== "all") {
-      filtered = filtered.filter((member) => member.roles?.includes(roleFilter));
+      filtered = filtered.filter(member => member.roles?.includes(roleFilter));
     }
-
     setFilteredMembers(filtered);
   }, [memberSearchQuery, roleFilter, members]);
-
   const checkAuth = async () => {
     const {
-      data: { session },
+      data: {
+        session
+      }
     } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
       return;
     }
-
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
-
-    const hasAdminRole = roles?.some((r) => r.role === "admin");
+    const {
+      data: roles
+    } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
+    const hasAdminRole = roles?.some(r => r.role === "admin");
     if (!hasAdminRole) {
       navigate("/");
       return;
     }
-
     setIsAdmin(true);
     setLoading(false);
   };
-
   const loadData = async () => {
     await Promise.all([loadCustomers(), loadStats(), loadMembers()]);
   };
-
   const loadMembers = async () => {
     // First, get all profiles
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+    const {
+      data: profiles,
+      error: profilesError
+    } = await supabase.from("profiles").select("*").order("created_at", {
+      ascending: false
+    });
     if (profilesError) {
       console.error("Failed to load members:", profilesError);
       toast.error("Failed to load members");
@@ -130,28 +119,27 @@ export default function UserManagement() {
     }
 
     // Then, get all user roles
-    const { data: userRoles, error: rolesError } = await supabase.from("user_roles").select("user_id, role");
-
+    const {
+      data: userRoles,
+      error: rolesError
+    } = await supabase.from("user_roles").select("user_id, role");
     if (rolesError) {
       console.error("Failed to load roles:", rolesError);
     }
 
     // Combine profiles with their roles
-    const membersWithRoles =
-      profiles?.map((profile) => ({
-        ...profile,
-        roles: userRoles?.filter((r) => r.user_id === profile.id).map((r) => r.role) || [],
-      })) || [];
-
+    const membersWithRoles = profiles?.map(profile => ({
+      ...profile,
+      roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || []
+    })) || [];
     setMembers(membersWithRoles);
     setFilteredMembers(membersWithRoles);
   };
-
   const loadCustomers = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        `
+    const {
+      data,
+      error
+    } = await supabase.from("profiles").select(`
         *,
         customer_tag_assignments!customer_tag_assignments_customer_id_fkey (
           customer_tags (
@@ -160,119 +148,90 @@ export default function UserManagement() {
             color
           )
         )
-      `,
-      )
-      .order("created_at", { ascending: false });
-
+      `).order("created_at", {
+      ascending: false
+    });
     if (error) {
-      showToast({ title: "Error loading customers", variant: "destructive" });
+      showToast({
+        title: "Error loading customers",
+        variant: "destructive"
+      });
       return;
     }
-
-    const customersWithTags = data.map((customer) => ({
+    const customersWithTags = data.map(customer => ({
       ...customer,
-      tags: customer.customer_tag_assignments?.map((ta: any) => ta.customer_tags).filter(Boolean) || [],
+      tags: customer.customer_tag_assignments?.map((ta: any) => ta.customer_tags).filter(Boolean) || []
     }));
-
     setCustomers(customersWithTags);
   };
-
   const loadStats = async () => {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("customer_status, lifetime_value, total_bookings");
-
+    const {
+      data: profiles
+    } = await supabase.from("profiles").select("customer_status, lifetime_value, total_bookings");
     if (profiles) {
       const totalCustomers = profiles.length;
-      const activeCustomers = profiles.filter((p) => p.customer_status === "active").length;
+      const activeCustomers = profiles.filter(p => p.customer_status === "active").length;
       const totalLifetimeValue = profiles.reduce((sum, p) => sum + (p.lifetime_value || 0), 0);
-      const avgBookingsPerCustomer =
-        profiles.reduce((sum, p) => sum + (p.total_bookings || 0), 0) / totalCustomers || 0;
-
+      const avgBookingsPerCustomer = profiles.reduce((sum, p) => sum + (p.total_bookings || 0), 0) / totalCustomers || 0;
       setStats({
         totalCustomers,
         activeCustomers,
         totalLifetimeValue,
-        avgBookingsPerCustomer,
+        avgBookingsPerCustomer
       });
     }
   };
-
   const exportToCSV = () => {
     const headers = ["Email", "Full Name", "Phone", "Roles", "Created At"];
-    const rows = filteredMembers.map((member) => [
-      member.email,
-      member.full_name || "N/A",
-      member.phone || "N/A",
-      member.roles?.join(", ") || "No roles",
-      new Date(member.created_at).toLocaleDateString(),
-    ]);
-
-    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const rows = filteredMembers.map(member => [member.email, member.full_name || "N/A", member.phone || "N/A", member.roles?.join(", ") || "No roles", new Date(member.created_at).toLocaleDateString()]);
+    const csvContent = [headers.join(","), ...rows.map(row => row.map(cell => `"${cell}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;"
+    });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-
     link.setAttribute("href", url);
     link.setAttribute("download", `members_${new Date().toISOString().split("T")[0]}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     toast.success(`Exported ${filteredMembers.length} members to CSV`);
   };
-
   const exportToExcel = () => {
     const headers = ["Email", "Full Name", "Phone", "Roles", "Created At"];
-    const rows = filteredMembers.map((member) => [
-      member.email,
-      member.full_name || "N/A",
-      member.phone || "N/A",
-      member.roles?.join(", ") || "No roles",
-      new Date(member.created_at).toLocaleDateString(),
-    ]);
-
-    let htmlContent =
-      '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    const rows = filteredMembers.map(member => [member.email, member.full_name || "N/A", member.phone || "N/A", member.roles?.join(", ") || "No roles", new Date(member.created_at).toLocaleDateString()]);
+    let htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
     htmlContent += '<head><meta charset="utf-8"/></head><body>';
     htmlContent += '<table border="1">';
-    htmlContent += "<thead><tr>" + headers.map((h) => `<th>${h}</th>`).join("") + "</tr></thead>";
+    htmlContent += "<thead><tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr></thead>";
     htmlContent += "<tbody>";
-    rows.forEach((row) => {
-      htmlContent += "<tr>" + row.map((cell) => `<td>${cell}</td>`).join("") + "</tr>";
+    rows.forEach(row => {
+      htmlContent += "<tr>" + row.map(cell => `<td>${cell}</td>`).join("") + "</tr>";
     });
     htmlContent += "</tbody></table></body></html>";
-
-    const blob = new Blob([htmlContent], { type: "application/vnd.ms-excel" });
+    const blob = new Blob([htmlContent], {
+      type: "application/vnd.ms-excel"
+    });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-
     link.setAttribute("href", url);
     link.setAttribute("download", `members_${new Date().toISOString().split("T")[0]}.xls`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     toast.success(`Exported ${filteredMembers.length} members to Excel`);
   };
-
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch =
-      customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredCustomers = customers.filter(customer => {
+    const matchesSearch = customer.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || customer.email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || customer.customer_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
   if (loading || !isAdmin) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
-
-  return (
-    <SidebarProvider>
+  return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
         <main className="flex-1 p-6 overflow-auto">
@@ -349,7 +308,7 @@ export default function UserManagement() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Πελάτες</CardTitle>
+                      <CardTitle>Χρήστες</CardTitle>
                       <CardDescription>Διαχειριστείτε και παρακολουθήστε τους πελάτες σας</CardDescription>
                     </div>
                     <Button onClick={() => navigate("/admin/crm/customer/new")}>
@@ -362,12 +321,7 @@ export default function UserManagement() {
                   <div className="flex gap-4 mb-4">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Αναζήτηση πελατών..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
+                      <Input placeholder="Αναζήτηση πελατών..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                       <SelectTrigger className="w-[180px]">
@@ -383,12 +337,7 @@ export default function UserManagement() {
                   </div>
 
                   <div className="space-y-2">
-                    {filteredCustomers.map((customer) => (
-                      <div
-                        key={customer.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
-                        onClick={() => navigate(`/admin/crm/customer/${customer.id}`)}
-                      >
+                    {filteredCustomers.map(customer => <div key={customer.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer" onClick={() => navigate(`/admin/crm/customer/${customer.id}`)}>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium">{customer.full_name || "No Name"}</span>
@@ -398,19 +347,18 @@ export default function UserManagement() {
                           </div>
                           <p className="text-sm text-muted-foreground">{customer.email}</p>
                           <div className="flex gap-2 mt-2">
-                            {customer.tags?.map((tag) => (
-                              <Badge key={tag.id} style={{ backgroundColor: tag.color }} className="text-white">
+                            {customer.tags?.map(tag => <Badge key={tag.id} style={{
+                          backgroundColor: tag.color
+                        }} className="text-white">
                                 {tag.name}
-                              </Badge>
-                            ))}
+                              </Badge>)}
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">€{customer.lifetime_value?.toFixed(2) || "0.00"}</p>
                           <p className="text-xs text-muted-foreground">{customer.total_bookings || 0} κρατήσεις</p>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
@@ -452,12 +400,7 @@ export default function UserManagement() {
                     <div className="flex gap-4">
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Αναζήτηση χρηστών (email, όνομα)..."
-                          value={memberSearchQuery}
-                          onChange={(e) => setMemberSearchQuery(e.target.value)}
-                          className="pl-10"
-                        />
+                        <Input placeholder="Αναζήτηση χρηστών (email, όνομα)..." value={memberSearchQuery} onChange={e => setMemberSearchQuery(e.target.value)} className="pl-10" />
                       </div>
                       <Select value={roleFilter} onValueChange={setRoleFilter}>
                         <SelectTrigger className="w-[200px]">
@@ -475,23 +418,15 @@ export default function UserManagement() {
                       <span>
                         Αποτελέσματα: {filteredMembers.length} από {members.length} χρήστες
                       </span>
-                      {roleFilter !== "all" && (
-                        <Badge variant="secondary" className="ml-2">
+                      {roleFilter !== "all" && <Badge variant="secondary" className="ml-2">
                           Φίλτρο: {roleFilter}
-                        </Badge>
-                      )}
+                        </Badge>}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {filteredMembers.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
+                    {filteredMembers.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                         {memberSearchQuery ? "No members found matching your search" : "No members yet"}
-                      </div>
-                    ) : (
-                      filteredMembers.map((member) => (
-                        <MemberRow key={member.id} member={member} onRoleUpdate={loadMembers} />
-                      ))
-                    )}
+                      </div> : filteredMembers.map(member => <MemberRow key={member.id} member={member} onRoleUpdate={loadMembers} />)}
                   </div>
                 </CardContent>
               </Card>
@@ -499,6 +434,5 @@ export default function UserManagement() {
           </Tabs>
         </main>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
