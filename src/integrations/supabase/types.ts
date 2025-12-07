@@ -878,6 +878,60 @@ export type Database = {
         }
         Relationships: []
       }
+      page_sections: {
+        Row: {
+          background_color: string | null
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_visible: boolean
+          page_key: string
+          section_key: string
+          section_type: string
+          settings: Json | null
+          sort_order: number
+          subtitle: string | null
+          text_color: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean
+          page_key: string
+          section_key: string
+          section_type: string
+          settings?: Json | null
+          sort_order?: number
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean
+          page_key?: string
+          section_key?: string
+          section_type?: string
+          settings?: Json | null
+          sort_order?: number
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       password_change_codes: {
         Row: {
           code: string
@@ -985,6 +1039,36 @@ export type Database = {
           name?: string
           price?: number
           sessions_included?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          setting_key: string
+          setting_type: string | null
+          setting_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          setting_key: string
+          setting_type?: string | null
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          setting_key?: string
+          setting_type?: string | null
+          setting_value?: string | null
           updated_at?: string
         }
         Relationships: []
