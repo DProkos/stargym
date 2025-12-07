@@ -144,10 +144,12 @@ const handler = async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Error in send-password-change-code:", error);
+    const status = error.message === "Unauthorized" || error.message === "No authorization header" ? 401 : 500;
+    const message = status === 401 ? "Authentication required" : "An error occurred. Please try again.";
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       {
-        status: 500,
+        status,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
