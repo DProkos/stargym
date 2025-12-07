@@ -260,7 +260,7 @@ export default function UserManagement() {
               </TabsTrigger>
               <TabsTrigger value="members">
                 <UsersRound className="h-4 w-4 mr-2" />
-                Members
+                Μέλη
               </TabsTrigger>
             </TabsList>
 
