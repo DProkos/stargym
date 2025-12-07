@@ -1,6 +1,8 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Dumbbell, 
   Users, 
@@ -13,8 +15,21 @@ import {
   Trophy, 
   Flame,
   MapPin,
-  Phone
+  Phone,
+  Check
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface ServicePackage {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  duration_months: number | null;
+  sessions_included: number | null;
+  features: any;
+  is_active: boolean;
+}
 
 interface PageSection {
   id: string;
@@ -43,6 +58,117 @@ interface DynamicSectionProps {
 const ICONS: Record<string, any> = {
   Dumbbell, Users, Award, Clock, Star, Heart, Zap, Target, Trophy, Flame
 };
+
+// Packages Section Component
+function PackagesSection({ 
+  section, 
+  bgClass, 
+  title, 
+  subtitle,
+  language 
+}: { 
+  section: PageSection; 
+  bgClass: string; 
+  title: string; 
+  subtitle: string;
+  language: string;
+}) {
+  const [packages, setPackages] = useState<ServicePackage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPackages();
+  }, []);
+
+  const loadPackages = async () => {
+    const { data, error } = await supabase
+      .from('service_packages')
+      .select('*')
+      .eq('is_active', true)
+      .order('price');
+
+    if (!error && data) {
+      setPackages(data);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <section className={`py-20 px-4 ${bgClass}`}>
+        <div className="container mx-auto text-center">
+          <div className="animate-pulse">Φόρτωση...</div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className={`py-20 px-4 ${bgClass}`}>
+      <div className="container mx-auto">
+        {(title || subtitle) && (
+          <div className="text-center mb-16">
+            {title && <h2 className="text-4xl font-bold mb-4">{title}</h2>}
+            {subtitle && <p className="text-xl text-muted-foreground">{subtitle}</p>}
+          </div>
+        )}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {packages.map((pkg) => {
+            const features = Array.isArray(pkg.features) ? pkg.features : [];
+            return (
+              <Card key={pkg.id} className="bg-gradient-card border-border hover:border-primary transition-all duration-300 hover:shadow-neon">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-2xl">{pkg.name}</CardTitle>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold text-primary">{pkg.price}€</span>
+                    {pkg.duration_months && (
+                      <span className="text-muted-foreground">
+                        / {pkg.duration_months === 1 
+                          ? (language === 'el' ? 'μήνα' : 'month')
+                          : `${pkg.duration_months} ${language === 'el' ? 'μήνες' : 'months'}`
+                        }
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {pkg.description && (
+                    <p className="text-muted-foreground mb-4">{pkg.description}</p>
+                  )}
+                  {pkg.sessions_included && (
+                    <p className="text-sm font-medium mb-4">
+                      {pkg.sessions_included} {language === 'el' ? 'συνεδρίες' : 'sessions'}
+                    </p>
+                  )}
+                  {features.length > 0 && (
+                    <ul className="space-y-2">
+                      {features.map((feature: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm">
+                          <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button className="w-full mt-6" asChild>
+                    <Link to="/contact">
+                      {language === 'el' ? 'Επικοινωνία' : 'Contact Us'}
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        {packages.length === 0 && (
+          <div className="text-center text-muted-foreground">
+            {language === 'el' ? 'Δεν υπάρχουν διαθέσιμα πακέτα' : 'No packages available'}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
   const { language } = useLanguage();
@@ -269,6 +395,9 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
           </div>
         </section>
       );
+
+    case 'packages':
+      return <PackagesSection section={section} bgClass={bgClass} title={title} subtitle={subtitle} language={language} />;
 
     case 'contact_form':
       // This will be handled by the Contact page itself
