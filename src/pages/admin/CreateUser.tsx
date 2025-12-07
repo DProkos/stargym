@@ -9,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function CreateUser() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState('member');
+  const [roles, setRoles] = useState<string[]>(['member']);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -42,7 +42,7 @@ export default function CreateUser() {
 
     try {
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
-        body: { email, password, fullName, phone, role }
+        body: { email, password, fullName, phone, roles }
       });
 
       if (error) {
@@ -59,7 +59,7 @@ export default function CreateUser() {
         admin_id: session?.user?.id,
         action_type: 'user_created',
         target_user_id: data.userId,
-        details: { email, role, full_name: fullName }
+        details: { email, roles, full_name: fullName }
       });
 
       toast({ title: 'Ο χρήστης δημιουργήθηκε επιτυχώς' });
@@ -159,18 +159,32 @@ export default function CreateUser() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="role">Ρόλος</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="trainer">Trainer</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3">
+                  <Label>Ρόλοι</Label>
+                  <div className="flex flex-wrap gap-4">
+                    {[
+                      { value: 'member', label: 'Member' },
+                      { value: 'trainer', label: 'Trainer' },
+                      { value: 'admin', label: 'Admin' }
+                    ].map((roleOption) => (
+                      <div key={roleOption.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={roleOption.value}
+                          checked={roles.includes(roleOption.value)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setRoles([...roles, roleOption.value]);
+                            } else {
+                              setRoles(roles.filter(r => r !== roleOption.value));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={roleOption.value} className="cursor-pointer">
+                          {roleOption.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
