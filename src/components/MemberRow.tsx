@@ -10,8 +10,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { Shield, Dumbbell, User2, Settings, Eye } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Shield, Dumbbell, User2, Settings, Eye, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MemberRowProps {
@@ -30,6 +41,8 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   const navigate = useNavigate();
   const [roles, setRoles] = useState<Role[]>(member.roles as Role[] || []);
   const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (member.roles) {
@@ -75,19 +88,16 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   const handleRoleToggle = async (role: Role, checked: boolean) => {
     setLoading(true);
     try {
-      // Get current admin info
       const { data: { session } } = await supabase.auth.getSession();
       const adminEmail = session?.user?.email || 'Unknown';
 
       if (checked) {
-        // Add role
         const { error } = await supabase
           .from('user_roles')
           .insert({ user_id: member.id, role });
 
         if (error) throw error;
 
-        // Log activity
         await supabase.from('admin_activity_log').insert({
           admin_id: session?.user?.id,
           action_type: 'role_added',
@@ -101,7 +111,6 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
 
         toast.success(`Added ${role} role to ${member.full_name || member.email}`);
       } else {
-        // Remove role
         const { error } = await supabase
           .from('user_roles')
           .delete()
@@ -110,7 +119,6 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
 
         if (error) throw error;
 
-        // Log activity
         await supabase.from('admin_activity_log').insert({
           admin_id: session?.user?.id,
           action_type: 'role_removed',
@@ -135,68 +143,135 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
     }
   };
 
-  return (
-    <div className="flex items-center justify-between p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors">
-      <div className="flex-1">
-        <p className="font-semibold">{member.full_name || 'No name'}</p>
-        <p className="text-sm text-muted-foreground">{member.email}</p>
-      </div>
+  const handleDeleteUser = async () => {
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Not authenticated');
+        return;
+      }
 
-      <div className="flex items-center gap-2">
-        <div className="flex gap-1">
-          {roles.map((role) => (
-            <Badge
-              key={role}
-              variant="outline"
-              className={`${getRoleBadgeColor(role)} flex items-center gap-1`}
-            >
-              {getRoleIcon(role)}
-              {role}
-            </Badge>
-          ))}
+      // Check if trying to delete self
+      if (member.id === session.user.id) {
+        toast.error('Δεν μπορείτε να διαγράψετε τον εαυτό σας');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: member.id }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Ο χρήστης ${member.full_name || member.email} διαγράφηκε επιτυχώς`);
+      onRoleUpdate();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast.error(error.message || 'Αποτυχία διαγραφής χρήστη');
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-between p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors">
+        <div className="flex-1">
+          <p className="font-semibold">{member.full_name || 'No name'}</p>
+          <p className="text-sm text-muted-foreground">{member.email}</p>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(`/admin/users/${member.id}`)}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {roles.map((role) => (
+              <Badge
+                key={role}
+                variant="outline"
+                className={`${getRoleBadgeColor(role)} flex items-center gap-1`}
+              >
+                {getRoleIcon(role)}
+                {role}
+              </Badge>
+            ))}
+          </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" disabled={loading}>
-              <Settings className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card border-border z-50">
-            <DropdownMenuLabel>Manage Roles</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={roles.includes('admin')}
-              onCheckedChange={(checked) => handleRoleToggle('admin', checked)}
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              Admin
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={roles.includes('trainer')}
-              onCheckedChange={(checked) => handleRoleToggle('trainer', checked)}
-            >
-              <Dumbbell className="h-4 w-4 mr-2" />
-              Trainer
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={roles.includes('member')}
-              onCheckedChange={(checked) => handleRoleToggle('member', checked)}
-            >
-              <User2 className="h-4 w-4 mr-2" />
-              Member
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/admin/users/${member.id}`)}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={loading}>
+                <Settings className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-card border-border z-50">
+              <DropdownMenuLabel>Manage Roles</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={roles.includes('admin')}
+                onCheckedChange={(checked) => handleRoleToggle('admin', checked)}
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Admin
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={roles.includes('trainer')}
+                onCheckedChange={(checked) => handleRoleToggle('trainer', checked)}
+              >
+                <Dumbbell className="h-4 w-4 mr-2" />
+                Trainer
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={roles.includes('member')}
+                onCheckedChange={(checked) => handleRoleToggle('member', checked)}
+              >
+                <User2 className="h-4 w-4 mr-2" />
+                Member
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Διαγραφή Χρήστη
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Διαγραφή Χρήστη</AlertDialogTitle>
+            <AlertDialogDescription>
+              Είστε σίγουροι ότι θέλετε να διαγράψετε τον χρήστη{' '}
+              <strong>{member.full_name || member.email}</strong>;
+              <br /><br />
+              Αυτή η ενέργεια είναι μη αναστρέψιμη και θα διαγράψει όλα τα δεδομένα του χρήστη.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Ακύρωση</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Διαγραφή...' : 'Διαγραφή'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
