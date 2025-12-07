@@ -24,8 +24,7 @@ import {
   Sparkles,
   Phone,
   FileText,
-  FilePlus,
-  Shield
+  FilePlus
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -42,6 +41,12 @@ interface PageSection {
   title: string | null;
   subtitle: string | null;
   content: string | null;
+  title_en: string | null;
+  title_el: string | null;
+  subtitle_en: string | null;
+  subtitle_el: string | null;
+  content_en: string | null;
+  content_el: string | null;
   image_url: string | null;
   background_color: string;
   text_color: string;
@@ -61,17 +66,14 @@ interface SiteSetting {
 interface PageInfo {
   key: string;
   label: string;
-  isProtected: boolean;
 }
 
-const PROTECTED_PAGES = ['home', 'contact', 'classes', 'memberships', 'pricing'];
-
 const DEFAULT_PAGES: PageInfo[] = [
-  { key: 'home', label: 'Αρχική', isProtected: true },
-  { key: 'contact', label: 'Επικοινωνία', isProtected: true },
-  { key: 'classes', label: 'Μαθήματα', isProtected: true },
-  { key: 'memberships', label: 'Συνδρομές', isProtected: true },
-  { key: 'pricing', label: 'Τιμές', isProtected: true },
+  { key: 'home', label: 'Αρχική' },
+  { key: 'contact', label: 'Επικοινωνία' },
+  { key: 'classes', label: 'Μαθήματα' },
+  { key: 'memberships', label: 'Συνδρομές' },
+  { key: 'pricing', label: 'Τιμές' },
 ];
 
 const SECTION_TYPES = [
@@ -162,7 +164,6 @@ export default function PageBuilder() {
         allPages.push({
           key,
           label: key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
-          isProtected: false,
         });
       }
     });
@@ -334,7 +335,6 @@ export default function PageBuilder() {
       const newPage: PageInfo = {
         key: pageKey,
         label: newPageName,
-        isProtected: false,
       };
       setPages([...pages, newPage]);
       setActivePage(pageKey);
@@ -346,13 +346,6 @@ export default function PageBuilder() {
   };
 
   const deletePage = async () => {
-    const currentPage = pages.find(p => p.key === activePage);
-    
-    if (currentPage?.isProtected) {
-      toast.error('Δεν μπορείτε να διαγράψετε αυτή τη σελίδα');
-      return;
-    }
-
     // Delete all sections for this page
     const { error } = await supabase
       .from('page_sections')
@@ -364,7 +357,7 @@ export default function PageBuilder() {
       console.error(error);
     } else {
       setPages(pages.filter(p => p.key !== activePage));
-      setActivePage('home');
+      setActivePage(pages.find(p => p.key !== activePage)?.key || 'home');
       setShowDeletePageDialog(false);
       toast.success('Η σελίδα διαγράφηκε');
     }
@@ -386,8 +379,6 @@ export default function PageBuilder() {
       toast.success('Η ρύθμιση αποθηκεύτηκε');
     }
   };
-
-  const currentPageInfo = pages.find(p => p.key === activePage);
 
   return (
     <SidebarProvider>
@@ -454,33 +445,21 @@ export default function PageBuilder() {
                           <SelectContent>
                             {pages.map(page => (
                               <SelectItem key={page.key} value={page.key}>
-                                <div className="flex items-center gap-2">
-                                  {page.isProtected && <Shield className="h-3 w-3 text-muted-foreground" />}
-                                  {page.label}
-                                </div>
+                                {page.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                         
-                        {currentPageInfo && !currentPageInfo.isProtected && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => setShowDeletePageDialog(true)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Διαγραφή Σελίδας
-                          </Button>
-                        )}
-                        
-                        {currentPageInfo?.isProtected && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Shield className="h-3 w-3" />
-                            Προστατευμένη σελίδα - δεν διαγράφεται
-                          </p>
-                        )}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setShowDeletePageDialog(true)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Διαγραφή Σελίδας
+                        </Button>
                       </CardContent>
                     </Card>
 
@@ -629,7 +608,7 @@ export default function PageBuilder() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Διαγραφή Σελίδας</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Είστε σίγουροι ότι θέλετε να διαγράψετε τη σελίδα "{currentPageInfo?.label}"? 
+                    Είστε σίγουροι ότι θέλετε να διαγράψετε τη σελίδα "{pages.find(p => p.key === activePage)?.label}"? 
                     Θα διαγραφούν όλα τα sections ({sections.length}) που περιέχει.
                     Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.
                   </AlertDialogDescription>
