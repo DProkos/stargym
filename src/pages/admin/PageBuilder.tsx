@@ -6,19 +6,16 @@ import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { 
   Layout, 
   Palette, 
-  Settings, 
   Eye, 
-  Save,
-  GripVertical,
   Plus,
   Trash2,
   Image as ImageIcon,
@@ -26,7 +23,9 @@ import {
   Square,
   Sparkles,
   Phone,
-  FileText
+  FileText,
+  FilePlus,
+  Shield
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -59,12 +58,20 @@ interface SiteSetting {
   category: string;
 }
 
-const PAGES = [
-  { key: 'home', label: 'Αρχική' },
-  { key: 'contact', label: 'Επικοινωνία' },
-  { key: 'classes', label: 'Μαθήματα' },
-  { key: 'memberships', label: 'Συνδρομές' },
-  { key: 'pricing', label: 'Τιμές' },
+interface PageInfo {
+  key: string;
+  label: string;
+  isProtected: boolean;
+}
+
+const PROTECTED_PAGES = ['home', 'contact', 'classes', 'memberships', 'pricing'];
+
+const DEFAULT_PAGES: PageInfo[] = [
+  { key: 'home', label: 'Αρχική', isProtected: true },
+  { key: 'contact', label: 'Επικοινωνία', isProtected: true },
+  { key: 'classes', label: 'Μαθήματα', isProtected: true },
+  { key: 'memberships', label: 'Συνδρομές', isProtected: true },
+  { key: 'pricing', label: 'Τιμές', isProtected: true },
 ];
 
 const SECTION_TYPES = [
@@ -86,8 +93,12 @@ export default function PageBuilder() {
   const [siteSettings, setSiteSettings] = useState<SiteSetting[]>([]);
   const [selectedSection, setSelectedSection] = useState<PageSection | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [pages, setPages] = useState<PageInfo[]>(DEFAULT_PAGES);
+  const [newPageName, setNewPageName] = useState('');
+  const [newPageKey, setNewPageKey] = useState('');
+  const [showNewPageDialog, setShowNewPageDialog] = useState(false);
+  const [showDeletePageDialog, setShowDeletePageDialog] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -116,7 +127,7 @@ export default function PageBuilder() {
       .select('role')
       .eq('user_id', session.user.id)
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
 
     if (!data) {
       navigate('/');
@@ -125,7 +136,38 @@ export default function PageBuilder() {
     }
 
     loadSiteSettings();
+    loadPages();
     loadSections();
+  };
+
+  const loadPages = async () => {
+    // Get all unique page_keys from page_sections
+    const { data, error } = await supabase
+      .from('page_sections')
+      .select('page_key');
+
+    if (error) {
+      console.error('Error loading pages:', error);
+      return;
+    }
+
+    // Get unique page keys
+    const uniquePageKeys = [...new Set(data?.map(d => d.page_key) || [])];
+    
+    // Merge with default pages
+    const allPages: PageInfo[] = [...DEFAULT_PAGES];
+    
+    uniquePageKeys.forEach(key => {
+      if (!allPages.find(p => p.key === key)) {
+        allPages.push({
+          key,
+          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          isProtected: false,
+        });
+      }
+    });
+
+    setPages(allPages);
   };
 
   const loadSections = async () => {
@@ -167,8 +209,6 @@ export default function PageBuilder() {
       const newIndex = sections.findIndex((s) => s.id === over.id);
       
       const newSections = arrayMove(sections, oldIndex, newIndex);
-      
-      // Update sort_order for all affected sections
       const updatedSections = newSections.map((section, index) => ({
         ...section,
         sort_order: index,
@@ -176,7 +216,6 @@ export default function PageBuilder() {
       
       setSections(updatedSections);
 
-      // Save to database
       for (const section of updatedSections) {
         await supabase
           .from('page_sections')
@@ -259,6 +298,78 @@ export default function PageBuilder() {
     }
   };
 
+  const createNewPage = async () => {
+    if (!newPageName.trim() || !newPageKey.trim()) {
+      toast.error('Συμπληρώστε όνομα και key σελίδας');
+      return;
+    }
+
+    const pageKey = newPageKey.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    
+    if (pages.find(p => p.key === pageKey)) {
+      toast.error('Υπάρχει ήδη σελίδα με αυτό το key');
+      return;
+    }
+
+    // Create a default header section for the new page
+    const { error } = await supabase
+      .from('page_sections')
+      .insert({
+        page_key: pageKey,
+        section_key: 'header',
+        section_type: 'header',
+        title: newPageName,
+        subtitle: 'New page subtitle',
+        background_color: 'default',
+        text_color: 'default',
+        settings: {},
+        sort_order: 0,
+        is_visible: true,
+      });
+
+    if (error) {
+      toast.error('Σφάλμα δημιουργίας σελίδας');
+      console.error(error);
+    } else {
+      const newPage: PageInfo = {
+        key: pageKey,
+        label: newPageName,
+        isProtected: false,
+      };
+      setPages([...pages, newPage]);
+      setActivePage(pageKey);
+      setNewPageName('');
+      setNewPageKey('');
+      setShowNewPageDialog(false);
+      toast.success('Η σελίδα δημιουργήθηκε');
+    }
+  };
+
+  const deletePage = async () => {
+    const currentPage = pages.find(p => p.key === activePage);
+    
+    if (currentPage?.isProtected) {
+      toast.error('Δεν μπορείτε να διαγράψετε αυτή τη σελίδα');
+      return;
+    }
+
+    // Delete all sections for this page
+    const { error } = await supabase
+      .from('page_sections')
+      .delete()
+      .eq('page_key', activePage);
+
+    if (error) {
+      toast.error('Σφάλμα διαγραφής σελίδας');
+      console.error(error);
+    } else {
+      setPages(pages.filter(p => p.key !== activePage));
+      setActivePage('home');
+      setShowDeletePageDialog(false);
+      toast.success('Η σελίδα διαγράφηκε');
+    }
+  };
+
   const updateSiteSetting = async (settingKey: string, value: string | null) => {
     const { error } = await supabase
       .from('site_settings')
@@ -275,6 +386,8 @@ export default function PageBuilder() {
       toast.success('Η ρύθμιση αποθηκεύτηκε');
     }
   };
+
+  const currentPageInfo = pages.find(p => p.key === activePage);
 
   return (
     <SidebarProvider>
@@ -321,21 +434,53 @@ export default function PageBuilder() {
                   <div className="space-y-4">
                     <Card>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm">Επιλογή Σελίδας</CardTitle>
+                        <CardTitle className="text-sm flex items-center justify-between">
+                          Επιλογή Σελίδας
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowNewPageDialog(true)}
+                          >
+                            <FilePlus className="h-4 w-4 mr-1" />
+                            Νέα
+                          </Button>
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="space-y-3">
                         <Select value={activePage} onValueChange={setActivePage}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {PAGES.map(page => (
+                            {pages.map(page => (
                               <SelectItem key={page.key} value={page.key}>
-                                {page.label}
+                                <div className="flex items-center gap-2">
+                                  {page.isProtected && <Shield className="h-3 w-3 text-muted-foreground" />}
+                                  {page.label}
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+                        
+                        {currentPageInfo && !currentPageInfo.isProtected && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => setShowDeletePageDialog(true)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Διαγραφή Σελίδας
+                          </Button>
+                        )}
+                        
+                        {currentPageInfo?.isProtected && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Shield className="h-3 w-3" />
+                            Προστατευμένη σελίδα - δεν διαγράφεται
+                          </p>
+                        )}
                       </CardContent>
                     </Card>
 
@@ -407,7 +552,7 @@ export default function PageBuilder() {
                         onUpdate={(updates) => updateSection(selectedSection.id, updates)}
                       />
                     ) : (
-                      <Card className="h-full flex items-center justify-center">
+                      <Card className="h-full flex items-center justify-center min-h-[300px]">
                         <div className="text-center text-muted-foreground">
                           <Layout className="h-12 w-12 mx-auto mb-4 opacity-50" />
                           <p>Επιλέξτε ένα section για επεξεργασία</p>
@@ -435,6 +580,68 @@ export default function PageBuilder() {
                 onClose={() => setShowPreview(false)}
               />
             )}
+
+            {/* New Page Dialog */}
+            <Dialog open={showNewPageDialog} onOpenChange={setShowNewPageDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Δημιουργία Νέας Σελίδας</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Όνομα Σελίδας</Label>
+                    <Input
+                      value={newPageName}
+                      onChange={(e) => {
+                        setNewPageName(e.target.value);
+                        setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                      }}
+                      placeholder="π.χ. Υπηρεσίες"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>URL Key</Label>
+                    <Input
+                      value={newPageKey}
+                      onChange={(e) => setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''))}
+                      placeholder="π.χ. services"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Η σελίδα θα είναι διαθέσιμη στο: /{newPageKey || 'page-key'}
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowNewPageDialog(false)}>
+                    Ακύρωση
+                  </Button>
+                  <Button onClick={createNewPage}>
+                    <FilePlus className="h-4 w-4 mr-2" />
+                    Δημιουργία
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Delete Page Confirmation */}
+            <AlertDialog open={showDeletePageDialog} onOpenChange={setShowDeletePageDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Διαγραφή Σελίδας</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Είστε σίγουροι ότι θέλετε να διαγράψετε τη σελίδα "{currentPageInfo?.label}"? 
+                    Θα διαγραφούν όλα τα sections ({sections.length}) που περιέχει.
+                    Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Ακύρωση</AlertDialogCancel>
+                  <AlertDialogAction onClick={deletePage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Διαγραφή
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </main>
       </div>
