@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EmailBlockEditor } from '@/components/email-editor/EmailBlockEditor';
 import {
@@ -79,6 +79,7 @@ export default function Settings() {
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
+  const [sendingSmtpTestEmail, setSendingSmtpTestEmail] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const [showVisualEditor, setShowVisualEditor] = useState(false);
   const [formData, setFormData] = useState({
@@ -485,6 +486,46 @@ Test Email - ${editingTemplate.name}
     }
   };
 
+  const handleSendSmtpTestEmail = async () => {
+    if (!userEmail) {
+      toast.error('Δεν βρέθηκε email χρήστη');
+      return;
+    }
+
+    setSendingSmtpTestEmail(true);
+
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: userEmail,
+          subject: '[TEST] SMTP Configuration Test',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #333;">SMTP Test Successful!</h1>
+              <p>Αυτό είναι ένα δοκιμαστικό email για επιβεβαίωση ότι οι ρυθμίσεις SMTP λειτουργούν σωστά.</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+              <p style="color: #666; font-size: 14px;">
+                <strong>SMTP Host:</strong> ${smtpSettings.host}<br/>
+                <strong>SMTP Port:</strong> ${smtpSettings.port}<br/>
+                <strong>From:</strong> ${smtpSettings.fromName} &lt;${smtpSettings.fromEmail}&gt;
+              </p>
+            </div>
+          `,
+          text: `SMTP Test Successful!\n\nΑυτό είναι ένα δοκιμαστικό email για επιβεβαίωση ότι οι ρυθμίσεις SMTP λειτουργούν σωστά.\n\nSMTP Host: ${smtpSettings.host}\nSMTP Port: ${smtpSettings.port}\nFrom: ${smtpSettings.fromName} <${smtpSettings.fromEmail}>`
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Test email στάλθηκε επιτυχώς στο ${userEmail}`);
+    } catch (error: any) {
+      console.error('Error sending SMTP test email:', error);
+      toast.error('Αποτυχία αποστολής test email: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSendingSmtpTestEmail(false);
+    }
+  };
+
   const handleOpenDialog = (tier?: MembershipTier) => {
     if (tier) {
       setEditingTier(tier);
@@ -866,7 +907,31 @@ Test Email - ${editingTemplate.name}
                       />
                       <Label>Use TLS/SSL</Label>
                     </div>
-                    <Button onClick={handleSaveSmtpSettings}>Save SMTP Settings</Button>
+                    <div className="flex gap-2">
+                      <Button onClick={handleSaveSmtpSettings}>Save SMTP Settings</Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleSendSmtpTestEmail}
+                        disabled={sendingSmtpTestEmail || !smtpSettings.host || !userEmail}
+                      >
+                        {sendingSmtpTestEmail ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Αποστολή...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Test Email
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    {userEmail && (
+                      <p className="text-sm text-muted-foreground">
+                        Το test email θα σταλεί στο: <strong>{userEmail}</strong>
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
