@@ -25,7 +25,8 @@ import {
   Phone,
   FileText,
   FilePlus,
-  Package
+  Package,
+  Layers
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -34,6 +35,7 @@ import { SectionEditor } from '@/components/page-builder/SectionEditor';
 import { SiteSettingsEditor } from '@/components/page-builder/SiteSettingsEditor';
 import { LivePreview } from '@/components/page-builder/LivePreview';
 import { PagePreview } from '@/components/page-builder/PagePreview';
+import { SectionTemplates, SectionTemplate } from '@/components/page-builder/SectionTemplates';
 
 interface PageSection {
   id: string;
@@ -279,6 +281,46 @@ export default function PageBuilder() {
     }
   };
 
+  const applyTemplate = async (template: SectionTemplate) => {
+    const newSectionKey = `${template.section_type}_${Date.now()}`;
+    const newSection = {
+      page_key: activePage,
+      section_key: newSectionKey,
+      section_type: template.section_type,
+      title: template.preview_data.title || null,
+      title_en: template.preview_data.title_en || null,
+      title_el: template.preview_data.title_el || null,
+      subtitle: template.preview_data.subtitle || null,
+      subtitle_en: template.preview_data.subtitle_en || null,
+      subtitle_el: template.preview_data.subtitle_el || null,
+      content: template.preview_data.content || null,
+      content_en: template.preview_data.content_en || null,
+      content_el: template.preview_data.content_el || null,
+      image_url: null,
+      background_color: template.preview_data.background_color || 'default',
+      text_color: template.preview_data.text_color || 'default',
+      settings: template.preview_data.settings || {},
+      sort_order: sections.length,
+      is_visible: true,
+    };
+
+    const { data, error } = await supabase
+      .from('page_sections')
+      .insert(newSection)
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Σφάλμα προσθήκης template');
+      console.error(error);
+    } else {
+      setSections([...sections, data]);
+      setSelectedSection(data);
+      setActiveTab('sections');
+      toast.success(`Το template "${template.name}" προστέθηκε`);
+    }
+  };
+
   const updateSection = async (sectionId: string, updates: Partial<PageSection>) => {
     const { error } = await supabase
       .from('page_sections')
@@ -431,6 +473,10 @@ export default function PageBuilder() {
                   <Layout className="h-4 w-4" />
                   Sections
                 </TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center gap-2">
+                  <Layers className="h-4 w-4" />
+                  Templates
+                </TabsTrigger>
                 <TabsTrigger value="settings" className="flex items-center gap-2">
                   <Palette className="h-4 w-4" />
                   Ρυθμίσεις Site
@@ -558,6 +604,13 @@ export default function PageBuilder() {
                     )}
                   </div>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="templates">
+                <SectionTemplates
+                  activePage={activePage}
+                  onApplyTemplate={applyTemplate}
+                />
               </TabsContent>
 
               <TabsContent value="settings">
