@@ -14,46 +14,63 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setLoading(false);
-        return;
-      }
-
-      setUser(session.user);
-
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id);
-
-      if (roleData && roleData.length > 0) {
-        const roles = roleData.map(r => r.role);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (allowedRoles) {
-          // Check if user has at least one allowed role
-          const hasAllowedRole = roles.some(role => allowedRoles.includes(role));
-          if (hasAllowedRole) {
-            // Find and set the first matching allowed role
-            const matchingRole = roles.find(role => allowedRoles.includes(role));
-            setUserRole(matchingRole || null);
+        if (!session) {
+          setLoading(false);
+          return;
+        }
+
+        setUser(session.user);
+
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id);
+
+        if (roleError) {
+          console.error('Error fetching user roles:', roleError);
+          setUserRole('no_access');
+          setLoading(false);
+          return;
+        }
+
+        if (roleData && roleData.length > 0) {
+          const roles = roleData.map(r => r.role);
+          
+          if (allowedRoles) {
+            const hasAllowedRole = roles.some(role => allowedRoles.includes(role));
+            if (hasAllowedRole) {
+              const matchingRole = roles.find(role => allowedRoles.includes(role));
+              setUserRole(matchingRole || null);
+            } else {
+              setUserRole('no_access');
+            }
           } else {
-            // User has roles but none match - they should be redirected
-            setUserRole('no_access');
+            setUserRole(roles[0]);
           }
         } else {
-          setUserRole(roles[0]);
+          setUserRole('no_access');
         }
-      } else {
-        // User has no roles at all
-        setUserRole('no_access');
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        setUser(null);
+        setUserRole(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [allowedRoles]);
 
   if (loading) {
