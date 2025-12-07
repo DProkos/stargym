@@ -62,7 +62,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { email, password, fullName, phone, role } = await req.json();
+    const { email, password, fullName, phone, roles } = await req.json();
 
     if (!email || !password) {
       throw new Error('Email and password are required');
@@ -108,26 +108,35 @@ serve(async (req) => {
       }
     }
 
-    // Assign role if specified (default is 'member' from trigger)
-    if (role && role !== 'member' && newUser.user) {
-      // Check if role already exists (from trigger)
-      const { data: existingRole } = await supabaseAdmin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', newUser.user.id)
-        .eq('role', role)
-        .maybeSingle();
-
-      if (!existingRole) {
-        const { error: roleInsertError } = await supabaseAdmin
+    // Assign roles if specified
+    const rolesToAssign = Array.isArray(roles) ? roles : (roles ? [roles] : []);
+    
+    if (newUser.user && rolesToAssign.length > 0) {
+      for (const roleToAdd of rolesToAssign) {
+        // Skip 'member' as it's already added by trigger
+        if (roleToAdd === 'member') continue;
+        
+        // Check if role already exists
+        const { data: existingRole } = await supabaseAdmin
           .from('user_roles')
-          .insert({
-            user_id: newUser.user.id,
-            role: role
-          });
+          .select('id')
+          .eq('user_id', newUser.user.id)
+          .eq('role', roleToAdd)
+          .maybeSingle();
 
-        if (roleInsertError) {
-          console.error('Error assigning role:', roleInsertError);
+        if (!existingRole) {
+          const { error: roleInsertError } = await supabaseAdmin
+            .from('user_roles')
+            .insert({
+              user_id: newUser.user.id,
+              role: roleToAdd
+            });
+
+          if (roleInsertError) {
+            console.error(`Error assigning role ${roleToAdd}:`, roleInsertError);
+          } else {
+            console.log(`Role ${roleToAdd} assigned to user ${newUser.user.id}`);
+          }
         }
       }
     }
