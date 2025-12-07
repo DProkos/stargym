@@ -16,6 +16,49 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Verify admin role (for manual triggers) or cron secret (for scheduled triggers)
+    const authHeader = req.headers.get('Authorization');
+    const cronSecret = req.headers.get('X-Cron-Secret');
+    const expectedCronSecret = Deno.env.get('CRON_SECRET');
+
+    // Allow cron jobs with secret
+    const isCronJob = cronSecret && expectedCronSecret && cronSecret === expectedCronSecret;
+    
+    if (!isCronJob) {
+      // Must be authenticated admin
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Authorization required" }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Invalid authentication" }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (roleError || !roleData) {
+        return new Response(
+          JSON.stringify({ error: "Admin access required" }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     console.log('Starting class reminder job...');
 
     // Calculate tomorrow's date
@@ -34,7 +77,10 @@ serve(async (req) => {
 
     if (bookingsError) {
       console.error('Error fetching bookings:', bookingsError);
-      throw bookingsError;
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch bookings' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (!bookings || bookings.length === 0) {
@@ -211,7 +257,7 @@ ${classData.description ? `\n${classData.description}\n` : ''}
   } catch (error: any) {
     console.error('Error in send-class-reminders:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Reminder processing failed' }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -19,7 +19,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.send-class-reminders]
-verify_jwt = false
+verify_jwt = true
 
 [functions.admin-update-user]
 verify_jwt = true
@@ -30,5 +30,17 @@ verify_jwt = true
 [functions.admin-toggle-user-status]
 verify_jwt = true
 
+[functions.admin-create-user]
+verify_jwt = true
+
 [functions.crm-workflow-executor]
+verify_jwt = true
+
+[functions.translate-content]
+verify_jwt = true
+
+[functions.notify-class-deletion]
+verify_jwt = true
+
+[functions.notify-class-status-change]
 verify_jwt = true
