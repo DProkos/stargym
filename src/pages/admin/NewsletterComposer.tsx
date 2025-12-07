@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Send, Save, Eye, Mail } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -21,7 +21,9 @@ export default function NewsletterComposer() {
   const [subject, setSubject] = useState('');
   const [htmlContent, setHtmlContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState(0);
+  const [userEmail, setUserEmail] = useState('');
 
   useEffect(() => {
     checkAuth();
@@ -53,7 +55,35 @@ export default function NewsletterComposer() {
       return;
     }
 
+    setUserEmail(session.user.email || '');
     setIsAdmin(true);
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!subject || !htmlContent) {
+      toast.error('Συμπλήρωσε το θέμα και το περιεχόμενο');
+      return;
+    }
+
+    setSendingTest(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: userEmail,
+          subject: `[TEST] ${subject}`,
+          html: htmlContent,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Test email στάλθηκε στο ${userEmail}`);
+    } catch (error: any) {
+      console.error('Error sending test email:', error);
+      toast.error('Αποτυχία αποστολής test email');
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   const loadSubscriberCount = async () => {
@@ -259,6 +289,15 @@ export default function NewsletterComposer() {
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Send to {subscriberCount} Subscribers
+                    </Button>
+                    <Button
+                      onClick={handleSendTestEmail}
+                      disabled={sendingTest || !userEmail}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      <Mail className="h-4 w-4 mr-2" />
+                      {sendingTest ? 'Αποστολή...' : `Test στο ${userEmail || 'email'}`}
                     </Button>
                     <Button
                       onClick={handleSaveDraft}
