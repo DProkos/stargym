@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,6 +15,12 @@ interface PageSection {
   title: string | null;
   subtitle: string | null;
   content: string | null;
+  title_en: string | null;
+  title_el: string | null;
+  subtitle_en: string | null;
+  subtitle_el: string | null;
+  content_en: string | null;
+  content_el: string | null;
   image_url: string | null;
   background_color: string;
   text_color: string;
@@ -45,6 +51,11 @@ const ICON_OPTIONS = [
 
 export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
   const [localSettings, setLocalSettings] = useState(section.settings || {});
+  const [activeLang, setActiveLang] = useState<'el' | 'en'>('el');
+
+  useEffect(() => {
+    setLocalSettings(section.settings || {});
+  }, [section.id]);
 
   const updateSettings = (key: string, value: any) => {
     const newSettings = { ...localSettings, [key]: value };
@@ -52,24 +63,67 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
     onUpdate({ settings: newSettings });
   };
 
+  const getTitleField = () => activeLang === 'el' ? 'title_el' : 'title_en';
+  const getSubtitleField = () => activeLang === 'el' ? 'subtitle_el' : 'subtitle_en';
+  const getContentField = () => activeLang === 'el' ? 'content_el' : 'content_en';
+
+  const getCurrentTitle = () => section[getTitleField()] || '';
+  const getCurrentSubtitle = () => section[getSubtitleField()] || '';
+  const getCurrentContent = () => section[getContentField()] || '';
+
+  const updateTitle = (value: string) => {
+    const field = getTitleField();
+    onUpdate({ [field]: value, title: activeLang === 'el' ? value : section.title });
+  };
+
+  const updateSubtitle = (value: string) => {
+    const field = getSubtitleField();
+    onUpdate({ [field]: value, subtitle: activeLang === 'el' ? value : section.subtitle });
+  };
+
+  const updateContent = (value: string) => {
+    const field = getContentField();
+    onUpdate({ [field]: value, content: activeLang === 'el' ? value : section.content });
+  };
+
+  const renderLanguageTabs = () => (
+    <div className="flex gap-2 mb-4">
+      <Button
+        variant={activeLang === 'el' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setActiveLang('el')}
+      >
+        🇬🇷 Ελληνικά
+      </Button>
+      <Button
+        variant={activeLang === 'en' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setActiveLang('en')}
+      >
+        🇬🇧 English
+      </Button>
+    </div>
+  );
+
   const renderContentFields = () => {
     switch (section.section_type) {
       case 'hero':
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Hero title..."
               />
             </div>
             <div>
-              <Label>Υπότιτλος</Label>
+              <Label>Υπότιτλος ({activeLang.toUpperCase()})</Label>
               <Textarea
-                value={section.subtitle || ''}
-                onChange={(e) => onUpdate({ subtitle: e.target.value })}
+                value={getCurrentSubtitle()}
+                onChange={(e) => updateSubtitle(e.target.value)}
                 placeholder="Hero subtitle..."
               />
             </div>
@@ -124,19 +178,20 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
       case 'header':
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Page title..."
               />
             </div>
             <div>
-              <Label>Υπότιτλος</Label>
+              <Label>Υπότιτλος ({activeLang.toUpperCase()})</Label>
               <Textarea
-                value={section.subtitle || ''}
-                onChange={(e) => onUpdate({ subtitle: e.target.value })}
+                value={getCurrentSubtitle()}
+                onChange={(e) => updateSubtitle(e.target.value)}
                 placeholder="Page subtitle..."
               />
             </div>
@@ -146,19 +201,20 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
       case 'text':
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Section title..."
               />
             </div>
             <div>
-              <Label>Περιεχόμενο</Label>
+              <Label>Περιεχόμενο ({activeLang.toUpperCase()})</Label>
               <Textarea
-                value={section.content || ''}
-                onChange={(e) => onUpdate({ content: e.target.value })}
+                value={getCurrentContent()}
+                onChange={(e) => updateContent(e.target.value)}
                 placeholder="Text content..."
                 rows={6}
               />
@@ -170,19 +226,20 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
         const features = localSettings.features || [];
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Features title..."
               />
             </div>
             <div>
-              <Label>Υπότιτλος</Label>
+              <Label>Υπότιτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.subtitle || ''}
-                onChange={(e) => onUpdate({ subtitle: e.target.value })}
+                value={getCurrentSubtitle()}
+                onChange={(e) => updateSubtitle(e.target.value)}
                 placeholder="Features subtitle..."
               />
             </div>
@@ -195,7 +252,7 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                   onClick={() => {
                     updateSettings('features', [
                       ...features,
-                      { icon: 'Star', title: 'New Feature', description: 'Feature description' }
+                      { icon: 'Star', title: 'New Feature', title_en: 'New Feature', title_el: 'Νέο Χαρακτηριστικό', description: 'Feature description', description_en: 'Feature description', description_el: 'Περιγραφή χαρακτηριστικού' }
                     ]);
                   }}
                 >
@@ -225,13 +282,18 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                           </SelectContent>
                         </Select>
                         <Input
-                          value={feature.title}
+                          value={activeLang === 'el' ? (feature.title_el || feature.title) : (feature.title_en || feature.title)}
                           onChange={(e) => {
                             const newFeatures = [...features];
-                            newFeatures[index].title = e.target.value;
+                            if (activeLang === 'el') {
+                              newFeatures[index].title_el = e.target.value;
+                              newFeatures[index].title = e.target.value;
+                            } else {
+                              newFeatures[index].title_en = e.target.value;
+                            }
                             updateSettings('features', newFeatures);
                           }}
-                          placeholder="Feature title"
+                          placeholder={`Feature title (${activeLang.toUpperCase()})`}
                         />
                         <Button
                           size="icon"
@@ -245,13 +307,18 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                         </Button>
                       </div>
                       <Textarea
-                        value={feature.description}
+                        value={activeLang === 'el' ? (feature.description_el || feature.description) : (feature.description_en || feature.description)}
                         onChange={(e) => {
                           const newFeatures = [...features];
-                          newFeatures[index].description = e.target.value;
+                          if (activeLang === 'el') {
+                            newFeatures[index].description_el = e.target.value;
+                            newFeatures[index].description = e.target.value;
+                          } else {
+                            newFeatures[index].description_en = e.target.value;
+                          }
                           updateSettings('features', newFeatures);
                         }}
-                        placeholder="Feature description"
+                        placeholder={`Feature description (${activeLang.toUpperCase()})`}
                         rows={2}
                       />
                     </div>
@@ -265,19 +332,20 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
       case 'cta':
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="CTA title..."
               />
             </div>
             <div>
-              <Label>Υπότιτλος</Label>
+              <Label>Υπότιτλος ({activeLang.toUpperCase()})</Label>
               <Textarea
-                value={section.subtitle || ''}
-                onChange={(e) => onUpdate({ subtitle: e.target.value })}
+                value={getCurrentSubtitle()}
+                onChange={(e) => updateSubtitle(e.target.value)}
                 placeholder="CTA subtitle..."
               />
             </div>
@@ -305,11 +373,12 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
       case 'image':
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος (optional)</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()}) (optional)</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Image title..."
               />
             </div>
@@ -329,11 +398,12 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
       case 'contact_info':
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
                 placeholder="Section title..."
               />
             </div>
@@ -346,18 +416,19 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
       default:
         return (
           <div className="space-y-4">
+            {renderLanguageTabs()}
             <div>
-              <Label>Τίτλος</Label>
+              <Label>Τίτλος ({activeLang.toUpperCase()})</Label>
               <Input
-                value={section.title || ''}
-                onChange={(e) => onUpdate({ title: e.target.value })}
+                value={getCurrentTitle()}
+                onChange={(e) => updateTitle(e.target.value)}
               />
             </div>
             <div>
-              <Label>Περιεχόμενο</Label>
+              <Label>Περιεχόμενο ({activeLang.toUpperCase()})</Label>
               <Textarea
-                value={section.content || ''}
-                onChange={(e) => onUpdate({ content: e.target.value })}
+                value={getCurrentContent()}
+                onChange={(e) => updateContent(e.target.value)}
                 rows={4}
               />
             </div>
