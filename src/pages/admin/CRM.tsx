@@ -217,7 +217,7 @@ export default function UserManagement() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Ενεργοί Πελάτες</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Μέλη</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
