@@ -38,6 +38,7 @@ import Invoices from "./pages/admin/Invoices";
 import InvoiceSettings from "./pages/admin/InvoiceSettings";
 import Packages from "./pages/admin/Packages";
 import InvoiceDetail from "./pages/admin/InvoiceDetail";
+import PageBuilder from "./pages/admin/PageBuilder";
 
 const queryClient = new QueryClient();
 
@@ -188,6 +189,11 @@ const App = () => (
             <Route path="/admin/packages" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <Packages />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/page-builder" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PageBuilder />
               </ProtectedRoute>
             } />
             
