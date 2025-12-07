@@ -29,45 +29,51 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify authentication
+    // Check for internal service call (from other edge functions using service role key)
     const authHeader = req.headers.get('Authorization');
-    console.log('Auth header present:', !!authHeader);
+    const internalCall = req.headers.get('X-Internal-Call') === 'true';
+    console.log('Auth header present:', !!authHeader, 'Internal call:', internalCall);
     
-    if (!authHeader) {
-      console.error('No authorization header provided');
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // If internal call, skip user authentication (called from other edge functions)
+    if (!internalCall) {
+      if (!authHeader) {
+        console.error('No authorization header provided');
+        return new Response(
+          JSON.stringify({ error: 'Authentication required' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    const token = authHeader.replace('Bearer ', '');
-    
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    console.log('User fetched:', user?.id, 'Error:', userError?.message);
-    
-    if (userError || !user) {
-      console.error('User verification failed:', userError?.message);
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+      const token = authHeader.replace('Bearer ', '');
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      console.log('User fetched:', user?.id, 'Error:', userError?.message);
+      
+      if (userError || !user) {
+        console.error('User verification failed:', userError?.message);
+        return new Response(
+          JSON.stringify({ error: 'Authentication required' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // Check if user has admin role
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-    if (roleError || !roleData) {
-      console.error('Unauthorized email send attempt by user:', user.id);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (roleError || !roleData) {
+        console.error('Unauthorized email send attempt by user:', user.id);
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      console.log('Internal call from edge function - skipping user auth');
     }
 
     // Validate input
@@ -154,7 +160,7 @@ serve(async (req) => {
     const port = parseInt(smtpConfig.smtp_port || '587');
     const secure = smtpConfig.smtp_secure === 'true';
     
-    console.log(`Sending email to ${to} by admin user ${user.id}`);
+    console.log(`Sending email to ${to}`);
     
     const conn = await Deno.connect({
       hostname: smtpConfig.smtp_host,
@@ -204,7 +210,7 @@ serve(async (req) => {
     await send('QUIT');
     conn.close();
 
-    console.log(`Email sent successfully to ${to} by admin ${user.id}`);
+    console.log(`Email sent successfully to ${to}`);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Email sent successfully' }),
