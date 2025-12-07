@@ -7,11 +7,14 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import heroImage from '@/assets/hero-gym.jpg';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
+import { usePageSections } from '@/hooks/usePageSections';
+import { DynamicPageSections } from '@/components/DynamicSection';
 
 export default function Home() {
   const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { sections, getSetting, loading } = usePageSections('home');
 
   useEffect(() => {
     const checkUser = async () => {
@@ -38,6 +41,18 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // If there are dynamic sections, use them
+  if (sections.length > 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation user={user} isAdmin={isAdmin} />
+        <ChatbotWidget />
+        <DynamicPageSections sections={sections} getSetting={getSetting} />
+      </div>
+    );
+  }
+
+  // Fallback to static content if no sections in database
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
