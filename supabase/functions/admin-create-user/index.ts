@@ -83,6 +83,9 @@ serve(async (req) => {
       email,
       password,
       email_confirm: true, // Auto-confirm email for admin-created users
+      app_metadata: {
+        created_by_admin: true // Flag to bypass signup_enabled check in trigger
+      },
       user_metadata: {
         full_name: fullName || ''
       }
