@@ -161,10 +161,17 @@ export default function PageBuilder() {
     // Get unique page keys that have sections in the database
     const existingPageKeys = [...new Set(data?.map(d => d.page_key) || [])];
     
-    // Start with all default pages
-    const allPages: PageInfo[] = [...DEFAULT_PAGES];
+    // Only show pages that actually have sections in the database
+    const allPages: PageInfo[] = [];
     
-    // Add any custom pages that exist in database but not in defaults
+    // First add default pages that exist in database
+    DEFAULT_PAGES.forEach(page => {
+      if (existingPageKeys.includes(page.key)) {
+        allPages.push(page);
+      }
+    });
+    
+    // Then add any custom pages that exist in database but not in defaults
     existingPageKeys.forEach(key => {
       if (!allPages.find(p => p.key === key)) {
         allPages.push({
@@ -174,7 +181,12 @@ export default function PageBuilder() {
       }
     });
 
-    setPages(allPages);
+    // If no pages exist yet, show default pages so user can create sections
+    if (allPages.length === 0) {
+      setPages(DEFAULT_PAGES);
+    } else {
+      setPages(allPages);
+    }
   };
 
   const loadSections = async () => {
