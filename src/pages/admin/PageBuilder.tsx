@@ -32,6 +32,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { SortableSectionItem } from '@/components/page-builder/SortableSectionItem';
 import { SectionEditor } from '@/components/page-builder/SectionEditor';
 import { SiteSettingsEditor } from '@/components/page-builder/SiteSettingsEditor';
+import { LivePreview } from '@/components/page-builder/LivePreview';
 import { PagePreview } from '@/components/page-builder/PagePreview';
 
 interface PageSection {
@@ -410,9 +411,9 @@ export default function PageBuilder() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
+              <Button variant="default" onClick={() => setShowPreview(!showPreview)}>
                   <Eye className="h-4 w-4 mr-2" />
-                  {showPreview ? 'Κλείσιμο Preview' : 'Preview'}
+                  Live Edit
                 </Button>
               </div>
             </div>
@@ -560,13 +561,14 @@ export default function PageBuilder() {
               </TabsContent>
             </Tabs>
 
-            {/* Preview Modal */}
+            {/* Live Preview with Visual Editing */}
             {showPreview && (
-              <PagePreview
+              <LivePreview
                 pageKey={activePage}
                 sections={sections}
                 siteSettings={siteSettings}
                 onClose={() => setShowPreview(false)}
+                onUpdateSection={updateSection}
               />
             )}
 
