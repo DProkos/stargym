@@ -21,12 +21,52 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { classId, className, status, reason, affectedDate, trainerName }: NotifyRequest = await req.json();
-
     // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify admin or trainer role
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if user has admin or trainer role
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'trainer']);
+
+    if (roleError || !roleData || roleData.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Admin or trainer access required" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { classId, className, status, reason, affectedDate, trainerName }: NotifyRequest = await req.json();
+
+    if (!classId || !className || !status || !trainerName) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // Get all users with bookings for this class
     const { data: bookings, error: bookingsError } = await supabase
@@ -40,7 +80,11 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('status', 'confirmed');
 
     if (bookingsError) {
-      throw new Error(`Failed to fetch bookings: ${bookingsError.message}`);
+      console.error('Failed to fetch bookings:', bookingsError);
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch bookings" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     if (!bookings || bookings.length === 0) {
@@ -186,7 +230,6 @@ const handler = async (req: Request): Promise<Response> => {
         message: "Notifications sent",
         successful: successCount,
         failed: failCount,
-        results: results,
       }),
       {
         status: 200,
@@ -196,7 +239,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in notify-class-status-change:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Notification failed" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
