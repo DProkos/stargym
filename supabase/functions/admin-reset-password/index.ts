@@ -20,30 +20,46 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('No authorization header provided');
       throw new Error('No authorization header');
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
+    // Extract the token from the header
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Use admin client to get user from token
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError) {
+      console.error('Error getting user:', userError);
+      throw new Error('Unauthorized');
+    }
+    
+    if (!user) {
+      console.error('No user found for token');
       throw new Error('Unauthorized');
     }
 
-    const { data: roleData } = await supabaseAdmin
+    console.log('User authenticated:', user.id);
+
+    const { data: roleData, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'admin')
       .maybeSingle();
 
+    if (roleError) {
+      console.error('Error checking role:', roleError);
+      throw new Error('Error checking permissions');
+    }
+
     if (!roleData) {
+      console.error('User does not have admin role:', user.id);
       throw new Error('Unauthorized: Admin access required');
     }
+
+    console.log('Admin role verified for user:', user.id);
 
     const { userId, action, newPassword } = await req.json();
 
@@ -116,12 +132,20 @@ serve(async (req) => {
         .eq('setting_key', 'site_url')
         .maybeSingle();
 
-      const baseUrl = siteSettings?.setting_value || Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app') || 'https://stargym.lovable.app';
+      const baseUrl = siteSettings?.setting_value || 'https://stargym.lovable.app';
       const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
-      // Send email using send-email function
-      const { error: emailError } = await supabaseClient.functions.invoke('send-email', {
-        body: {
+      console.log('Sending reset email to:', userEmail, 'with link:', resetLink);
+
+      // Send email using send-email function - call directly with fetch
+      const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'x-internal-call': 'true'
+        },
+        body: JSON.stringify({
           to: userEmail,
           subject: 'Επαναφορά Κωδικού Πρόσβασης',
           html: `
@@ -138,11 +162,12 @@ serve(async (req) => {
               <p style="color: #666; font-size: 12px;">Αν δεν ζητήσατε εσείς αυτή την επαναφορά, αγνοήστε αυτό το email.</p>
             </div>
           `
-        }
+        })
       });
 
-      if (emailError) {
-        console.error('Error sending reset email:', emailError);
+      if (!emailResponse.ok) {
+        const errorText = await emailResponse.text();
+        console.error('Error sending reset email:', errorText);
         throw new Error('Failed to send reset email');
       }
 
