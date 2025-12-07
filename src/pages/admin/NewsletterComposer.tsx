@@ -232,13 +232,13 @@ export default function NewsletterComposer() {
 
                     <div className="space-y-2">
                       <Label>Email Content</Label>
-                      <div className="border rounded-md">
+                      <div className="border rounded-md overflow-hidden">
                         <ReactQuill
                           theme="snow"
                           value={htmlContent}
                           onChange={setHtmlContent}
                           modules={modules}
-                          className="h-96"
+                          className="h-96 [&_.ql-editor]:overflow-y-auto [&_.ql-editor]:max-h-80"
                         />
                       </div>
                     </div>
