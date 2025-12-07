@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { X, ExternalLink, Check, Edit2, Save, Eye, EyeOff } from 'lucide-react';
+import { X, ExternalLink, Check, Edit2, Save, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
   Dumbbell, 
@@ -19,6 +19,7 @@ import {
   Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PageSection {
   id: string;
@@ -145,6 +146,23 @@ export function LivePreview({ pageKey, sections, siteSettings, onClose, onUpdate
   const [previewLang, setPreviewLang] = useState<'el' | 'en'>('el');
   const [editMode, setEditMode] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
+  const [packages, setPackages] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadPackages();
+  }, []);
+
+  const loadPackages = async () => {
+    const { data, error } = await supabase
+      .from('service_packages')
+      .select('*')
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    
+    if (!error && data) {
+      setPackages(data);
+    }
+  };
   
   const getSetting = (key: string) => siteSettings.find(s => s.setting_key === key)?.setting_value || '';
 
@@ -567,6 +585,97 @@ export function LivePreview({ pageKey, sections, siteSettings, onClose, onUpdate
                     : '(Preview - Form will be functional on the site)'}
                 </p>
               </div>
+            </div>
+          </section>
+        );
+
+      case 'packages':
+        return (
+          <section key={section.id} className={`py-20 px-4 ${bgClass}`}>
+            <div className="container mx-auto">
+              <div className="text-center mb-12">
+                {editMode ? (
+                  <>
+                    <h2 className="text-4xl font-bold mb-4">
+                      <EditableText
+                        value={getTitle(section)}
+                        onChange={(v) => updateSectionTitle(section, v)}
+                        placeholder="Packages title..."
+                      />
+                    </h2>
+                    <div className="text-xl text-muted-foreground">
+                      <EditableText
+                        value={getSubtitle(section)}
+                        onChange={(v) => updateSectionSubtitle(section, v)}
+                        placeholder="Packages subtitle..."
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {getTitle(section) && <h2 className="text-4xl font-bold mb-4">{getTitle(section)}</h2>}
+                    {getSubtitle(section) && <p className="text-xl text-muted-foreground">{getSubtitle(section)}</p>}
+                  </>
+                )}
+              </div>
+              
+              {packages.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                  {packages.map((pkg, index) => (
+                    <div
+                      key={pkg.id}
+                      className={cn(
+                        "bg-gradient-card p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon relative",
+                        index === 1 && packages.length > 1 && "border-primary shadow-neon scale-105"
+                      )}
+                    >
+                      {index === 1 && packages.length > 1 && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+                          {previewLang === 'el' ? 'Δημοφιλές' : 'Popular'}
+                        </div>
+                      )}
+                      <h3 className="text-2xl font-bold mb-2">{pkg.name}</h3>
+                      <div className="mb-4">
+                        <span className="text-4xl font-bold text-primary">€{pkg.price}</span>
+                        {pkg.duration_months && (
+                          <span className="text-muted-foreground">
+                            /{pkg.duration_months} {previewLang === 'el' ? 'μήνα' : 'month'}
+                          </span>
+                        )}
+                      </div>
+                      {pkg.description && (
+                        <p className="text-muted-foreground mb-4">{pkg.description}</p>
+                      )}
+                      {pkg.features && Array.isArray(pkg.features) && pkg.features.length > 0 && (
+                        <ul className="space-y-2 mb-6">
+                          {(pkg.features as string[]).map((feature: string, fIndex: number) => (
+                            <li key={fIndex} className="flex items-center gap-2 text-sm">
+                              <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {pkg.sessions_included > 0 && (
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {pkg.sessions_included} {previewLang === 'el' ? 'συνεδρίες' : 'sessions'}
+                        </p>
+                      )}
+                      <Button className="w-full" variant={index === 1 ? "default" : "outline"}>
+                        {previewLang === 'el' ? 'Επιλογή' : 'Select'}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-12">
+                  <p>
+                    {previewLang === 'el' 
+                      ? 'Δεν υπάρχουν διαθέσιμα πακέτα. Προσθέστε πακέτα από τη σελίδα Πακέτα.'
+                      : 'No packages available. Add packages from the Packages page.'}
+                  </p>
+                </div>
+              )}
             </div>
           </section>
         );
