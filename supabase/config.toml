@@ -47,3 +47,9 @@ verify_jwt = true
 
 [functions.notify-class-status-change]
 verify_jwt = true
+
+[functions.admin-reset-password]
+verify_jwt = true
+
+[functions.reset-password-with-token]
+verify_jwt = false

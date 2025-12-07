@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +24,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Shield, Dumbbell, User2, Settings, Eye, Trash2, Mail, Key, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Shield, Dumbbell, User2, Settings, Eye, Trash2, Mail, Key, Loader2, KeyRound, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MemberRowProps {
@@ -44,7 +54,10 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [sendingWelcome, setSendingWelcome] = useState(false);
-  const [sendingReset, setSendingReset] = useState(false);
+  const [sendingResetLink, setSendingResetLink] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (member.roles) {
@@ -215,35 +228,55 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
     }
   };
 
-  const handleSendPasswordReset = async () => {
-    setSendingReset(true);
+  const handleSendResetLink = async () => {
+    setSendingResetLink(true);
     try {
-      const { error } = await supabase.functions.invoke('send-email', {
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
         body: {
-          to: member.email,
-          subject: 'Επαναφορά Κωδικού Πρόσβασης',
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #6366f1;">Επαναφορά Κωδικού</h1>
-              <p>Αγαπητέ/ή ${member.full_name || 'χρήστη'},</p>
-              <p>Λάβαμε αίτημα επαναφοράς του κωδικού σας.</p>
-              <p>Παρακαλούμε επικοινωνήστε με τη διαχείριση για να λάβετε τον νέο σας κωδικό ή χρησιμοποιήστε την επιλογή "Ξέχασα τον κωδικό μου" στη σελίδα σύνδεσης.</p>
-              <p>Αν δεν ζητήσατε επαναφορά κωδικού, παρακαλώ αγνοήστε αυτό το email.</p>
-              <br>
-              <p>Με εκτίμηση,<br>Η ομάδα διαχείρισης</p>
-            </div>
-          `,
-          text: `Αγαπητέ/ή ${member.full_name || 'χρήστη'}, Λάβαμε αίτημα επαναφοράς του κωδικού σας. Παρακαλούμε επικοινωνήστε με τη διαχείριση.`
+          userId: member.id,
+          action: 'send_reset_link'
         }
       });
 
       if (error) throw error;
-      toast.success(`Το email επαναφοράς κωδικού στάλθηκε στο ${member.email}`);
+      if (data?.error) throw new Error(data.error);
+      
+      toast.success(`Ο σύνδεσμος επαναφοράς στάλθηκε στο ${member.email}`);
     } catch (error: any) {
-      console.error('Error sending password reset email:', error);
-      toast.error('Αποτυχία αποστολής email');
+      console.error('Error sending reset link:', error);
+      toast.error(error.message || 'Αποτυχία αποστολής συνδέσμου');
     } finally {
-      setSendingReset(false);
+      setSendingResetLink(false);
+    }
+  };
+
+  const handleManualPasswordChange = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          userId: member.id,
+          action: 'manual',
+          newPassword: newPassword
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      toast.success(`Ο κωδικός άλλαξε επιτυχώς για ${member.full_name || member.email}`);
+      setPasswordDialogOpen(false);
+      setNewPassword('');
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast.error(error.message || 'Αποτυχία αλλαγής κωδικού');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -285,11 +318,20 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleSendPasswordReset}
-            disabled={sendingReset}
-            title="Αποστολή Reset Password Email"
+            onClick={handleSendResetLink}
+            disabled={sendingResetLink}
+            title="Αποστολή Link Επαναφοράς (10 λεπτά)"
           >
-            {sendingReset ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
+            {sendingResetLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setPasswordDialogOpen(true)}
+            title="Χειροκίνητη Αλλαγή Κωδικού"
+          >
+            <KeyRound className="h-4 w-4" />
           </Button>
 
           <Button
@@ -367,6 +409,44 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Αλλαγή Κωδικού</DialogTitle>
+            <DialogDescription>
+              Ορίστε νέο κωδικό για τον χρήστη {member.full_name || member.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Νέος Κωδικός</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Εισάγετε νέο κωδικό (min. 6 χαρακτήρες)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+              Ακύρωση
+            </Button>
+            <Button onClick={handleManualPasswordChange} disabled={changingPassword}>
+              {changingPassword ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Αποθήκευση...
+                </>
+              ) : (
+                'Αποθήκευση'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
