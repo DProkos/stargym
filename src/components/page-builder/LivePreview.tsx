@@ -693,7 +693,16 @@ export function LivePreview({ pageKey, sections, siteSettings, onClose, onUpdate
         <nav className="bg-background/80 backdrop-blur-lg border-b border-border py-4 px-4">
           <div className="container mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Dumbbell className="h-6 w-6 text-primary" />
+              {getSetting('logo_url') ? (
+                <img 
+                  src={getSetting('logo_url')} 
+                  alt={getSetting('site_name') || 'Logo'}
+                  style={{ height: `${getSetting('logo_size') || 32}px` }}
+                  className="w-auto object-contain"
+                />
+              ) : (
+                <Dumbbell className="h-6 w-6 text-primary" />
+              )}
               <span className="font-bold">{getSetting('site_name') || 'Star Gym'}</span>
             </div>
             <div className="flex gap-6 text-sm">
