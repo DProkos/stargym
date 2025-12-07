@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, Save, Plus, X, Shield, Key, UserCog } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, Save, Plus, X, Shield, Key, UserCog, Send, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -68,6 +69,10 @@ export default function UserDetail() {
   const [newPassword, setNewPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(true);
+  const [sendingWelcome, setSendingWelcome] = useState(false);
+  const [welcomeDialogOpen, setWelcomeDialogOpen] = useState(false);
+  const [emailTemplates, setEmailTemplates] = useState<{id: string; name: string; html_template: string}[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -84,7 +89,8 @@ export default function UserDetail() {
       loadInteractions(),
       loadTags(),
       loadAllTags(),
-      loadRoles()
+      loadRoles(),
+      loadEmailTemplates()
     ]);
     setLoading(false);
   };
@@ -159,6 +165,76 @@ export default function UserDetail() {
 
     if (!error && data) {
       setRoles(data);
+    }
+  };
+
+  const loadEmailTemplates = async () => {
+    const { data, error } = await supabase
+      .from('email_templates')
+      .select('id, name, html_template')
+      .order('name');
+
+    if (!error && data) {
+      setEmailTemplates(data);
+      // Auto-select welcome template if exists
+      const welcomeTemplate = data.find(t => t.name.toLowerCase().includes('welcome') || t.name.toLowerCase().includes('καλωσόρισμα'));
+      if (welcomeTemplate) {
+        setSelectedTemplate(welcomeTemplate.id);
+      } else if (data.length > 0) {
+        setSelectedTemplate(data[0].id);
+      }
+    }
+  };
+
+  const handleSendWelcomeEmail = async () => {
+    if (!customer || !selectedTemplate) {
+      toast({ title: 'Επιλέξτε template email', variant: 'destructive' });
+      return;
+    }
+
+    setSendingWelcome(true);
+    try {
+      const template = emailTemplates.find(t => t.id === selectedTemplate);
+      if (!template) {
+        throw new Error('Template not found');
+      }
+
+      // Replace placeholders in template
+      let html = template.html_template;
+      html = html.replace(/\{\{name\}\}/gi, customer.full_name || 'Αγαπητέ μέλος');
+      html = html.replace(/\{\{full_name\}\}/gi, customer.full_name || 'Αγαπητέ μέλος');
+      html = html.replace(/\{\{email\}\}/gi, customer.email);
+
+      const { error } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: customer.email,
+          subject: `Καλώς ήρθατε! - ${template.name}`,
+          html: html
+        }
+      });
+
+      if (error) throw error;
+
+      // Log the interaction
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.from('crm_interactions').insert({
+          customer_id: id,
+          interaction_type: 'email',
+          title: 'Welcome Email Sent',
+          description: `Στάλθηκε welcome email με template: ${template.name}`,
+          created_by: session.user.id
+        });
+      }
+
+      toast({ title: 'Το email στάλθηκε επιτυχώς!' });
+      setWelcomeDialogOpen(false);
+      loadInteractions();
+    } catch (error: any) {
+      console.error('Error sending welcome email:', error);
+      toast({ title: 'Σφάλμα αποστολής email', description: error.message, variant: 'destructive' });
+    } finally {
+      setSendingWelcome(false);
     }
   };
 
@@ -397,10 +473,71 @@ export default function UserDetail() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Στοιχεία Πελάτη</CardTitle>
-                    <Button onClick={handleSaveCustomer}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Αποθήκευση
-                    </Button>
+                    <div className="flex gap-2">
+                      <Dialog open={welcomeDialogOpen} onOpenChange={setWelcomeDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline">
+                            <Send className="h-4 w-4 mr-2" />
+                            Welcome Email
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Αποστολή Welcome Email</DialogTitle>
+                            <DialogDescription>
+                              Επιλέξτε template και στείλτε welcome email στον χρήστη {customer.email}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4 space-y-4">
+                            <div>
+                              <Label>Template Email</Label>
+                              <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Επιλέξτε template..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {emailTemplates.map(template => (
+                                    <SelectItem key={template.id} value={template.id}>
+                                      {template.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {emailTemplates.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                Δεν υπάρχουν διαθέσιμα templates. Δημιουργήστε πρώτα ένα template από τα Email Templates.
+                              </p>
+                            )}
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setWelcomeDialogOpen(false)}>
+                              Ακύρωση
+                            </Button>
+                            <Button 
+                              onClick={handleSendWelcomeEmail} 
+                              disabled={sendingWelcome || !selectedTemplate}
+                            >
+                              {sendingWelcome ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Αποστολή...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Αποστολή
+                                </>
+                              )}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                      <Button onClick={handleSaveCustomer}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Αποθήκευση
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
