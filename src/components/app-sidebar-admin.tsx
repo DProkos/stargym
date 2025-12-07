@@ -49,7 +49,7 @@ export function AppSidebarAdmin() {
     { title: t('admin.classes'), url: "/admin/classes", icon: BookText },
     { title: 'Page Builder', url: "/admin/page-builder", icon: Layout },
     { title: 'Email Templates', url: "/admin/email-templates", icon: Mail },
-    { title: 'Cron Jobs', url: "/admin/cron-jobs", icon: Clock },
+    { title: 'Αυτοματισμοί', url: "/admin/cron-jobs", icon: Clock },
     { title: 'Settings', url: "/admin/settings", icon: Settings },
   ];
 
