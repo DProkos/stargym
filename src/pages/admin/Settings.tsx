@@ -334,20 +334,27 @@ export default function Settings() {
   const handleSaveSmtpSettings = async () => {
     try {
       const updates = [
-        { setting_key: 'smtp_host', setting_value: smtpSettings.host },
-        { setting_key: 'smtp_port', setting_value: smtpSettings.port },
-        { setting_key: 'smtp_secure', setting_value: smtpSettings.secure.toString() },
-        { setting_key: 'smtp_user', setting_value: smtpSettings.user },
-        { setting_key: 'smtp_password', setting_value: smtpSettings.password },
-        { setting_key: 'smtp_from_email', setting_value: smtpSettings.fromEmail },
-        { setting_key: 'smtp_from_name', setting_value: smtpSettings.fromName },
+        { setting_key: 'smtp_host', setting_value: smtpSettings.host, is_sensitive: false },
+        { setting_key: 'smtp_port', setting_value: smtpSettings.port, is_sensitive: false },
+        { setting_key: 'smtp_secure', setting_value: smtpSettings.secure.toString(), is_sensitive: false },
+        { setting_key: 'smtp_user', setting_value: smtpSettings.user, is_sensitive: false },
+        { setting_key: 'smtp_password', setting_value: smtpSettings.password, is_sensitive: true },
+        { setting_key: 'smtp_from_email', setting_value: smtpSettings.fromEmail, is_sensitive: false },
+        { setting_key: 'smtp_from_name', setting_value: smtpSettings.fromName, is_sensitive: false },
       ];
 
       for (const update of updates) {
         const { error } = await supabase
           .from('app_settings')
-          .update({ setting_value: update.setting_value })
-          .eq('setting_key', update.setting_key);
+          .upsert(
+            { 
+              setting_key: update.setting_key, 
+              setting_value: update.setting_value,
+              is_sensitive: update.is_sensitive,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'setting_key' }
+          );
 
         if (error) throw error;
       }
