@@ -31,7 +31,10 @@ serve(async (req) => {
 
     // Verify authentication
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader) {
+      console.error('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -39,10 +42,18 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const supabaseClient = createClient(supabaseUrl, token);
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    });
     
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    console.log('User fetched:', user?.id, 'Error:', userError?.message);
+    
     if (userError || !user) {
+      console.error('User verification failed:', userError?.message);
       return new Response(
         JSON.stringify({ error: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
