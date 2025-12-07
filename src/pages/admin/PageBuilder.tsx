@@ -153,22 +153,30 @@ export default function PageBuilder() {
       return;
     }
 
-    // Get unique page keys
+    // Get unique page keys that actually have sections
     const uniquePageKeys = [...new Set(data?.map(d => d.page_key) || [])];
     
-    // Merge with default pages
-    const allPages: PageInfo[] = [...DEFAULT_PAGES];
-    
-    uniquePageKeys.forEach(key => {
-      if (!allPages.find(p => p.key === key)) {
-        allPages.push({
-          key,
-          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
-        });
-      }
+    // Build pages list - only include pages that have sections in the database
+    const allPages: PageInfo[] = uniquePageKeys.map(key => {
+      // Check if it's a known default page for better labeling
+      const defaultPage = DEFAULT_PAGES.find(p => p.key === key);
+      return {
+        key,
+        label: defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+      };
     });
 
+    // If no pages exist, add home as default
+    if (allPages.length === 0) {
+      allPages.push({ key: 'home', label: 'Αρχική' });
+    }
+
     setPages(allPages);
+    
+    // If current active page doesn't exist, switch to first available
+    if (!allPages.find(p => p.key === activePage) && allPages.length > 0) {
+      setActivePage(allPages[0].key);
+    }
   };
 
   const loadSections = async () => {
