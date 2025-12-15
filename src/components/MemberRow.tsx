@@ -67,6 +67,34 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
     }
   }, [member.id, member.roles]);
 
+  const requireAdmin = async (): Promise<boolean> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      toast.error('Πρέπει να συνδεθείτε ως διαχειριστής');
+      return false;
+    }
+
+    const { data: adminRole, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking admin role:', error);
+      toast.error('Αποτυχία ελέγχου δικαιωμάτων');
+      return false;
+    }
+
+    if (!adminRole) {
+      toast.error('Δεν έχετε δικαιώματα διαχειριστή');
+      return false;
+    }
+
+    return true;
+  };
+
   const loadRoles = async () => {
     const { data } = await supabase
       .from('user_roles')
@@ -229,6 +257,9 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   };
 
   const handleSendResetLink = async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
+
     setSendingResetLink(true);
     try {
       const { data, error } = await supabase.functions.invoke('admin-reset-password', {
@@ -251,6 +282,9 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
   };
 
   const handleManualPasswordChange = async () => {
+    const ok = await requireAdmin();
+    if (!ok) return;
+
     if (!newPassword || newPassword.length < 6) {
       toast.error('Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες');
       return;
