@@ -41,12 +41,14 @@ import InvoiceDetail from "./pages/admin/InvoiceDetail";
 import PageBuilder from "./pages/admin/PageBuilder";
 import DynamicPage from "./pages/DynamicPage";
 import ResetPassword from "./pages/ResetPassword";
+import { DynamicFavicon } from "./components/DynamicFavicon";
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <LanguageProvider>
+        <DynamicFavicon />
         <BrowserRouter>
           <Toaster />
           <Sonner />
