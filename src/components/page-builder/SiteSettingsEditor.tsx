@@ -103,6 +103,50 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               <CardDescription>Το εικονίδιο που εμφανίζεται στην καρτέλα του browser</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Browser Tab Preview */}
+              {getSetting('favicon_url') && (
+                <div className="space-y-2">
+                  <Label>Preview</Label>
+                  <div className="bg-muted rounded-lg p-3">
+                    {/* Browser Window Mockup */}
+                    <div className="bg-background border rounded-lg shadow-sm overflow-hidden">
+                      {/* Browser Tab Bar */}
+                      <div className="bg-muted/50 border-b px-2 py-1.5 flex items-center gap-1">
+                        {/* Tab */}
+                        <div className="bg-background border border-b-0 rounded-t-md px-3 py-1.5 flex items-center gap-2 max-w-[200px]">
+                          <img 
+                            src={getSetting('favicon_url')} 
+                            alt="Favicon preview" 
+                            className="w-4 h-4 object-contain flex-shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <span className="text-xs truncate text-foreground">
+                            {getSetting('site_name') || 'Star Gym'}
+                          </span>
+                          <span className="text-muted-foreground text-xs ml-auto">×</span>
+                        </div>
+                        {/* Empty tab indicator */}
+                        <div className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground text-lg hover:bg-muted">
+                          +
+                        </div>
+                      </div>
+                      {/* URL Bar */}
+                      <div className="bg-muted/30 px-3 py-1.5 flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30"></div>
+                          <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/30"></div>
+                        </div>
+                        <div className="flex-1 bg-background border rounded-full px-3 py-0.5 text-xs text-muted-foreground">
+                          {window.location.origin}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <ImageUpload
                 currentImageUrl={getSetting('favicon_url')}
                 onImageUploaded={(url) => onUpdate('favicon_url', url)}
