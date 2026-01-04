@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Building2, Phone } from 'lucide-react';
+import { Palette, Building2, Phone, Star } from 'lucide-react';
 
 interface SiteSetting {
   id: string;
@@ -91,6 +91,27 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                   Επιλέξτε το ύψος του logo (16-64px)
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                Favicon
+              </CardTitle>
+              <CardDescription>Το εικονίδιο που εμφανίζεται στην καρτέλα του browser</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ImageUpload
+                currentImageUrl={getSetting('favicon_url')}
+                onImageUploaded={(url) => onUpdate('favicon_url', url)}
+                bucket="cms-images"
+                folder="branding"
+              />
+              <p className="text-xs text-muted-foreground">
+                Προτεινόμενες διαστάσεις: 32x32 ή 64x64 pixels. Υποστηριζόμενα formats: PNG, ICO, SVG
+              </p>
             </CardContent>
           </Card>
         </div>
