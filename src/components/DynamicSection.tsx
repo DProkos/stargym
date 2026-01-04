@@ -136,7 +136,7 @@ function PackagesSection({
                   {pkg.description && (
                     <p className="text-muted-foreground mb-4">{pkg.description}</p>
                   )}
-                  {pkg.sessions_included && (
+                  {pkg.sessions_included != null && pkg.sessions_included > 0 && (
                     <p className="text-sm font-medium mb-4">
                       {pkg.sessions_included} {language === 'el' ? 'συνεδρίες' : 'sessions'}
                     </p>
