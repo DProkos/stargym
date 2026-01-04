@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Building2, Phone, Star } from 'lucide-react';
+import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter } from 'lucide-react';
 
 interface SiteSetting {
   id: string;
@@ -283,6 +283,52 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                   placeholder="Saturday - Sunday: 8:00 AM - 9:00 PM"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Social Media</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Facebook className="h-4 w-4 text-[#1877F2]" />
+                    Facebook
+                  </Label>
+                  <Input
+                    value={getSetting('facebook_url')}
+                    onChange={(e) => onUpdate('facebook_url', e.target.value)}
+                    placeholder="https://facebook.com/yourpage"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Instagram className="h-4 w-4 text-[#E4405F]" />
+                    Instagram
+                  </Label>
+                  <Input
+                    value={getSetting('instagram_url')}
+                    onChange={(e) => onUpdate('instagram_url', e.target.value)}
+                    placeholder="https://instagram.com/yourpage"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Twitter className="h-4 w-4 text-[#1DA1F2]" />
+                    Twitter / X
+                  </Label>
+                  <Input
+                    value={getSetting('twitter_url')}
+                    onChange={(e) => onUpdate('twitter_url', e.target.value)}
+                    placeholder="https://twitter.com/yourpage"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Τα social media links θα εμφανίζονται στο footer και στη σελίδα επικοινωνίας
+              </p>
             </CardContent>
           </Card>
         </div>
