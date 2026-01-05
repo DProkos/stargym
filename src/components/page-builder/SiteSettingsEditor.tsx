@@ -55,12 +55,32 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               <CardTitle>Όνομα Site</CardTitle>
               <CardDescription>Το όνομα που εμφανίζεται στο navigation</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Input
                 value={getSetting('site_name')}
                 onChange={(e) => onUpdate('site_name', e.target.value)}
                 placeholder="Star Gym"
               />
+              <div className="space-y-2 pt-4 border-t">
+                <Label>Χρώμα Τίτλου</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={getSetting('site_name_color') || '#ffffff'}
+                    onChange={(e) => onUpdate('site_name_color', e.target.value)}
+                    className="w-16 h-10 p-1 cursor-pointer"
+                  />
+                  <Input
+                    value={getSetting('site_name_color') || '#ffffff'}
+                    onChange={(e) => onUpdate('site_name_color', e.target.value)}
+                    placeholder="#ffffff"
+                    className="flex-1"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Το χρώμα του τίτλου στο navigation bar
+                </p>
+              </div>
             </CardContent>
           </Card>
 

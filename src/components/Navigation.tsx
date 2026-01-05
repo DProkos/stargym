@@ -38,6 +38,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navPages, setNavPages] = useState<NavPage[]>([]);
   const [siteName, setSiteName] = useState('Star Gym');
+  const [siteNameColor, setSiteNameColor] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoSize, setLogoSize] = useState(32);
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     const { data, error } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['site_name', 'logo_url', 'logo_size']);
+      .in('setting_key', ['site_name', 'site_name_color', 'logo_url', 'logo_size']);
 
     if (error) {
       console.error('Error loading site settings:', error);
@@ -61,6 +62,9 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     data?.forEach(setting => {
       if (setting.setting_key === 'site_name' && setting.setting_value) {
         setSiteName(setting.setting_value);
+      }
+      if (setting.setting_key === 'site_name_color' && setting.setting_value) {
+        setSiteNameColor(setting.setting_value);
       }
       if (setting.setting_key === 'logo_url' && setting.setting_value) {
         setLogoUrl(setting.setting_value);
@@ -194,7 +198,12 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 className="text-primary" 
               />
             )}
-            <span className="text-xl font-bold">{siteName}</span>
+            <span 
+              className="text-xl font-bold"
+              style={siteNameColor ? { color: siteNameColor } : undefined}
+            >
+              {siteName}
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
