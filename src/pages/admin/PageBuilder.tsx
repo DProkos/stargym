@@ -485,45 +485,45 @@ export default function PageBuilder() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+          <div className="p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <SidebarTrigger />
                 <div>
-                  <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <Layout className="h-8 w-8 text-primary" />
+                  <h1 className="text-xl sm:text-3xl font-bold flex items-center gap-2">
+                    <Layout className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
                     Page Builder
                   </h1>
-                  <p className="text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                     Επεξεργαστείτε τις σελίδες του site με drag & drop
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-              <Button variant="default" onClick={() => setShowPreview(!showPreview)}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Live Edit
+                <Button variant="default" size="sm" className="text-xs sm:text-sm" onClick={() => setShowPreview(!showPreview)}>
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Live</span> Edit
                 </Button>
               </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="sections" className="flex items-center gap-2">
-                  <Layout className="h-4 w-4" />
-                  Sections
+              <TabsList className="mb-6 flex flex-wrap h-auto gap-1 p-1">
+                <TabsTrigger value="sections" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Layout className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Sections</span>
                 </TabsTrigger>
-                <TabsTrigger value="templates" className="flex items-center gap-2">
-                  <Layers className="h-4 w-4" />
-                  Templates
+                <TabsTrigger value="templates" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Layers className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Templates</span>
                 </TabsTrigger>
-                <TabsTrigger value="navigation" className="flex items-center gap-2">
-                  <Navigation className="h-4 w-4" />
-                  Navigation
+                <TabsTrigger value="navigation" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Navigation className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Nav</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2">
-                  <Palette className="h-4 w-4" />
-                  Ρυθμίσεις Site
+                <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                  <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Settings</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -532,11 +532,11 @@ export default function PageBuilder() {
               </TabsContent>
 
               <TabsContent value="sections">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                   {/* Left Panel - Page & Section List */}
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <Card>
-                      <CardHeader className="pb-3">
+                      <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
                         <CardTitle className="text-sm flex items-center justify-between">
                           Επιλογή Σελίδας
                           <Button

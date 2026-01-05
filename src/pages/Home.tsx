@@ -48,30 +48,30 @@ export default function Home() {
       <div className="min-h-screen bg-background flex flex-col">
         <Navigation user={user} isAdmin={isAdmin} />
         <main className="flex-grow">
-          {/* Hero Skeleton */}
-          <section className="pt-32 pb-20 px-4 relative overflow-hidden bg-background">
+          {/* Hero Skeleton - Mobile Optimized */}
+          <section className="pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden bg-background">
             <div className="container mx-auto relative z-10 text-center">
-              <div className="h-12 sm:h-16 md:h-24 w-3/4 max-w-xl mx-auto mb-6 rounded-lg page-skeleton" />
-              <div className="h-5 sm:h-6 md:h-8 w-2/3 max-w-md mx-auto mb-8 rounded page-skeleton" />
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <div className="h-11 sm:h-12 w-32 sm:w-40 rounded-lg page-skeleton" />
-                <div className="h-11 sm:h-12 w-32 sm:w-40 rounded-lg page-skeleton" />
+              <div className="h-10 sm:h-16 md:h-24 w-[90%] sm:w-3/4 max-w-xl mx-auto mb-4 sm:mb-6 rounded-lg page-skeleton" />
+              <div className="h-4 sm:h-6 md:h-8 w-[80%] sm:w-2/3 max-w-md mx-auto mb-6 sm:mb-8 rounded page-skeleton" />
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                <div className="h-10 sm:h-12 w-28 sm:w-40 rounded-lg page-skeleton" />
+                <div className="h-10 sm:h-12 w-28 sm:w-40 rounded-lg page-skeleton" />
               </div>
             </div>
           </section>
-          {/* Features Skeleton */}
-          <section className="py-16 sm:py-20 px-4">
+          {/* Features Skeleton - Mobile Optimized */}
+          <section className="py-12 sm:py-20 px-4">
             <div className="container mx-auto">
-              <div className="text-center mb-12 sm:mb-16">
-                <div className="h-8 sm:h-10 w-1/2 max-w-sm mx-auto mb-4 rounded page-skeleton" />
-                <div className="h-5 sm:h-6 w-2/3 max-w-md mx-auto rounded page-skeleton" />
+              <div className="text-center mb-8 sm:mb-16">
+                <div className="h-6 sm:h-10 w-2/3 sm:w-1/2 max-w-sm mx-auto mb-3 sm:mb-4 rounded page-skeleton" />
+                <div className="h-4 sm:h-6 w-3/4 sm:w-2/3 max-w-md mx-auto rounded page-skeleton" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="p-6 sm:p-8 rounded-lg border border-border">
-                    <div className="h-10 sm:h-12 w-10 sm:w-12 mb-4 rounded page-skeleton" />
-                    <div className="h-5 sm:h-6 w-3/4 mb-2 rounded page-skeleton" />
-                    <div className="h-4 w-full rounded page-skeleton" />
+                  <div key={i} className="p-4 sm:p-8 rounded-lg border border-border">
+                    <div className="h-8 sm:h-12 w-8 sm:w-12 mb-3 sm:mb-4 rounded page-skeleton" />
+                    <div className="h-4 sm:h-6 w-3/4 mb-2 rounded page-skeleton" />
+                    <div className="h-3 sm:h-4 w-full rounded page-skeleton" />
                   </div>
                 ))}
               </div>
