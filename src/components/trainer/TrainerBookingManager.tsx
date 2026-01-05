@@ -126,22 +126,44 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
     }
   };
 
+  const sendNotification = async (bookingId: string, status: 'confirmed' | 'rejected', trainerNotes?: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error } = await supabase.functions.invoke('notify-booking-status', {
+        body: { bookingId, status, trainerNotes }
+      });
+
+      if (error) {
+        console.error('Failed to send notification:', error);
+      }
+    } catch (err) {
+      console.error('Notification error:', err);
+    }
+  };
+
   const handleApprove = async (bookingId: string) => {
     setProcessingId(bookingId);
     try {
+      const trainerNotes = notes[bookingId] || null;
+      
       const { error } = await supabase
         .from('bookings')
         .update({ 
           status: 'confirmed',
-          trainer_notes: notes[bookingId] || null
+          trainer_notes: trainerNotes
         })
         .eq('id', bookingId);
 
       if (error) throw error;
 
+      // Send email notification
+      await sendNotification(bookingId, 'confirmed', trainerNotes || undefined);
+
       toast({
         title: 'Κράτηση επιβεβαιώθηκε',
-        description: 'Ο πελάτης θα ειδοποιηθεί',
+        description: 'Ο πελάτης ειδοποιήθηκε με email',
       });
 
       loadBookings();
@@ -159,19 +181,24 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
   const handleReject = async (bookingId: string) => {
     setProcessingId(bookingId);
     try {
+      const trainerNotes = notes[bookingId] || null;
+      
       const { error } = await supabase
         .from('bookings')
         .update({ 
           status: 'rejected',
-          trainer_notes: notes[bookingId] || null
+          trainer_notes: trainerNotes
         })
         .eq('id', bookingId);
 
       if (error) throw error;
 
+      // Send email notification
+      await sendNotification(bookingId, 'rejected', trainerNotes || undefined);
+
       toast({
         title: 'Κράτηση απορρίφθηκε',
-        description: 'Ο πελάτης θα ειδοποιηθεί',
+        description: 'Ο πελάτης ειδοποιήθηκε με email',
       });
 
       loadBookings();
