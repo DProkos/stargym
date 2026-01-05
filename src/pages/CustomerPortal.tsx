@@ -24,6 +24,12 @@ interface Booking {
   };
 }
 
+interface ClassSchedule {
+  id: string;
+  day_of_week: number;
+  time: string;
+}
+
 interface Class {
   id: string;
   name: string;
@@ -34,6 +40,7 @@ interface Class {
   max_capacity: number;
   status: string;
   specific_date?: string | null;
+  schedules?: ClassSchedule[];
 }
 
 export default function CustomerPortal() {
@@ -81,17 +88,30 @@ export default function CustomerPortal() {
 
   const loadClasses = async () => {
     try {
-      const { data, error } = await supabase
+      // Load classes with their schedules
+      const { data: classesData, error: classesError } = await supabase
         .from('classes')
         .select('*')
         .eq('status', 'active')
         .order('day_of_week')
         .order('time');
 
-      if (error) throw error;
+      if (classesError) throw classesError;
 
-      if (data) {
-        setClasses(data);
+      // Load all schedules
+      const { data: schedulesData, error: schedulesError } = await supabase
+        .from('class_schedules')
+        .select('*');
+
+      if (schedulesError) throw schedulesError;
+
+      // Combine classes with their schedules
+      if (classesData) {
+        const classesWithSchedules = classesData.map(cls => ({
+          ...cls,
+          schedules: schedulesData?.filter(s => s.class_id === cls.id) || []
+        }));
+        setClasses(classesWithSchedules);
       }
     } catch (error: any) {
       toast({
@@ -175,8 +195,42 @@ export default function CustomerPortal() {
             status: 'available',
           });
         }
+      } else if (cls.schedules && cls.schedules.length > 0) {
+        // Use multiple schedules from class_schedules table
+        cls.schedules.forEach(schedule => {
+          let currentDate = new Date(today);
+          while (currentDate <= endDate) {
+            if (currentDate.getDay() === schedule.day_of_week) {
+              const dateStr = currentDate.toISOString().split('T')[0];
+              const [hours, minutes] = schedule.time.split(':').map(Number);
+              const startTime = new Date(currentDate);
+              startTime.setHours(hours, minutes, 0);
+              const endTime = new Date(startTime);
+              endTime.setMinutes(endTime.getMinutes() + cls.duration_minutes);
+
+              // Check if already booked
+              const isBooked = bookings.some(b => 
+                b.class_id === cls.id && 
+                b.booking_date === dateStr &&
+                (b.status === 'confirmed' || b.status === 'pending')
+              );
+
+              if (!isBooked) {
+                events.push({
+                  id: `class-${cls.id}-${schedule.id}-${dateStr}`,
+                  title: `📅 ${cls.name}`,
+                  start: startTime,
+                  end: endTime,
+                  resource: { ...cls, type: 'class', eventDate: dateStr, scheduleTime: schedule.time },
+                  status: 'available',
+                });
+              }
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+        });
       } else {
-        // Recurring class - generate for each occurrence
+        // Fallback to legacy day_of_week/time from class itself
         let currentDate = new Date(today);
         while (currentDate <= endDate) {
           if (currentDate.getDay() === cls.day_of_week) {
