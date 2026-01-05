@@ -68,7 +68,42 @@ export default function MyBookings() {
     }
   };
 
+  const canCancelBooking = (booking: Booking): boolean => {
+    const bookingDate = new Date(booking.booking_date);
+    const [hours, minutes] = booking.class.time.split(':').map(Number);
+    bookingDate.setHours(hours, minutes, 0, 0);
+    
+    const now = new Date();
+    const hoursUntilClass = (bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    return hoursUntilClass >= 24;
+  };
+
+  const getTimeUntilClass = (booking: Booking): string => {
+    const bookingDate = new Date(booking.booking_date);
+    const [hours, minutes] = booking.class.time.split(':').map(Number);
+    bookingDate.setHours(hours, minutes, 0, 0);
+    
+    const now = new Date();
+    const hoursUntilClass = Math.floor((bookingDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+    
+    if (hoursUntilClass < 24) {
+      return `${hoursUntilClass} ώρες`;
+    }
+    return '';
+  };
+
   const handleCancelBooking = async (bookingId: string) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (booking && !canCancelBooking(booking)) {
+      toast({ 
+        title: 'Δεν είναι δυνατή η ακύρωση', 
+        description: 'Η ακύρωση επιτρέπεται μόνο έως 24 ώρες πριν το μάθημα', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
     // Get booking details before canceling
     const { data: bookingData } = await supabase
       .from('bookings')
@@ -82,9 +117,9 @@ export default function MyBookings() {
       .eq('id', bookingId);
 
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Σφάλμα', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Booking cancelled successfully' });
+      toast({ title: 'Η κράτηση ακυρώθηκε επιτυχώς' });
       if (user) loadBookings(user.id);
 
       // Notify waitlist if booking was cancelled and had booking details
@@ -98,7 +133,6 @@ export default function MyBookings() {
           });
         } catch (error) {
           console.error('Failed to notify waitlist:', error);
-          // Don't show error to user - this is a background operation
         }
       }
     }
@@ -180,19 +214,27 @@ export default function MyBookings() {
                   </CardHeader>
                   {selectedBooking.status === 'confirmed' && (
                     <CardContent>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="destructive" 
-                          onClick={() => handleCancelBooking(selectedBooking.id)}
-                        >
-                          {t('booking.cancel')}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setSelectedBooking(null)}
-                        >
-                          Close
-                        </Button>
+                      <div className="flex flex-col gap-3">
+                        {!canCancelBooking(selectedBooking) && (
+                          <p className="text-sm text-muted-foreground">
+                            ⚠️ Η ακύρωση δεν είναι δυνατή (λιγότερο από 24 ώρες πριν το μάθημα)
+                          </p>
+                        )}
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="destructive" 
+                            onClick={() => handleCancelBooking(selectedBooking.id)}
+                            disabled={!canCancelBooking(selectedBooking)}
+                          >
+                            {t('booking.cancel')}
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setSelectedBooking(null)}
+                          >
+                            Κλείσιμο
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   )}
@@ -236,12 +278,20 @@ export default function MyBookings() {
                     </CardHeader>
                     {booking.status === 'confirmed' && (
                       <CardContent>
-                        <Button 
-                          variant="destructive" 
-                          onClick={() => handleCancelBooking(booking.id)}
-                        >
-                          {t('booking.cancel')}
-                        </Button>
+                        <div className="flex flex-col gap-2">
+                          {!canCancelBooking(booking) && (
+                            <p className="text-sm text-muted-foreground">
+                              ⚠️ Η ακύρωση δεν είναι δυνατή (λιγότερο από 24 ώρες πριν το μάθημα)
+                            </p>
+                          )}
+                          <Button 
+                            variant="destructive" 
+                            onClick={() => handleCancelBooking(booking.id)}
+                            disabled={!canCancelBooking(booking)}
+                          >
+                            {t('booking.cancel')}
+                          </Button>
+                        </div>
                       </CardContent>
                     )}
                   </Card>
