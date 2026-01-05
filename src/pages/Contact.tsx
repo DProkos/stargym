@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { MapPin, Phone, Clock, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
+import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -162,6 +162,11 @@ export default function Contact() {
   };
 
   const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url;
+
+  const getGoogleMapsEmbedUrl = (address: string) => {
+    const encodedAddress = encodeURIComponent(address);
+    return `https://www.google.com/maps?q=${encodedAddress}&output=embed`;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -353,6 +358,33 @@ export default function Contact() {
               )}
             </div>
           </div>
+
+          {/* Google Maps Section */}
+          {siteSettings.contact_address && (
+            <div className="mt-12">
+              <Card className="bg-gradient-card border-border overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    {t('contact.location')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <iframe
+                    src={getGoogleMapsEmbedUrl(siteSettings.contact_address)}
+                    width="100%"
+                    height="400"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Location Map"
+                    className="w-full"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </section>
     </div>
