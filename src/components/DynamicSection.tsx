@@ -480,6 +480,13 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       const twitterUrl = getSetting('twitter_url');
       const hasSocial = facebookUrl || instagramUrl || twitterUrl;
 
+      // Helper to ensure URLs have https:// prefix
+      const ensureHttps = (url: string) => {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        return `https://${url}`;
+      };
+
       if (!hasSocial) {
         return (
           <section className={`py-16 px-4 ${bgClass}`}>
@@ -504,7 +511,7 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
             <div className="flex justify-center gap-6">
               {facebookUrl && (
                 <a
-                  href={facebookUrl}
+                  href={ensureHttps(facebookUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
@@ -515,7 +522,7 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
               )}
               {instagramUrl && (
                 <a
-                  href={instagramUrl}
+                  href={ensureHttps(instagramUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
@@ -526,7 +533,7 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
               )}
               {twitterUrl && (
                 <a
-                  href={twitterUrl}
+                  href={ensureHttps(twitterUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
