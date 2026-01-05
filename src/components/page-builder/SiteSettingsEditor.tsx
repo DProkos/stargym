@@ -4,7 +4,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
 import { Slider } from '@/components/ui/slider';
-import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid } from 'lucide-react';
 
 interface SiteSetting {
   id: string;
@@ -28,7 +29,7 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
 
   return (
     <Tabs defaultValue="branding">
-      <TabsList className="mb-6">
+      <TabsList className="mb-6 flex-wrap">
         <TabsTrigger value="branding" className="flex items-center gap-2">
           <Building2 className="h-4 w-4" />
           Branding
@@ -40,6 +41,10 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
         <TabsTrigger value="contact" className="flex items-center gap-2">
           <Phone className="h-4 w-4" />
           Επικοινωνία
+        </TabsTrigger>
+        <TabsTrigger value="footer" className="flex items-center gap-2">
+          <LayoutGrid className="h-4 w-4" />
+          Footer
         </TabsTrigger>
       </TabsList>
 
@@ -329,6 +334,68 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               <p className="text-xs text-muted-foreground mt-4">
                 Τα social media links θα εμφανίζονται στο footer και στη σελίδα επικοινωνίας
               </p>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="footer">
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Ρυθμίσεις Footer</CardTitle>
+              <CardDescription>
+                Το footer εμφανίζεται στο κάτω μέρος όλων των σελίδων. 
+                Τα Quick Links συνδέονται αυτόματα με το Navigation menu.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tagline / Περιγραφή</Label>
+                <Textarea
+                  value={getSetting('footer_tagline')}
+                  onChange={(e) => onUpdate('footer_tagline', e.target.value)}
+                  placeholder="Το γυμναστήριο που θα αλλάξει τη ζωή σου..."
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Εμφανίζεται κάτω από το όνομα στο footer
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Links</CardTitle>
+              <CardDescription>Αυτόματη σύνδεση με Navigation</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Τα Quick Links στο footer εμφανίζουν αυτόματα τα ίδια links με το Navigation menu.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Για να αλλάξετε τα links, πηγαίνετε στην καρτέλα <strong>"Διαχείριση Navigation"</strong>.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Επικοινωνία & Social</CardTitle>
+              <CardDescription>Αυτόματη σύνδεση</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Τα στοιχεία επικοινωνίας (τηλέφωνο, email, διεύθυνση, ωράριο) και τα social media εμφανίζονται αυτόματα στο footer.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Για να τα αλλάξετε, πηγαίνετε στην καρτέλα <strong>"Επικοινωνία"</strong>.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -10,42 +10,165 @@ interface SiteSettings {
   contact_phone?: string;
   contact_address?: string;
   working_hours?: string;
+  working_hours_weekday?: string;
+  working_hours_weekend?: string;
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
+  footer_tagline?: string;
 }
 
+interface NavPage {
+  key: string;
+  label: string;
+  path: string;
+}
+
+// Default navigation structure
+const DEFAULT_NAV_PAGES: NavPage[] = [
+  { key: 'home', label: 'nav.home', path: '/' },
+  { key: 'classes', label: 'nav.classes', path: '/classes' },
+  { key: 'memberships', label: 'memberships.title', path: '/memberships' },
+  { key: 'pricing', label: 'nav.pricing', path: '/pricing' },
+  { key: 'contact', label: 'nav.contact', path: '/contact' },
+];
+
 export function Footer() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [settings, setSettings] = useState<SiteSettings>({});
+  const [navPages, setNavPages] = useState<NavPage[]>([]);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      const { data } = await supabase
-        .from('site_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', [
-          'site_name',
-          'contact_email',
-          'contact_phone',
-          'contact_address',
-          'working_hours',
-          'facebook_url',
-          'instagram_url',
-          'twitter_url'
-        ]);
-
-      if (data) {
-        const settingsObj: SiteSettings = {};
-        data.forEach((item) => {
-          settingsObj[item.setting_key as keyof SiteSettings] = item.setting_value || '';
-        });
-        setSettings(settingsObj);
-      }
-    };
-
     fetchSettings();
+    loadNavigationPages();
   }, []);
+
+  const fetchSettings = async () => {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'site_name',
+        'contact_email',
+        'contact_phone',
+        'contact_address',
+        'working_hours',
+        'working_hours_weekday',
+        'working_hours_weekend',
+        'facebook_url',
+        'instagram_url',
+        'twitter_url',
+        'footer_tagline'
+      ]);
+
+    if (data) {
+      const settingsObj: SiteSettings = {};
+      data.forEach((item) => {
+        settingsObj[item.setting_key as keyof SiteSettings] = item.setting_value || '';
+      });
+      setSettings(settingsObj);
+    }
+  };
+
+  const loadNavigationPages = async () => {
+    // Get all unique page keys that have sections in the database
+    const { data: pagesData, error } = await supabase
+      .from('page_sections')
+      .select('page_key')
+      .eq('is_visible', true);
+
+    if (error) {
+      console.error('Error loading nav pages:', error);
+      setNavPages(DEFAULT_NAV_PAGES);
+      return;
+    }
+
+    const existingPageKeys = [...new Set(pagesData?.map(d => d.page_key) || [])];
+
+    // Get saved nav config from site_settings
+    const { data: settingsData } = await supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['nav_order', 'nav_labels', 'nav_visibility']);
+
+    let navOrder: string[] = [];
+    let navLabels: Record<string, string> = {};
+    let navVisibility: Record<string, boolean> = {};
+
+    settingsData?.forEach(setting => {
+      try {
+        if (setting.setting_key === 'nav_order' && setting.setting_value) {
+          navOrder = JSON.parse(setting.setting_value);
+        }
+        if (setting.setting_key === 'nav_labels' && setting.setting_value) {
+          navLabels = JSON.parse(setting.setting_value);
+        }
+        if (setting.setting_key === 'nav_visibility' && setting.setting_value) {
+          navVisibility = JSON.parse(setting.setting_value);
+        }
+      } catch (e) {
+        console.error('Error parsing nav setting:', e);
+      }
+    });
+
+    // Build nav items list
+    const items: NavPage[] = [];
+    
+    // If we have saved order, use it
+    if (navOrder.length > 0) {
+      navOrder.forEach(key => {
+        // Skip if not visible
+        if (navVisibility[key] === false) return;
+        // Skip if page doesn't exist
+        if (!existingPageKeys.includes(key)) return;
+        
+        const defaultPage = DEFAULT_NAV_PAGES.find(p => p.key === key);
+        items.push({
+          key,
+          label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          path: defaultPage?.path || `/page/${key}`,
+        });
+      });
+
+      // Add any new pages not in saved order (if visible)
+      existingPageKeys.forEach(key => {
+        if (!items.find(i => i.key === key) && navVisibility[key] !== false) {
+          const defaultPage = DEFAULT_NAV_PAGES.find(p => p.key === key);
+          items.push({
+            key,
+            label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+            path: defaultPage?.path || `/page/${key}`,
+          });
+        }
+      });
+    } else {
+      // No saved order - use default behavior
+      DEFAULT_NAV_PAGES.forEach(page => {
+        if (existingPageKeys.includes(page.key)) {
+          items.push(page);
+        }
+      });
+
+      // Always include home if it doesn't exist
+      if (!items.find(p => p.key === 'home')) {
+        items.unshift(DEFAULT_NAV_PAGES[0]);
+      }
+
+      // Add custom pages from Page Builder
+      const defaultKeys = DEFAULT_NAV_PAGES.map(p => p.key);
+      existingPageKeys.forEach(key => {
+        if (!defaultKeys.includes(key)) {
+          items.push({
+            key,
+            label: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            path: `/page/${key}`
+          });
+        }
+      });
+    }
+
+    setNavPages(items);
+  };
 
   const ensureHttps = (url: string | undefined) => {
     if (!url) return '';
@@ -62,6 +185,19 @@ export function Footer() {
 
   const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url;
   const hasContact = settings.contact_phone || settings.contact_email || settings.contact_address;
+  const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend;
+
+  const getWorkingHours = () => {
+    if (settings.working_hours) return settings.working_hours;
+    const parts = [];
+    if (settings.working_hours_weekday) parts.push(settings.working_hours_weekday);
+    if (settings.working_hours_weekend) parts.push(settings.working_hours_weekend);
+    return parts.join('\n');
+  };
+
+  const defaultTagline = language === 'el' 
+    ? 'Το γυμναστήριο που θα αλλάξει τη ζωή σου. Ελάτε να γνωριστούμε!'
+    : 'The gym that will change your life. Come meet us!';
 
   return (
     <footer className="bg-card border-t border-border">
@@ -73,43 +209,31 @@ export function Footer() {
               {settings.site_name || 'Star Gym'}
             </h3>
             <p className="text-muted-foreground text-sm">
-              {language === 'el' 
-                ? 'Το γυμναστήριο που θα αλλάξει τη ζωή σου. Ελάτε να γνωριστούμε!'
-                : 'The gym that will change your life. Come meet us!'}
+              {settings.footer_tagline || defaultTagline}
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links - Same as Navigation */}
           <div>
             <h4 className="font-semibold mb-4">
               {language === 'el' ? 'Σύνδεσμοι' : 'Quick Links'}
             </h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'el' ? 'Αρχική' : 'Home'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/classes" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'el' ? 'Μαθήματα' : 'Classes'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'el' ? 'Τιμές' : 'Pricing'}
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
-                  {language === 'el' ? 'Επικοινωνία' : 'Contact'}
-                </Link>
-              </li>
+              {navPages.map((page) => (
+                <li key={page.key}>
+                  <Link 
+                    to={page.path} 
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {t(page.label)}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Contact Info */}
-          {hasContact && (
+          {(hasContact || hasWorkingHours) && (
             <div>
               <h4 className="font-semibold mb-4">
                 {language === 'el' ? 'Επικοινωνία' : 'Contact'}
@@ -143,10 +267,10 @@ export function Footer() {
                     <span>{settings.contact_address}</span>
                   </li>
                 )}
-                {settings.working_hours && (
+                {hasWorkingHours && (
                   <li className="flex items-start gap-2 text-muted-foreground">
                     <Clock className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="whitespace-pre-line">{settings.working_hours}</span>
+                    <span className="whitespace-pre-line">{getWorkingHours()}</span>
                   </li>
                 )}
               </ul>
