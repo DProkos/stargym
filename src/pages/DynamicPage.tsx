@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { DynamicPageSections } from '@/components/DynamicSection';
 import { usePageSections } from '@/hooks/usePageSections';
@@ -32,31 +33,36 @@ export default function DynamicPage({ pageKeyOverride }: { pageKeyOverride?: str
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navigation user={user} isAdmin={isAdmin} />
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex-grow flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">Φόρτωση...</div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   if (sections.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navigation user={user} isAdmin={isAdmin} />
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex-grow flex items-center justify-center">
           <div className="text-muted-foreground">Η σελίδα δεν βρέθηκε</div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation user={user} isAdmin={isAdmin} />
-      <DynamicPageSections sections={sections} getSetting={getSetting} />
+      <main className="flex-grow">
+        <DynamicPageSections sections={sections} getSetting={getSetting} />
+      </main>
       <ChatbotWidget />
+      <Footer />
     </div>
   );
 }
