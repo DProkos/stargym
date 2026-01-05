@@ -161,6 +161,13 @@ export default function Contact() {
     }
   };
 
+  // Helper to ensure URLs have https:// prefix
+  const ensureHttps = (url: string | undefined) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `https://${url}`;
+  };
+
   const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url;
 
   const getGoogleMapsEmbedUrl = (address: string) => {
@@ -305,7 +312,7 @@ export default function Contact() {
                     <div className="flex gap-4">
                       {siteSettings.facebook_url && (
                         <a
-                          href={siteSettings.facebook_url}
+                          href={ensureHttps(siteSettings.facebook_url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -315,7 +322,7 @@ export default function Contact() {
                       )}
                       {siteSettings.instagram_url && (
                         <a
-                          href={siteSettings.instagram_url}
+                          href={ensureHttps(siteSettings.instagram_url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -325,7 +332,7 @@ export default function Contact() {
                       )}
                       {siteSettings.twitter_url && (
                         <a
-                          href={siteSettings.twitter_url}
+                          href={ensureHttps(siteSettings.twitter_url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
