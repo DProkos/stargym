@@ -157,13 +157,16 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       navOrder.forEach(key => {
         // Skip if not visible
         if (navVisibility[key] === false) return;
-        // Skip if page doesn't exist
-        if (!existingPageKeys.includes(key)) return;
-        
+        // Skip if page doesn't exist (except essential routes)
+        if (!existingPageKeys.includes(key) && !ALWAYS_SHOW_PAGES.includes(key)) return;
+
         const defaultPage = DEFAULT_NAV_PAGES.find(p => p.key === key);
         items.push({
           key,
-          label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          label:
+            navLabels[key] ||
+            defaultPage?.label ||
+            key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
           path: defaultPage?.path || `/page/${key}`,
         });
       });
@@ -174,7 +177,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
           const defaultPage = DEFAULT_NAV_PAGES.find(p => p.key === key);
           items.push({
             key,
-            label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+            label:
+              navLabels[key] ||
+              defaultPage?.label ||
+              key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
             path: defaultPage?.path || `/page/${key}`,
           });
         }
@@ -194,12 +200,32 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
         if (!defaultKeys.includes(key)) {
           items.push({
             key,
-            label: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-            path: `/page/${key}`
+            label: key
+              .split('-')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' '),
+            path: `/page/${key}`,
           });
         }
       });
     }
+
+    // Always ensure essential routes exist in nav
+    ALWAYS_SHOW_PAGES.forEach((key) => {
+      if (navVisibility[key] === false) return;
+      const page = DEFAULT_NAV_PAGES.find((p) => p.key === key);
+      if (!page) return;
+      if (items.find((i) => i.key === key)) return;
+
+      if (key === 'home') {
+        items.unshift(page);
+        return;
+      }
+
+      const homeIndex = items.findIndex((i) => i.key === 'home');
+      if (homeIndex >= 0) items.splice(homeIndex + 1, 0, page);
+      else items.unshift(page);
+    });
 
     setNavPages(items);
   };
