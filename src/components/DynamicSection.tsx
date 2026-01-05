@@ -276,6 +276,31 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
     }
   };
 
+  // Helper function for animation class
+  const getAnimationClass = (type: string) => {
+    switch (type) {
+      case 'fade-in': return 'animate-hero-fade-in';
+      case 'fade-up': return 'animate-hero-fade-up';
+      case 'fade-down': return 'animate-hero-fade-down';
+      case 'scale-in': return 'animate-hero-scale-in';
+      case 'slide-left': return 'animate-hero-slide-left';
+      case 'slide-right': return 'animate-hero-slide-right';
+      case 'none': return '';
+      default: return 'animate-hero-fade-up';
+    }
+  };
+
+  // Helper function for animation duration
+  const getAnimationDuration = (speed: string) => {
+    switch (speed) {
+      case 'fast': return '0.3s';
+      case 'normal': return '0.5s';
+      case 'slow': return '0.8s';
+      case 'very-slow': return '1.2s';
+      default: return '0.5s';
+    }
+  };
+
   switch (section.section_type) {
     case 'hero':
       const heroSettings = section.settings || {};
@@ -286,6 +311,13 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       const overlayEnabled = heroSettings.overlay_enabled !== false;
       const overlayColor = heroSettings.overlay_color || 'dark';
       const overlayOpacity = heroSettings.overlay_opacity || 20;
+      
+      // Animation settings
+      const titleAnimation = getAnimationClass(heroSettings.title_animation || 'fade-up');
+      const subtitleAnimation = getAnimationClass(heroSettings.subtitle_animation || 'fade-up');
+      const buttonsAnimation = getAnimationClass(heroSettings.buttons_animation || 'fade-up');
+      const animationDuration = getAnimationDuration(heroSettings.animation_speed || 'normal');
+      const staggerDelay = parseInt(heroSettings.stagger_delay || '200');
 
       return (
         <section className={`pt-32 pb-20 px-4 relative overflow-hidden ${bgClass}`}>
@@ -310,13 +342,31 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
             </div>
           )}
           <div className="container mx-auto relative z-10 text-center">
-            <h1 className={`${titleSize} font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent`}>
+            <h1 
+              className={`${titleSize} font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent opacity-0 ${titleAnimation}`}
+              style={{ 
+                '--hero-duration': animationDuration,
+                animationDelay: '0ms'
+              } as React.CSSProperties}
+            >
               {title}
             </h1>
-            <p className={`${subtitleSize} text-muted-foreground mb-8 max-w-2xl mx-auto`}>
+            <p 
+              className={`${subtitleSize} text-muted-foreground mb-8 max-w-2xl mx-auto opacity-0 ${subtitleAnimation}`}
+              style={{ 
+                '--hero-duration': animationDuration,
+                animationDelay: `${staggerDelay}ms`
+              } as React.CSSProperties}
+            >
               {subtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div 
+              className={`flex flex-col sm:flex-row gap-4 justify-center opacity-0 ${buttonsAnimation}`}
+              style={{ 
+                '--hero-duration': animationDuration,
+                animationDelay: `${staggerDelay * 2}ms`
+              } as React.CSSProperties}
+            >
               {section.settings?.button_text && (
                 <Button size="lg" className="shadow-neon-strong" asChild>
                   <Link to={section.settings.button_link || '/auth'}>

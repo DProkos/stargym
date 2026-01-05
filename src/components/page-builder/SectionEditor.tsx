@@ -88,6 +88,31 @@ const IMAGE_SIZE_OPTIONS = [
   { value: 'auto', label: 'Auto' },
 ];
 
+const ANIMATION_TYPE_OPTIONS = [
+  { value: 'none', label: 'Χωρίς Animation' },
+  { value: 'fade-in', label: 'Fade In' },
+  { value: 'fade-up', label: 'Fade Up' },
+  { value: 'fade-down', label: 'Fade Down' },
+  { value: 'scale-in', label: 'Scale In' },
+  { value: 'slide-left', label: 'Slide Left' },
+  { value: 'slide-right', label: 'Slide Right' },
+];
+
+const ANIMATION_SPEED_OPTIONS = [
+  { value: 'fast', label: 'Γρήγορο (0.3s)' },
+  { value: 'normal', label: 'Κανονικό (0.5s)' },
+  { value: 'slow', label: 'Αργό (0.8s)' },
+  { value: 'very-slow', label: 'Πολύ Αργό (1.2s)' },
+];
+
+const ANIMATION_DELAY_OPTIONS = [
+  { value: '0', label: 'Χωρίς Delay' },
+  { value: '100', label: '100ms' },
+  { value: '200', label: '200ms' },
+  { value: '300', label: '300ms' },
+  { value: '500', label: '500ms' },
+];
+
 export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
   const [localSettings, setLocalSettings] = useState(section.settings || {});
   const [activeLang, setActiveLang] = useState<'el' | 'en'>('el');
@@ -907,6 +932,107 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                       onChange={(e) => updateSettings('overlay_opacity', parseInt(e.target.value))}
                       className="w-full mt-2"
                     />
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="font-medium mb-3">Animations</h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Animation Τίτλου</Label>
+                      <Select
+                        value={localSettings.title_animation || 'fade-up'}
+                        onValueChange={(value) => updateSettings('title_animation', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ANIMATION_TYPE_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Animation Υπότιτλου</Label>
+                      <Select
+                        value={localSettings.subtitle_animation || 'fade-up'}
+                        onValueChange={(value) => updateSettings('subtitle_animation', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ANIMATION_TYPE_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Animation Κουμπιών</Label>
+                      <Select
+                        value={localSettings.buttons_animation || 'fade-up'}
+                        onValueChange={(value) => updateSettings('buttons_animation', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ANIMATION_TYPE_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Ταχύτητα Animation</Label>
+                      <Select
+                        value={localSettings.animation_speed || 'normal'}
+                        onValueChange={(value) => updateSettings('animation_speed', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ANIMATION_SPEED_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Stagger Delay (μεταξύ elements)</Label>
+                    <Select
+                      value={localSettings.stagger_delay || '200'}
+                      onValueChange={(value) => updateSettings('stagger_delay', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ANIMATION_DELAY_OPTIONS.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}
