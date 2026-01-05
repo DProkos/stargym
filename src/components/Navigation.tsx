@@ -27,14 +27,13 @@ interface NavPage {
 // Default navigation structure - will be filtered by what exists in DB
 const DEFAULT_NAV_PAGES: NavPage[] = [
   { key: 'home', label: 'nav.home', path: '/' },
-  { key: 'classes', label: 'nav.classes', path: '/classes' },
   { key: 'memberships', label: 'memberships.title', path: '/memberships' },
   { key: 'pricing', label: 'nav.pricing', path: '/pricing' },
   { key: 'contact', label: 'nav.contact', path: '/contact' },
 ];
 
 // Pages that should always appear in nav (React routes, not page builder pages)
-const ALWAYS_SHOW_PAGES = ['home', 'classes'];
+const ALWAYS_SHOW_PAGES = ['home'];
 
 export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
