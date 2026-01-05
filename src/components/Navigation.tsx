@@ -33,6 +33,9 @@ const DEFAULT_NAV_PAGES: NavPage[] = [
   { key: 'contact', label: 'nav.contact', path: '/contact' },
 ];
 
+// Pages that should always appear in nav (React routes, not page builder pages)
+const ALWAYS_SHOW_PAGES = ['home', 'classes'];
+
 export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -179,15 +182,11 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     } else {
       // No saved order - use default behavior
       DEFAULT_NAV_PAGES.forEach(page => {
-        if (existingPageKeys.includes(page.key)) {
+        // Always show certain pages even if not in page_sections
+        if (existingPageKeys.includes(page.key) || ALWAYS_SHOW_PAGES.includes(page.key)) {
           items.push(page);
         }
       });
-
-      // Always include home if it doesn't exist
-      if (!items.find(p => p.key === 'home')) {
-        items.unshift(DEFAULT_NAV_PAGES[0]);
-      }
 
       // Add custom pages from Page Builder
       const defaultKeys = DEFAULT_NAV_PAGES.map(p => p.key);
