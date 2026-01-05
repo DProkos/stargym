@@ -26,7 +26,8 @@ import {
   FileText,
   FilePlus,
   Package,
-  Layers
+  Layers,
+  Navigation
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -36,6 +37,7 @@ import { SiteSettingsEditor } from '@/components/page-builder/SiteSettingsEditor
 import { LivePreview } from '@/components/page-builder/LivePreview';
 import { PagePreview } from '@/components/page-builder/PagePreview';
 import { SectionTemplates, SectionTemplate } from '@/components/page-builder/SectionTemplates';
+import { NavigationManager } from '@/components/page-builder/NavigationManager';
 
 interface PageSection {
   id: string;
@@ -478,11 +480,19 @@ export default function PageBuilder() {
                   <Layers className="h-4 w-4" />
                   Templates
                 </TabsTrigger>
+                <TabsTrigger value="navigation" className="flex items-center gap-2">
+                  <Navigation className="h-4 w-4" />
+                  Navigation
+                </TabsTrigger>
                 <TabsTrigger value="settings" className="flex items-center gap-2">
                   <Palette className="h-4 w-4" />
                   Ρυθμίσεις Site
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="navigation">
+                <NavigationManager />
+              </TabsContent>
 
               <TabsContent value="sections">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

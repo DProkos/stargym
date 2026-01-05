@@ -73,42 +73,102 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
 
   const loadNavigationPages = async () => {
     // Get all unique page keys that have sections in the database
-    const { data, error } = await supabase
+    const { data: pagesData, error } = await supabase
       .from('page_sections')
       .select('page_key')
       .eq('is_visible', true);
 
     if (error) {
       console.error('Error loading nav pages:', error);
-      // Fallback to defaults if error
       setNavPages(DEFAULT_NAV_PAGES);
       return;
     }
 
-    const existingPageKeys = [...new Set(data?.map(d => d.page_key) || [])];
-    
-    // Start with default pages that exist in DB
-    const filteredPages = DEFAULT_NAV_PAGES.filter(
-      page => existingPageKeys.includes(page.key)
-    );
+    const existingPageKeys = [...new Set(pagesData?.map(d => d.page_key) || [])];
 
-    // Always include home if it doesn't exist (as it's the main page)
-    if (!filteredPages.find(p => p.key === 'home')) {
-      filteredPages.unshift(DEFAULT_NAV_PAGES[0]);
+    // Get saved nav config from site_settings
+    const { data: settingsData } = await supabase
+      .from('site_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['nav_order', 'nav_labels', 'nav_visibility']);
+
+    let navOrder: string[] = [];
+    let navLabels: Record<string, string> = {};
+    let navVisibility: Record<string, boolean> = {};
+
+    settingsData?.forEach(setting => {
+      try {
+        if (setting.setting_key === 'nav_order' && setting.setting_value) {
+          navOrder = JSON.parse(setting.setting_value);
+        }
+        if (setting.setting_key === 'nav_labels' && setting.setting_value) {
+          navLabels = JSON.parse(setting.setting_value);
+        }
+        if (setting.setting_key === 'nav_visibility' && setting.setting_value) {
+          navVisibility = JSON.parse(setting.setting_value);
+        }
+      } catch (e) {
+        console.error('Error parsing nav setting:', e);
+      }
+    });
+
+    // Build nav items list
+    const items: NavPage[] = [];
+    
+    // If we have saved order, use it
+    if (navOrder.length > 0) {
+      navOrder.forEach(key => {
+        // Skip if not visible
+        if (navVisibility[key] === false) return;
+        // Skip if page doesn't exist
+        if (!existingPageKeys.includes(key)) return;
+        
+        const defaultPage = DEFAULT_NAV_PAGES.find(p => p.key === key);
+        items.push({
+          key,
+          label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          path: defaultPage?.path || `/page/${key}`,
+        });
+      });
+
+      // Add any new pages not in saved order (if visible)
+      existingPageKeys.forEach(key => {
+        if (!items.find(i => i.key === key) && navVisibility[key] !== false) {
+          const defaultPage = DEFAULT_NAV_PAGES.find(p => p.key === key);
+          items.push({
+            key,
+            label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+            path: defaultPage?.path || `/page/${key}`,
+          });
+        }
+      });
+    } else {
+      // No saved order - use default behavior
+      DEFAULT_NAV_PAGES.forEach(page => {
+        if (existingPageKeys.includes(page.key)) {
+          items.push(page);
+        }
+      });
+
+      // Always include home if it doesn't exist
+      if (!items.find(p => p.key === 'home')) {
+        items.unshift(DEFAULT_NAV_PAGES[0]);
+      }
+
+      // Add custom pages from Page Builder
+      const defaultKeys = DEFAULT_NAV_PAGES.map(p => p.key);
+      existingPageKeys.forEach(key => {
+        if (!defaultKeys.includes(key)) {
+          items.push({
+            key,
+            label: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            path: `/page/${key}`
+          });
+        }
+      });
     }
 
-    // Add custom pages from Page Builder that are not in the default list
-    const defaultKeys = DEFAULT_NAV_PAGES.map(p => p.key);
-    const customPageKeys = existingPageKeys.filter(key => !defaultKeys.includes(key));
-    
-    // Create nav entries for custom pages
-    const customPages: NavPage[] = customPageKeys.map(key => ({
-      key,
-      label: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-      path: `/page/${key}`
-    }));
-
-    setNavPages([...filteredPages, ...customPages]);
+    setNavPages(items);
   };
 
   const handleLogout = async () => {
