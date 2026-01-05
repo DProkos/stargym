@@ -63,7 +63,7 @@ const ICONS: Record<string, any> = {
   Dumbbell, Users, Award, Clock, Star, Heart, Zap, Target, Trophy, Flame
 };
 
-// Hero Section Component with Parallax
+// Hero Section Component with Parallax and Neon
 function HeroSection({
   section,
   bgClass,
@@ -81,6 +81,9 @@ function HeroSection({
   staggerDelay,
   parallaxEnabled,
   parallaxFactor,
+  neonEnabled,
+  neonColor,
+  neonIntensity,
   title,
   subtitle,
 }: {
@@ -100,6 +103,9 @@ function HeroSection({
   staggerDelay: number;
   parallaxEnabled: boolean;
   parallaxFactor: number;
+  neonEnabled: boolean;
+  neonColor: string;
+  neonIntensity: string;
   title: string;
   subtitle: string;
 }) {
@@ -154,7 +160,11 @@ function HeroSection({
       )}
       <div className="container mx-auto relative z-10 text-center">
         <h1 
-          className={`${titleSize} font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent opacity-0 ${titleAnimation}`}
+          className={`${titleSize} font-bold mb-6 opacity-0 ${titleAnimation} ${
+            neonEnabled 
+              ? `neon-text-${neonColor} neon-${neonIntensity}` 
+              : 'bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent'
+          }`}
           style={{ 
             '--hero-duration': animationDuration,
             animationDelay: '0ms'
@@ -466,6 +476,11 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
         }
       };
 
+      // Neon settings
+      const neonEnabled = heroSettings.neon_enabled === true;
+      const neonColor = heroSettings.neon_color || 'primary';
+      const neonIntensity = heroSettings.neon_intensity || 'medium';
+
       return (
         <HeroSection
           section={section}
@@ -484,6 +499,9 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
           staggerDelay={staggerDelay}
           parallaxEnabled={parallaxEnabled}
           parallaxFactor={getParallaxFactor()}
+          neonEnabled={neonEnabled}
+          neonColor={neonColor}
+          neonIntensity={neonIntensity}
           title={title}
           subtitle={subtitle}
         />

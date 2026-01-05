@@ -143,3 +143,88 @@ All colors MUST be HSL.
   @apply text-foreground;
 }
 
+/* Neon Text Effects */
+.neon-text-primary {
+  color: hsl(45 100% 51%);
+  text-shadow: 
+    0 0 5px hsl(45 100% 51% / 0.5),
+    0 0 10px hsl(45 100% 51% / 0.4),
+    0 0 20px hsl(45 100% 51% / 0.3),
+    0 0 40px hsl(45 100% 51% / 0.2);
+}
+
+.neon-text-cyan {
+  color: hsl(185 100% 50%);
+  text-shadow: 
+    0 0 5px hsl(185 100% 50% / 0.5),
+    0 0 10px hsl(185 100% 50% / 0.4),
+    0 0 20px hsl(185 100% 50% / 0.3),
+    0 0 40px hsl(185 100% 50% / 0.2);
+}
+
+.neon-text-pink {
+  color: hsl(330 100% 60%);
+  text-shadow: 
+    0 0 5px hsl(330 100% 60% / 0.5),
+    0 0 10px hsl(330 100% 60% / 0.4),
+    0 0 20px hsl(330 100% 60% / 0.3),
+    0 0 40px hsl(330 100% 60% / 0.2);
+}
+
+.neon-text-green {
+  color: hsl(120 100% 45%);
+  text-shadow: 
+    0 0 5px hsl(120 100% 45% / 0.5),
+    0 0 10px hsl(120 100% 45% / 0.4),
+    0 0 20px hsl(120 100% 45% / 0.3),
+    0 0 40px hsl(120 100% 45% / 0.2);
+}
+
+.neon-text-purple {
+  color: hsl(270 100% 60%);
+  text-shadow: 
+    0 0 5px hsl(270 100% 60% / 0.5),
+    0 0 10px hsl(270 100% 60% / 0.4),
+    0 0 20px hsl(270 100% 60% / 0.3),
+    0 0 40px hsl(270 100% 60% / 0.2);
+}
+
+.neon-text-white {
+  color: hsl(0 0% 100%);
+  text-shadow: 
+    0 0 5px hsl(0 0% 100% / 0.5),
+    0 0 10px hsl(0 0% 100% / 0.4),
+    0 0 20px hsl(0 0% 100% / 0.3),
+    0 0 40px hsl(0 0% 100% / 0.2);
+}
+
+/* Neon Intensity Modifiers */
+.neon-subtle {
+  filter: brightness(0.9);
+}
+.neon-subtle::after { opacity: 0.5; }
+
+.neon-medium {
+  filter: brightness(1);
+}
+
+.neon-strong {
+  filter: brightness(1.1);
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+.neon-extreme {
+  filter: brightness(1.2);
+  animation: neon-flicker 0.1s ease-in-out infinite alternate;
+}
+
+@keyframes neon-pulse {
+  0%, 100% { filter: brightness(1.1); }
+  50% { filter: brightness(1.3); }
+}
+
+@keyframes neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { filter: brightness(1.2); }
+  20%, 24%, 55% { filter: brightness(0.9); }
+}
+

@@ -1072,6 +1072,65 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                       </Select>
                     </div>
                   </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="font-medium mb-3">Neon Effect</h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Neon Τίτλου</Label>
+                      <Select
+                        value={localSettings.neon_enabled ? 'true' : 'false'}
+                        onValueChange={(value) => updateSettings('neon_enabled', value === 'true')}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="false">Απενεργοποιημένο</SelectItem>
+                          <SelectItem value="true">Ενεργοποιημένο</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Χρώμα Neon</Label>
+                      <Select
+                        value={localSettings.neon_color || 'primary'}
+                        onValueChange={(value) => updateSettings('neon_color', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="primary">Primary (Χρυσό)</SelectItem>
+                          <SelectItem value="cyan">Cyan</SelectItem>
+                          <SelectItem value="pink">Pink</SelectItem>
+                          <SelectItem value="green">Green</SelectItem>
+                          <SelectItem value="purple">Purple</SelectItem>
+                          <SelectItem value="white">White</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Ένταση Neon Glow</Label>
+                    <Select
+                      value={localSettings.neon_intensity || 'medium'}
+                      onValueChange={(value) => updateSettings('neon_intensity', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="subtle">Ελαφρύ</SelectItem>
+                        <SelectItem value="medium">Μεσαίο</SelectItem>
+                        <SelectItem value="strong">Έντονο</SelectItem>
+                        <SelectItem value="extreme">Πολύ Έντονο</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </>
               )}
             </div>
