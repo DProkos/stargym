@@ -44,6 +44,8 @@ export default function BookingCalendar({
       backgroundColor = 'hsl(0 84% 60%)'; // red
     } else if (event.status === 'available') {
       backgroundColor = 'hsl(142 76% 36%)'; // green for available classes
+    } else if (event.status === 'full') {
+      backgroundColor = 'hsl(0 0% 50%)'; // gray for full classes
     }
 
     return {
