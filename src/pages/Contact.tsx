@@ -132,15 +132,23 @@ export default function Contact() {
       // Validate input data
       const validatedData = contactSchema.parse(formData);
 
-      // Sanitize data for external use
-      const sanitizedMessage = encodeURIComponent(validatedData.message);
-      const sanitizedName = encodeURIComponent(validatedData.name);
+      // Send contact form via edge function
+      const { error } = await supabase.functions.invoke('send-contact-form', {
+        body: {
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: validatedData.phone || '',
+          message: validatedData.message,
+        },
+      });
 
-      // Here you could send to an API endpoint or service
-      // For now, we'll just show success
+      if (error) {
+        throw new Error(error.message || 'Failed to send message');
+      }
+
       toast({ 
-        title: 'Message sent successfully!',
-        description: 'We will get back to you soon.',
+        title: t('contact.success') || 'Message sent successfully!',
+        description: t('contact.successDesc') || 'We will get back to you soon.',
       });
       setFormData({ name: '', email: '', phone: '', message: '' });
     } catch (error: any) {
@@ -151,9 +159,10 @@ export default function Contact() {
           variant: 'destructive',
         });
       } else {
+        console.error('Contact form error:', error);
         toast({
           title: 'Error',
-          description: 'Failed to send message. Please try again.',
+          description: error.message || 'Failed to send message. Please try again.',
           variant: 'destructive',
         });
       }
