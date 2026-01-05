@@ -22,6 +22,13 @@ interface Class {
   max_capacity: number;
   status: 'active' | 'cancelled' | 'postponed';
   specific_date: string | null;
+  schedules?: Schedule[];
+}
+
+interface Schedule {
+  id?: string;
+  day_of_week: number;
+  time: string;
 }
 
 interface TrainerClassManagerProps {
@@ -40,17 +47,16 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
   const [trainerName, setTrainerName] = useState('');
   const { toast } = useToast();
 
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const daysOfWeek = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
 
   // New class form state
   const [newClass, setNewClass] = useState({
     name: '',
     description: '',
-    time: '',
-    day_of_week: 1,
     duration_minutes: 60,
     max_capacity: 20,
     specific_date: '',
+    schedules: [{ day_of_week: 1, time: '' }] as Schedule[],
   });
 
   useEffect(() => {
@@ -101,59 +107,90 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
   };
 
   const handleCreateClass = async () => {
-    if (!newClass.name || !newClass.time) {
+    // Validate schedules
+    const validSchedules = newClass.schedules.filter(s => s.time);
+    if (!newClass.name || validSchedules.length === 0) {
       toast({
         title: 'Missing information',
-        description: 'Please fill in class name and time',
+        description: 'Παρακαλώ συμπληρώστε το όνομα και τουλάχιστον μία ημέρα/ώρα',
         variant: 'destructive',
       });
       return;
     }
 
-    // If specific_date is set, calculate day_of_week from it
-    let dayOfWeek = newClass.day_of_week;
-    if (newClass.specific_date) {
-      dayOfWeek = new Date(newClass.specific_date).getDay();
-    }
-
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('classes')
-        .insert({
-          name: newClass.name,
-          description: newClass.description,
-          time: newClass.time,
-          day_of_week: dayOfWeek,
-          duration_minutes: newClass.duration_minutes,
-          max_capacity: newClass.max_capacity,
-          specific_date: newClass.specific_date || null,
-          trainer_id: trainerId,
-        });
+      // For one-time classes with specific date
+      if (newClass.specific_date) {
+        const dayOfWeek = new Date(newClass.specific_date).getDay();
+        const { error } = await supabase
+          .from('classes')
+          .insert({
+            name: newClass.name,
+            description: newClass.description,
+            time: validSchedules[0].time,
+            day_of_week: dayOfWeek,
+            duration_minutes: newClass.duration_minutes,
+            max_capacity: newClass.max_capacity,
+            specific_date: newClass.specific_date,
+            trainer_id: trainerId,
+          });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // For recurring classes with multiple schedules
+        // Create a class entry for each schedule
+        for (const schedule of validSchedules) {
+          const { data: classData, error: classError } = await supabase
+            .from('classes')
+            .insert({
+              name: newClass.name,
+              description: newClass.description,
+              time: schedule.time,
+              day_of_week: schedule.day_of_week,
+              duration_minutes: newClass.duration_minutes,
+              max_capacity: newClass.max_capacity,
+              specific_date: null,
+              trainer_id: trainerId,
+            })
+            .select('id')
+            .single();
+
+          if (classError) throw classError;
+
+          // Also add to class_schedules table for reference
+          if (classData) {
+            await supabase
+              .from('class_schedules')
+              .insert({
+                class_id: classData.id,
+                day_of_week: schedule.day_of_week,
+                time: schedule.time,
+              });
+          }
+        }
+      }
 
       toast({
-        title: 'Class created',
-        description: 'Your class has been added successfully',
+        title: 'Μάθημα δημιουργήθηκε',
+        description: `Το μάθημα προστέθηκε με ${validSchedules.length} πρόγραμμα(τα)`,
       });
 
       setIsDialogOpen(false);
       setNewClass({
         name: '',
         description: '',
-        time: '',
-        day_of_week: 1,
         duration_minutes: 60,
         max_capacity: 20,
         specific_date: '',
+        schedules: [{ day_of_week: 1, time: '' }],
       });
       
       loadClasses();
       if (onClassesChange) onClassesChange();
     } catch (error: any) {
       toast({
-        title: 'Error creating class',
+        title: 'Σφάλμα δημιουργίας',
         description: error.message,
         variant: 'destructive',
       });
@@ -365,43 +402,97 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-day">Ημέρα Εβδομάδας {newClass.specific_date ? '(αυτόματα)' : '*'}</Label>
-                  <Select
-                    value={newClass.specific_date 
-                      ? new Date(newClass.specific_date).getDay().toString() 
-                      : newClass.day_of_week.toString()}
-                    onValueChange={(value) => setNewClass({ ...newClass, day_of_week: parseInt(value) })}
-                    disabled={!!newClass.specific_date}
-                  >
-                    <SelectTrigger id="new-day">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {daysOfWeek.map((day, idx) => (
-                        <SelectItem key={idx} value={idx.toString()}>
-                          {day}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Schedule entries - multiple day/time */}
+              {!newClass.specific_date && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Πρόγραμμα (Ημέρες & Ώρες) *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setNewClass({
+                        ...newClass,
+                        schedules: [...newClass.schedules, { day_of_week: 1, time: '' }]
+                      })}
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Προσθήκη
+                    </Button>
+                  </div>
+                  
+                  {newClass.schedules.map((schedule, index) => (
+                    <div key={index} className="flex gap-2 items-end">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs">Ημέρα</Label>
+                        <Select
+                          value={schedule.day_of_week.toString()}
+                          onValueChange={(value) => {
+                            const updated = [...newClass.schedules];
+                            updated[index].day_of_week = parseInt(value);
+                            setNewClass({ ...newClass, schedules: updated });
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {daysOfWeek.map((day, idx) => (
+                              <SelectItem key={idx} value={idx.toString()}>
+                                {day}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs">Ώρα</Label>
+                        <Input
+                          type="time"
+                          value={schedule.time}
+                          onChange={(e) => {
+                            const updated = [...newClass.schedules];
+                            updated[index].time = e.target.value;
+                            setNewClass({ ...newClass, schedules: updated });
+                          }}
+                        />
+                      </div>
+                      {newClass.schedules.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const updated = newClass.schedules.filter((_, i) => i !== index);
+                            setNewClass({ ...newClass, schedules: updated });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
+              )}
 
+              {/* For specific date - single time */}
+              {newClass.specific_date && (
                 <div className="space-y-2">
                   <Label htmlFor="new-time">Ώρα *</Label>
                   <Input
                     id="new-time"
                     type="time"
-                    value={newClass.time}
-                    onChange={(e) => setNewClass({ ...newClass, time: e.target.value })}
+                    value={newClass.schedules[0]?.time || ''}
+                    onChange={(e) => setNewClass({ 
+                      ...newClass, 
+                      schedules: [{ day_of_week: new Date(newClass.specific_date).getDay(), time: e.target.value }] 
+                    })}
                   />
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-duration">Duration (minutes)</Label>
+                  <Label htmlFor="new-duration">Διάρκεια (λεπτά)</Label>
                   <Input
                     id="new-duration"
                     type="number"
@@ -413,7 +504,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-capacity">Max Capacity</Label>
+                  <Label htmlFor="new-capacity">Μέγιστη χωρητικότητα</Label>
                   <Input
                     id="new-capacity"
                     type="number"
@@ -426,9 +517,9 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
 
               <Button onClick={handleCreateClass} disabled={saving} className="w-full">
                 {saving ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating...</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Δημιουργία...</>
                 ) : (
-                  <><Plus className="h-4 w-4 mr-2" /> Create Class</>
+                  <><Plus className="h-4 w-4 mr-2" /> Δημιουργία Μαθήματος</>
                 )}
               </Button>
             </div>
