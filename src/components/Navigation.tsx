@@ -87,7 +87,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
 
     const existingPageKeys = [...new Set(data?.map(d => d.page_key) || [])];
     
-    // Filter default nav pages to only include those that exist in DB
+    // Start with default pages that exist in DB
     const filteredPages = DEFAULT_NAV_PAGES.filter(
       page => existingPageKeys.includes(page.key)
     );
@@ -97,7 +97,18 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       filteredPages.unshift(DEFAULT_NAV_PAGES[0]);
     }
 
-    setNavPages(filteredPages);
+    // Add custom pages from Page Builder that are not in the default list
+    const defaultKeys = DEFAULT_NAV_PAGES.map(p => p.key);
+    const customPageKeys = existingPageKeys.filter(key => !defaultKeys.includes(key));
+    
+    // Create nav entries for custom pages
+    const customPages: NavPage[] = customPageKeys.map(key => ({
+      key,
+      label: key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      path: `/page/${key}`
+    }));
+
+    setNavPages([...filteredPages, ...customPages]);
   };
 
   const handleLogout = async () => {
