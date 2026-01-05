@@ -38,6 +38,12 @@ export default function BookingCalendar({
       backgroundColor = 'hsl(var(--destructive))';
     } else if (event.status === 'completed') {
       backgroundColor = 'hsl(var(--muted))';
+    } else if (event.status === 'pending') {
+      backgroundColor = 'hsl(45 93% 47%)'; // yellow
+    } else if (event.status === 'rejected') {
+      backgroundColor = 'hsl(0 84% 60%)'; // red
+    } else if (event.status === 'available') {
+      backgroundColor = 'hsl(142 76% 36%)'; // green for available classes
     }
 
     return {

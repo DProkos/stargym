@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface Booking {
   id: string;
+  class_id?: string;
   booking_date: string;
   status: string;
   class: {
@@ -32,6 +33,7 @@ interface Class {
   duration_minutes: number;
   max_capacity: number;
   status: string;
+  specific_date?: string | null;
 }
 
 export default function CustomerPortal() {
@@ -63,7 +65,10 @@ export default function CustomerPortal() {
     const { data } = await supabase
       .from('bookings')
       .select(`
-        *,
+        id,
+        class_id,
+        booking_date,
+        status,
         class:classes(name, time, duration_minutes)
       `)
       .eq('user_id', userId)
@@ -117,7 +122,8 @@ export default function CustomerPortal() {
     }
   };
 
-  const calendarEvents = bookings.map(booking => {
+  // Generate calendar events from bookings
+  const bookingEvents = bookings.map(booking => {
     const bookingDate = new Date(booking.booking_date);
     const [hours, minutes] = booking.class.time.split(':').map(Number);
     const startTime = new Date(bookingDate);
@@ -127,13 +133,87 @@ export default function CustomerPortal() {
 
     return {
       id: booking.id,
-      title: booking.class.name,
+      title: `${booking.class.name} (${booking.status === 'confirmed' ? 'Επιβεβαιωμένη' : booking.status === 'pending' ? 'Αναμονή' : booking.status})`,
       start: startTime,
       end: endTime,
-      resource: booking,
+      resource: { ...booking, type: 'booking' },
       status: booking.status,
     };
   });
+
+  // Generate calendar events from available classes
+  const generateClassEvents = () => {
+    const events: any[] = [];
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 2); // Show classes for next 2 months
+
+    classes.forEach(cls => {
+      if (cls.specific_date) {
+        // One-time class with specific date
+        const classDate = new Date(cls.specific_date);
+        const [hours, minutes] = cls.time.split(':').map(Number);
+        const startTime = new Date(classDate);
+        startTime.setHours(hours, minutes, 0);
+        const endTime = new Date(startTime);
+        endTime.setMinutes(endTime.getMinutes() + cls.duration_minutes);
+
+        // Check if already booked
+        const isBooked = bookings.some(b => 
+          b.class_id === cls.id && 
+          b.booking_date === cls.specific_date &&
+          (b.status === 'confirmed' || b.status === 'pending')
+        );
+
+        if (!isBooked && startTime >= today) {
+          events.push({
+            id: `class-${cls.id}-${cls.specific_date}`,
+            title: `📅 ${cls.name}`,
+            start: startTime,
+            end: endTime,
+            resource: { ...cls, type: 'class', eventDate: cls.specific_date },
+            status: 'available',
+          });
+        }
+      } else {
+        // Recurring class - generate for each occurrence
+        let currentDate = new Date(today);
+        while (currentDate <= endDate) {
+          if (currentDate.getDay() === cls.day_of_week) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const [hours, minutes] = cls.time.split(':').map(Number);
+            const startTime = new Date(currentDate);
+            startTime.setHours(hours, minutes, 0);
+            const endTime = new Date(startTime);
+            endTime.setMinutes(endTime.getMinutes() + cls.duration_minutes);
+
+            // Check if already booked
+            const isBooked = bookings.some(b => 
+              b.class_id === cls.id && 
+              b.booking_date === dateStr &&
+              (b.status === 'confirmed' || b.status === 'pending')
+            );
+
+            if (!isBooked) {
+              events.push({
+                id: `class-${cls.id}-${dateStr}`,
+                title: `📅 ${cls.name}`,
+                start: startTime,
+                end: endTime,
+                resource: { ...cls, type: 'class', eventDate: dateStr },
+                status: 'available',
+              });
+            }
+          }
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+    });
+
+    return events;
+  };
+
+  const calendarEvents = [...bookingEvents, ...generateClassEvents()];
 
   return (
     <SidebarProvider>
@@ -173,9 +253,42 @@ export default function CustomerPortal() {
 
                 {/* My Bookings Tab */}
                 <TabsContent value="my-bookings" className="space-y-4">
+                  <div className="flex gap-4 text-sm mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(142 76% 36%)' }} />
+                      <span>Διαθέσιμο μάθημα</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(45 93% 47%)' }} />
+                      <span>Αναμονή έγκρισης</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-primary" />
+                      <span>Επιβεβαιωμένη</span>
+                    </div>
+                  </div>
                   <BookingCalendar 
                     events={calendarEvents}
-                    onSelectEvent={(event) => setSelectedBooking(event.resource)}
+                    onSelectEvent={(event) => {
+                      if (event.resource?.type === 'class') {
+                        // Open booking modal for available class
+                        const cls = event.resource;
+                        setSelectedClass({
+                          id: cls.id,
+                          name: cls.name,
+                          description: cls.description || '',
+                          time: cls.time,
+                          day_of_week: cls.day_of_week,
+                          duration_minutes: cls.duration_minutes,
+                          max_capacity: cls.max_capacity,
+                          status: cls.status,
+                          specific_date: cls.eventDate,
+                        });
+                        setIsBookingModalOpen(true);
+                      } else {
+                        setSelectedBooking(event.resource);
+                      }
+                    }}
                   />
                   
                   {selectedBooking && (
@@ -363,6 +476,7 @@ export default function CustomerPortal() {
             max_capacity: selectedClass.max_capacity,
           }}
           userId={user?.id}
+          preSelectedDate={selectedClass.specific_date}
         />
       )}
     </SidebarProvider>
