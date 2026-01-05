@@ -428,18 +428,54 @@ export default function PageBuilder() {
   };
 
   const updateSiteSetting = async (settingKey: string, value: string | null) => {
-    const { error } = await supabase
+    // First try to update
+    const { data: existingData, error: selectError } = await supabase
       .from('site_settings')
-      .update({ setting_value: value })
-      .eq('setting_key', settingKey);
+      .select('id')
+      .eq('setting_key', settingKey)
+      .maybeSingle();
+
+    let error;
+    
+    if (existingData) {
+      // Update existing
+      const result = await supabase
+        .from('site_settings')
+        .update({ setting_value: value, updated_at: new Date().toISOString() })
+        .eq('setting_key', settingKey);
+      error = result.error;
+    } else {
+      // Insert new
+      const result = await supabase
+        .from('site_settings')
+        .insert({ 
+          setting_key: settingKey, 
+          setting_value: value,
+          setting_type: 'text',
+          category: 'branding'
+        });
+      error = result.error;
+    }
 
     if (error) {
       toast.error('Σφάλμα ενημέρωσης ρύθμισης');
       console.error(error);
     } else {
-      setSiteSettings(siteSettings.map(s => 
-        s.setting_key === settingKey ? { ...s, setting_value: value } : s
-      ));
+      // Update local state
+      const existingSetting = siteSettings.find(s => s.setting_key === settingKey);
+      if (existingSetting) {
+        setSiteSettings(siteSettings.map(s => 
+          s.setting_key === settingKey ? { ...s, setting_value: value } : s
+        ));
+      } else {
+        setSiteSettings([...siteSettings, {
+          id: crypto.randomUUID(),
+          setting_key: settingKey,
+          setting_value: value,
+          setting_type: 'text',
+          category: 'branding'
+        }]);
+      }
       toast.success('Η ρύθμιση αποθηκεύτηκε');
     }
   };
