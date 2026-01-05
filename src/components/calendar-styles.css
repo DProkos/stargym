@@ -249,14 +249,40 @@
   border-radius: 8px 8px 0 0;
 }
 
-/* Month view - ensure events have proper height */
+/* Month view - ensure events stay within cells */
 .rbc-month-row {
   min-height: 100px;
-  overflow: visible;
+  overflow: hidden;
+}
+
+.rbc-row-content {
+  overflow: hidden;
 }
 
 .rbc-row-segment {
   padding: 2px 4px;
+}
+
+.rbc-event {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Prevent events from overflowing their container */
+.rbc-event-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ensure day cells clip their content */
+.rbc-day-bg {
+  overflow: hidden;
+}
+
+.rbc-date-cell {
+  overflow: hidden;
 }
 
 /* Responsive adjustments */
