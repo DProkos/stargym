@@ -24,14 +24,19 @@ interface BookingModalProps {
   onClose: () => void;
   classItem: any;
   userId: string;
-  preSelectedDate?: Date;
+  preSelectedDate?: Date | string;
 }
 
 export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDate }: BookingModalProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { fireConfetti } = useConfetti();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(preSelectedDate || new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    if (preSelectedDate) {
+      return typeof preSelectedDate === 'string' ? new Date(preSelectedDate) : preSelectedDate;
+    }
+    return new Date();
+  });
   const [loading, setLoading] = useState(false);
   const [availability, setAvailability] = useState<{
     booked: number;
@@ -46,7 +51,8 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
 
   useEffect(() => {
     if (preSelectedDate) {
-      setSelectedDate(preSelectedDate);
+      const date = typeof preSelectedDate === 'string' ? new Date(preSelectedDate) : preSelectedDate;
+      setSelectedDate(date);
     }
   }, [preSelectedDate]);
 
