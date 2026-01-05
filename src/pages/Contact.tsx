@@ -315,7 +315,15 @@ export default function Contact() {
                           href={ensureHttps(siteSettings.facebook_url)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          referrerPolicy="no-referrer"
+                          onClick={(e) => {
+                            // In embedded previews some external sites (like Facebook) refuse to load.
+                            // Force opening in a new tab/window.
+                            e.preventDefault();
+                            window.open(ensureHttps(siteSettings.facebook_url), '_blank', 'noopener,noreferrer');
+                          }}
                           className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                          aria-label="Facebook"
                         >
                           <Facebook className="h-5 w-5" />
                         </a>
@@ -325,7 +333,13 @@ export default function Contact() {
                           href={ensureHttps(siteSettings.instagram_url)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          referrerPolicy="no-referrer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(ensureHttps(siteSettings.instagram_url), '_blank', 'noopener,noreferrer');
+                          }}
                           className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                          aria-label="Instagram"
                         >
                           <Instagram className="h-5 w-5" />
                         </a>
@@ -335,7 +349,13 @@ export default function Contact() {
                           href={ensureHttps(siteSettings.twitter_url)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          referrerPolicy="no-referrer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(ensureHttps(siteSettings.twitter_url), '_blank', 'noopener,noreferrer');
+                          }}
                           className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                          aria-label="Twitter"
                         >
                           <Twitter className="h-5 w-5" />
                         </a>
