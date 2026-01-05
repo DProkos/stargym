@@ -31,6 +31,7 @@ import CronJobs from "./pages/admin/CronJobs";
 import TrainerProfile from "./pages/trainer/TrainerProfile";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import TrainerClasses from "./pages/trainer/TrainerClasses";
+import TrainerBookings from "./pages/trainer/TrainerBookings";
 import CRM from "./pages/admin/CRM";
 import CRMCustomerDetail from "./pages/admin/CRMCustomerDetail";
 import CreateUser from "./pages/admin/CreateUser";
@@ -88,6 +89,11 @@ const App = () => (
             <Route path="/trainer/profile" element={
               <ProtectedRoute allowedRoles={['trainer']}>
                 <TrainerProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/trainer/bookings" element={
+              <ProtectedRoute allowedRoles={['trainer']}>
+                <TrainerBookings />
               </ProtectedRoute>
             } />
             

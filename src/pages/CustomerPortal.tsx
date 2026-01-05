@@ -185,10 +185,18 @@ export default function CustomerPortal() {
                           <span>{selectedBooking.class.name}</span>
                           <span className={`text-sm px-3 py-1 rounded-full ${
                             selectedBooking.status === 'confirmed' 
-                              ? 'bg-primary/20 text-primary' 
+                              ? 'bg-green-500/20 text-green-600' 
+                              : selectedBooking.status === 'pending'
+                              ? 'bg-yellow-500/20 text-yellow-600'
+                              : selectedBooking.status === 'rejected'
+                              ? 'bg-red-500/20 text-red-600'
                               : 'bg-destructive/20 text-destructive'
                           }`}>
-                            {selectedBooking.status}
+                            {selectedBooking.status === 'confirmed' ? 'Επιβεβαιωμένη' 
+                              : selectedBooking.status === 'pending' ? 'Αναμονή Έγκρισης'
+                              : selectedBooking.status === 'rejected' ? 'Απορρίφθηκε'
+                              : selectedBooking.status === 'cancelled' ? 'Ακυρώθηκε'
+                              : selectedBooking.status}
                           </span>
                         </CardTitle>
                         <CardDescription>
@@ -204,7 +212,7 @@ export default function CustomerPortal() {
                           </div>
                         </CardDescription>
                       </CardHeader>
-                      {selectedBooking.status === 'confirmed' && (
+                      {(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') && (
                         <CardContent>
                           <div className="flex gap-2">
                             <Button 
@@ -217,9 +225,14 @@ export default function CustomerPortal() {
                               variant="outline" 
                               onClick={() => setSelectedBooking(null)}
                             >
-                              Close
+                              Κλείσιμο
                             </Button>
                           </div>
+                          {selectedBooking.status === 'pending' && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              Η κράτησή σας αναμένει έγκριση από τον trainer.
+                            </p>
+                          )}
                         </CardContent>
                       )}
                     </Card>

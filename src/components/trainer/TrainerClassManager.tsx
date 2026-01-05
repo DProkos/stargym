@@ -21,6 +21,7 @@ interface Class {
   duration_minutes: number;
   max_capacity: number;
   status: 'active' | 'cancelled' | 'postponed';
+  specific_date: string | null;
 }
 
 interface TrainerClassManagerProps {
@@ -49,6 +50,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
     day_of_week: 1,
     duration_minutes: 60,
     max_capacity: 20,
+    specific_date: '',
   });
 
   useEffect(() => {
@@ -108,12 +110,24 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
       return;
     }
 
+    // If specific_date is set, calculate day_of_week from it
+    let dayOfWeek = newClass.day_of_week;
+    if (newClass.specific_date) {
+      dayOfWeek = new Date(newClass.specific_date).getDay();
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
         .from('classes')
         .insert({
-          ...newClass,
+          name: newClass.name,
+          description: newClass.description,
+          time: newClass.time,
+          day_of_week: dayOfWeek,
+          duration_minutes: newClass.duration_minutes,
+          max_capacity: newClass.max_capacity,
+          specific_date: newClass.specific_date || null,
           trainer_id: trainerId,
         });
 
@@ -132,6 +146,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
         day_of_week: 1,
         duration_minutes: 60,
         max_capacity: 20,
+        specific_date: '',
       });
       
       loadClasses();
@@ -337,12 +352,28 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="new-specific-date">Συγκεκριμένη Ημερομηνία (προαιρετικό)</Label>
+                <Input
+                  id="new-specific-date"
+                  type="date"
+                  value={newClass.specific_date}
+                  onChange={(e) => setNewClass({ ...newClass, specific_date: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Αν επιλέξετε ημερομηνία, το μάθημα θα γίνει μόνο εκείνη τη μέρα. Αλλιώς θα επαναλαμβάνεται εβδομαδιαία.
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-day">Day of Week *</Label>
+                  <Label htmlFor="new-day">Ημέρα Εβδομάδας {newClass.specific_date ? '(αυτόματα)' : '*'}</Label>
                   <Select
-                    value={newClass.day_of_week.toString()}
+                    value={newClass.specific_date 
+                      ? new Date(newClass.specific_date).getDay().toString() 
+                      : newClass.day_of_week.toString()}
                     onValueChange={(value) => setNewClass({ ...newClass, day_of_week: parseInt(value) })}
+                    disabled={!!newClass.specific_date}
                   >
                     <SelectTrigger id="new-day">
                       <SelectValue />
@@ -358,7 +389,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new-time">Time *</Label>
+                  <Label htmlFor="new-time">Ώρα *</Label>
                   <Input
                     id="new-time"
                     type="time"

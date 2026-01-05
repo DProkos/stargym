@@ -1,4 +1,4 @@
-import { Calendar, User, Users, LogOut, Home } from "lucide-react";
+import { Calendar, User, Users, LogOut, Home, ClipboardList } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,7 @@ export function AppSidebarTrainer() {
     { title: t('nav.home'), url: "/", icon: Home },
     { title: t('trainer.schedule'), url: "/trainer/schedule", icon: Calendar },
     { title: t('trainer.classes'), url: "/trainer/classes", icon: Users },
+    { title: 'Κρατήσεις', url: "/trainer/bookings", icon: ClipboardList },
     { title: t('nav.profile'), url: "/trainer/profile", icon: User },
   ];
 

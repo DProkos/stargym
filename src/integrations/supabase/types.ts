@@ -126,6 +126,7 @@ export type Database = {
           created_at: string | null
           id: string
           status: string
+          trainer_notes: string | null
           user_id: string
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           status?: string
+          trainer_notes?: string | null
           user_id: string
         }
         Update: {
@@ -142,6 +144,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           status?: string
+          trainer_notes?: string | null
           user_id?: string
         }
         Relationships: [
@@ -204,6 +207,7 @@ export type Database = {
           id: string
           max_capacity: number
           name: string
+          specific_date: string | null
           status: string
           time: string
           trainer_id: string | null
@@ -216,6 +220,7 @@ export type Database = {
           id?: string
           max_capacity?: number
           name: string
+          specific_date?: string | null
           status?: string
           time: string
           trainer_id?: string | null
@@ -228,6 +233,7 @@ export type Database = {
           id?: string
           max_capacity?: number
           name?: string
+          specific_date?: string | null
           status?: string
           time?: string
           trainer_id?: string | null
