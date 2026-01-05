@@ -152,7 +152,7 @@ export function ChatbotWidget() {
       {/* Chatbot Toggle Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-neon-strong z-50"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-neon-strong z-50 bg-primary hover:bg-primary/90 text-primary-foreground border-2 border-primary/50"
         size="icon"
       >
         {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
@@ -160,15 +160,15 @@ export function ChatbotWidget() {
 
       {/* Chatbot Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-96 h-[500px] shadow-2xl z-50 flex flex-col">
-          <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
+        <Card className="fixed bottom-24 right-6 w-96 h-[500px] shadow-neon-strong z-50 flex flex-col bg-background border-2 border-primary/30">
+          <CardHeader className="border-b border-primary/30 bg-card">
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <MessageCircle className="h-5 w-5" />
               {language === 'el' ? 'Star Gym Βοηθός' : 'Star Gym Assistant'}
             </CardTitle>
           </CardHeader>
           
-          <CardContent className="flex-1 p-0 overflow-hidden min-h-0">
+          <CardContent className="flex-1 p-0 overflow-hidden min-h-0 bg-background">
             <ScrollArea className="h-full">
               <div className="space-y-4 p-4">
                 {messages.map((msg, idx) => (
@@ -180,7 +180,7 @@ export function ChatbotWidget() {
                       className={`max-w-[80%] rounded-lg px-4 py-2 ${
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                          : 'bg-card border border-primary/20 text-foreground'
                       }`}
                       style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                     >
@@ -190,8 +190,8 @@ export function ChatbotWidget() {
                 ))}
                 {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
                   <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg px-4 py-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="bg-card border border-primary/20 rounded-lg px-4 py-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     </div>
                   </div>
                 )}
@@ -200,7 +200,7 @@ export function ChatbotWidget() {
             </ScrollArea>
           </CardContent>
 
-          <CardFooter className="border-t p-4">
+          <CardFooter className="border-t border-primary/30 p-4 bg-card">
             <div className="flex gap-2 w-full">
               <Input
                 placeholder={language === 'el' ? 'Γράψτε το μήνυμά σας...' : 'Type your message...'}
@@ -208,8 +208,14 @@ export function ChatbotWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={isLoading}
+                className="bg-background border-primary/30 text-foreground placeholder:text-muted-foreground focus:border-primary"
               />
-              <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon">
+              <Button 
+                onClick={sendMessage} 
+                disabled={isLoading || !input.trim()} 
+                size="icon"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
