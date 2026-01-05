@@ -37,12 +37,13 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navPages, setNavPages] = useState<NavPage[]>([]);
-  const [siteName, setSiteName] = useState('Star Gym');
+  const [siteName, setSiteName] = useState<string | null>(null);
   const [siteNameColor, setSiteNameColor] = useState<string | null>(null);
   const [siteNameFont, setSiteNameFont] = useState<string | null>(null);
-  const [siteNameVisible, setSiteNameVisible] = useState(true);
+  const [siteNameVisible, setSiteNameVisible] = useState<boolean | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [logoSize, setLogoSize] = useState(32);
+  const [logoSize, setLogoSize] = useState<number | null>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,29 +59,50 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
 
     if (error) {
       console.error('Error loading site settings:', error);
+      // Set defaults on error
+      setSiteName('Star Gym');
+      setSiteNameVisible(true);
+      setLogoSize(32);
+      setSettingsLoaded(true);
       return;
     }
 
+    // Set defaults first
+    let loadedSiteName = 'Star Gym';
+    let loadedVisible = true;
+    let loadedSize = 32;
+    let loadedColor: string | null = null;
+    let loadedFont: string | null = null;
+    let loadedLogo: string | null = null;
+
     data?.forEach(setting => {
       if (setting.setting_key === 'site_name' && setting.setting_value) {
-        setSiteName(setting.setting_value);
+        loadedSiteName = setting.setting_value;
       }
       if (setting.setting_key === 'site_name_color' && setting.setting_value) {
-        setSiteNameColor(setting.setting_value);
+        loadedColor = setting.setting_value;
       }
       if (setting.setting_key === 'site_name_font' && setting.setting_value) {
-        setSiteNameFont(setting.setting_value);
+        loadedFont = setting.setting_value;
       }
       if (setting.setting_key === 'site_name_visible') {
-        setSiteNameVisible(setting.setting_value !== 'false');
+        loadedVisible = setting.setting_value !== 'false';
       }
       if (setting.setting_key === 'logo_url' && setting.setting_value) {
-        setLogoUrl(setting.setting_value);
+        loadedLogo = setting.setting_value;
       }
       if (setting.setting_key === 'logo_size' && setting.setting_value) {
-        setLogoSize(parseInt(setting.setting_value) || 32);
+        loadedSize = parseInt(setting.setting_value) || 32;
       }
     });
+
+    setSiteName(loadedSiteName);
+    setSiteNameColor(loadedColor);
+    setSiteNameFont(loadedFont);
+    setSiteNameVisible(loadedVisible);
+    setLogoUrl(loadedLogo);
+    setLogoSize(loadedSize);
+    setSettingsLoaded(true);
   };
 
   const loadNavigationPages = async () => {
@@ -192,21 +214,25 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            {logoUrl ? (
+          <Link to="/" className="flex items-center gap-2 min-h-[32px]">
+            {!settingsLoaded ? (
+              <div className="h-8 w-8 bg-muted/50 rounded animate-pulse" />
+            ) : logoUrl ? (
               <img 
                 src={logoUrl} 
-                alt={siteName} 
-                style={{ height: `${logoSize}px` }}
+                alt={siteName || 'Logo'} 
+                style={{ height: `${logoSize || 32}px` }}
                 className="w-auto object-contain" 
               />
             ) : (
               <Dumbbell 
-                style={{ height: `${logoSize}px`, width: `${logoSize}px` }}
+                style={{ height: `${logoSize || 32}px`, width: `${logoSize || 32}px` }}
                 className="text-primary" 
               />
             )}
-            {siteNameVisible && (
+            {!settingsLoaded ? (
+              <div className="h-6 w-24 bg-muted/50 rounded animate-pulse" />
+            ) : siteNameVisible && siteName && (
               <span 
                 className="text-xl font-bold"
                 style={{

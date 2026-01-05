@@ -37,6 +37,7 @@ export function Footer() {
   const { language, t } = useLanguage();
   const [settings, setSettings] = useState<SiteSettings>({});
   const [navPages, setNavPages] = useState<NavPage[]>([]);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -68,6 +69,7 @@ export function Footer() {
       });
       setSettings(settingsObj);
     }
+    setSettingsLoaded(true);
   };
 
   const loadNavigationPages = async () => {
@@ -205,12 +207,22 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand / About */}
           <div>
-            <h3 className="text-xl font-bold text-primary mb-4">
-              {settings.site_name || 'Star Gym'}
-            </h3>
-            <p className="text-muted-foreground text-sm">
-              {settings.footer_tagline || defaultTagline}
-            </p>
+            {!settingsLoaded ? (
+              <>
+                <div className="h-7 w-32 bg-muted/50 rounded animate-pulse mb-4" />
+                <div className="h-4 w-full bg-muted/50 rounded animate-pulse" />
+                <div className="h-4 w-3/4 bg-muted/50 rounded animate-pulse mt-2" />
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-bold text-primary mb-4">
+                  {settings.site_name || 'Star Gym'}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {settings.footer_tagline || defaultTagline}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Quick Links - Same as Navigation */}
