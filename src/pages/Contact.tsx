@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { MapPin, Phone, Clock } from 'lucide-react';
+import { MapPin, Phone, Clock, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -33,11 +33,22 @@ const contactSchema = z.object({
     .max(1000, { message: 'Message must be less than 1000 characters' }),
 });
 
+interface SiteSettings {
+  contact_email?: string;
+  contact_phone?: string;
+  contact_address?: string;
+  working_hours?: string;
+  facebook_url?: string;
+  instagram_url?: string;
+  twitter_url?: string;
+}
+
 export default function Contact() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -63,7 +74,31 @@ export default function Contact() {
       }
     };
 
+    const fetchSiteSettings = async () => {
+      const { data } = await supabase
+        .from('site_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', [
+          'contact_email',
+          'contact_phone',
+          'contact_address',
+          'working_hours',
+          'facebook_url',
+          'instagram_url',
+          'twitter_url'
+        ]);
+
+      if (data) {
+        const settings: SiteSettings = {};
+        data.forEach((item) => {
+          settings[item.setting_key as keyof SiteSettings] = item.setting_value || '';
+        });
+        setSiteSettings(settings);
+      }
+    };
+
     checkUser();
+    fetchSiteSettings();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
@@ -125,6 +160,8 @@ export default function Contact() {
       setLoading(false);
     }
   };
+
+  const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url;
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,47 +234,123 @@ export default function Contact() {
             </Card>
 
             <div className="space-y-6">
-              <Card className="bg-gradient-card border-border">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
-                      <p className="text-muted-foreground">
-                        123 Fitness Street<br />
-                        Athens, 10431<br />
-                        Greece
-                      </p>
+              {siteSettings.contact_address && (
+                <Card className="bg-gradient-card border-border">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
+                        <p className="text-muted-foreground whitespace-pre-line">
+                          {siteSettings.contact_address}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="bg-gradient-card border-border">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold mb-2">Phone</h3>
-                      <p className="text-muted-foreground">+30 210 123 4567</p>
-                      <p className="text-muted-foreground">info@stargym.gr</p>
+              {(siteSettings.contact_phone || siteSettings.contact_email) && (
+                <Card className="bg-gradient-card border-border">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <h3 className="font-semibold mb-2">{t('contact.phone')}</h3>
+                        {siteSettings.contact_phone && (
+                          <p className="text-muted-foreground">
+                            <a href={`tel:${siteSettings.contact_phone}`} className="hover:text-primary transition-colors">
+                              {siteSettings.contact_phone}
+                            </a>
+                          </p>
+                        )}
+                        {siteSettings.contact_email && (
+                          <p className="text-muted-foreground">
+                            <a href={`mailto:${siteSettings.contact_email}`} className="hover:text-primary transition-colors">
+                              {siteSettings.contact_email}
+                            </a>
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="bg-gradient-card border-border">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Clock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                    <div>
-                      <h3 className="font-semibold mb-2">{t('contact.hours')}</h3>
-                      <p className="text-muted-foreground">Monday - Friday: 6:00 AM - 11:00 PM</p>
-                      <p className="text-muted-foreground">Saturday - Sunday: 8:00 AM - 9:00 PM</p>
+              {siteSettings.working_hours && (
+                <Card className="bg-gradient-card border-border">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                      <Clock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <h3 className="font-semibold mb-2">{t('contact.hours')}</h3>
+                        <p className="text-muted-foreground whitespace-pre-line">
+                          {siteSettings.working_hours}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {hasSocialLinks && (
+                <Card className="bg-gradient-card border-border">
+                  <CardContent className="pt-6">
+                    <h3 className="font-semibold mb-4">Social Media</h3>
+                    <div className="flex gap-4">
+                      {siteSettings.facebook_url && (
+                        <a
+                          href={siteSettings.facebook_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Facebook className="h-5 w-5" />
+                        </a>
+                      )}
+                      {siteSettings.instagram_url && (
+                        <a
+                          href={siteSettings.instagram_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Instagram className="h-5 w-5" />
+                        </a>
+                      )}
+                      {siteSettings.twitter_url && (
+                        <a
+                          href={siteSettings.twitter_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        >
+                          <Twitter className="h-5 w-5" />
+                        </a>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Fallback if no settings configured */}
+              {!siteSettings.contact_address && !siteSettings.contact_phone && !siteSettings.contact_email && !siteSettings.working_hours && (
+                <>
+                  <Card className="bg-gradient-card border-border">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-4">
+                        <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                        <div>
+                          <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
+                          <p className="text-muted-foreground">
+                            Ρυθμίστε τη διεύθυνση στο Page Builder → Site Settings → Επικοινωνία
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </div>
         </div>
