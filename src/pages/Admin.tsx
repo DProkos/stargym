@@ -116,16 +116,16 @@ export default function Admin() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
+        <div className="flex-1 overflow-x-hidden">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">{t('admin.dashboard')}</h1>
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold">{t('admin.dashboard')}</h1>
           </header>
 
-          <main className="p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <main className="p-3 sm:p-6">
+            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <div className="text-center mb-4 sm:mb-8">
+            <h1 className="text-2xl sm:text-5xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('dashboard.overview')}
             </h1>
           </div>
@@ -133,47 +133,47 @@ export default function Admin() {
           {/* Recent Activity Widget */}
           <RecentActivityWidget />
 
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
             <Card className="bg-gradient-card border-border">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.members')}</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.members')}</CardTitle>
                 <Users className="h-4 w-4 text-primary" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.members}</div>
+              <CardContent className="p-3 sm:p-6 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{stats.members}</div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-card border-border">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.classes')}</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.classes')}</CardTitle>
                 <Calendar className="h-4 w-4 text-primary" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.classes}</div>
+              <CardContent className="p-3 sm:p-6 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{stats.classes}</div>
               </CardContent>
             </Card>
 
             <Card className="bg-gradient-card border-border">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.bookings')}</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 sm:p-6">
+                <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.bookings')}</CardTitle>
                 <BookOpen className="h-4 w-4 text-primary" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.bookings}</div>
+              <CardContent className="p-3 sm:p-6 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{stats.bookings}</div>
               </CardContent>
             </Card>
           </div>
 
           <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full md:w-auto grid-cols-4">
-              <TabsTrigger value="calendar" className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Calendar
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+              <TabsTrigger value="calendar" className="flex items-center gap-1 text-xs sm:text-sm px-1 sm:px-3 py-2">
+                <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Calendar</span>
               </TabsTrigger>
-              <TabsTrigger value="members">{t('dashboard.members')}</TabsTrigger>
-              <TabsTrigger value="classes">{t('dashboard.classes')}</TabsTrigger>
-              <TabsTrigger value="bookings">{t('dashboard.bookings')}</TabsTrigger>
+              <TabsTrigger value="members" className="text-xs sm:text-sm px-1 sm:px-3 py-2">{t('dashboard.members')}</TabsTrigger>
+              <TabsTrigger value="classes" className="text-xs sm:text-sm px-1 sm:px-3 py-2">{t('dashboard.classes')}</TabsTrigger>
+              <TabsTrigger value="bookings" className="text-xs sm:text-sm px-1 sm:px-3 py-2">{t('dashboard.bookings')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="calendar" className="mt-6">

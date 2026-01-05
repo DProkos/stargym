@@ -141,7 +141,7 @@ function HeroSection({
     : {};
 
   return (
-    <section ref={sectionRef} className={`pt-32 pb-20 px-4 relative overflow-hidden ${bgClass}`}>
+    <section ref={sectionRef} className={`pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden ${bgClass}`}>
       {section.image_url && (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
           <img 
@@ -166,9 +166,9 @@ function HeroSection({
           )}
         </div>
       )}
-      <div className="container mx-auto relative z-10 text-center">
+      <div className="container mx-auto relative z-10 text-center px-2 sm:px-4">
         <h1 
-          className={`${titleSize} font-bold mb-6 opacity-0 ${titleAnimation} ${
+          className={`${titleSize} font-bold mb-4 sm:mb-6 opacity-0 ${titleAnimation} ${
             neonEnabled 
               ? `neon-text-${neonColor} neon-${neonIntensity}` 
               : 'bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent'
@@ -181,7 +181,7 @@ function HeroSection({
           {title}
         </h1>
         <p 
-          className={`${subtitleSize} text-muted-foreground mb-8 max-w-2xl mx-auto opacity-0 ${subtitleAnimation}`}
+          className={`${subtitleSize} text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto opacity-0 ${subtitleAnimation} px-2`}
           style={{ 
             '--hero-duration': animationDuration,
             animationDelay: `${staggerDelay}ms`
@@ -385,25 +385,25 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
   const subtitle = getSubtitle();
   const content = getContent();
 
-  // Helper function for hero title size
+  // Helper function for hero title size - mobile optimized
   const getTitleSizeClass = (size: string) => {
     switch (size) {
-      case 'small': return 'text-3xl md:text-4xl';
-      case 'medium': return 'text-4xl md:text-5xl';
-      case 'large': return 'text-5xl md:text-7xl';
-      case 'xlarge': return 'text-6xl md:text-8xl';
-      default: return 'text-5xl md:text-7xl';
+      case 'small': return 'text-2xl sm:text-3xl md:text-4xl';
+      case 'medium': return 'text-3xl sm:text-4xl md:text-5xl';
+      case 'large': return 'text-3xl sm:text-5xl md:text-7xl';
+      case 'xlarge': return 'text-4xl sm:text-6xl md:text-8xl';
+      default: return 'text-3xl sm:text-5xl md:text-7xl';
     }
   };
 
-  // Helper function for hero subtitle size
+  // Helper function for hero subtitle size - mobile optimized
   const getSubtitleSizeClass = (size: string) => {
     switch (size) {
-      case 'small': return 'text-base md:text-lg';
-      case 'medium': return 'text-lg md:text-xl';
-      case 'large': return 'text-xl md:text-2xl';
-      case 'xlarge': return 'text-2xl md:text-3xl';
-      default: return 'text-xl md:text-2xl';
+      case 'small': return 'text-sm sm:text-base md:text-lg';
+      case 'medium': return 'text-base sm:text-lg md:text-xl';
+      case 'large': return 'text-lg sm:text-xl md:text-2xl';
+      case 'xlarge': return 'text-xl sm:text-2xl md:text-3xl';
+      default: return 'text-base sm:text-xl md:text-2xl';
     }
   };
 
@@ -532,25 +532,25 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
     case 'features':
       const features = section.settings?.features || [];
       return (
-        <section className={`py-20 px-4 ${bgClass}`}>
+        <section className={`py-12 sm:py-20 px-4 ${bgClass}`}>
           <div className="container mx-auto">
             {(title || subtitle) && (
-              <div className="text-center mb-16">
-                {title && <h2 className="text-4xl font-bold mb-4">{title}</h2>}
-                {subtitle && <p className="text-xl text-muted-foreground">{subtitle}</p>}
+              <div className="text-center mb-8 sm:mb-16">
+                {title && <h2 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4">{title}</h2>}
+                {subtitle && <p className="text-base sm:text-xl text-muted-foreground">{subtitle}</p>}
               </div>
             )}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8">
               {features.map((feature: any, index: number) => {
                 const Icon = ICONS[feature.icon] || Star;
                 return (
                   <div 
                     key={index} 
-                    className="bg-gradient-card p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon"
+                    className="bg-gradient-card p-4 sm:p-8 rounded-lg border border-border hover:border-primary transition-all duration-300 hover:shadow-neon"
                   >
-                    <Icon className="h-12 w-12 text-primary mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">{getFeatureTitle(feature)}</h3>
-                    <p className="text-muted-foreground">{getFeatureDescription(feature)}</p>
+                    <Icon className="h-8 w-8 sm:h-12 sm:w-12 text-primary mb-2 sm:mb-4" />
+                    <h3 className="text-sm sm:text-xl font-semibold mb-1 sm:mb-2">{getFeatureTitle(feature)}</h3>
+                    <p className="text-xs sm:text-base text-muted-foreground">{getFeatureDescription(feature)}</p>
                   </div>
                 );
               })}
@@ -561,11 +561,11 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
 
     case 'cta':
       return (
-        <section className={`py-20 px-4 ${bgClass}`}>
+        <section className={`py-12 sm:py-20 px-4 ${bgClass}`}>
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">{title}</h2>
+            <h2 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6">{title}</h2>
             {subtitle && (
-              <p className="text-xl text-muted-foreground mb-8">{subtitle}</p>
+              <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-8">{subtitle}</p>
             )}
             {section.settings?.button_text && (
               <Button size="lg" className="shadow-neon-strong" asChild>
