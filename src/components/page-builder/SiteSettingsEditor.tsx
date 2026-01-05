@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid } from 'lucide-react';
 
 interface SiteSetting {
@@ -56,11 +58,46 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               <CardDescription>Το όνομα που εμφανίζεται στο navigation</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Εμφάνιση Τίτλου</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Εμφάνιση/απόκρυψη του ονόματος στο navigation
+                  </p>
+                </div>
+                <Switch
+                  checked={getSetting('site_name_visible') !== 'false'}
+                  onCheckedChange={(checked) => onUpdate('site_name_visible', checked.toString())}
+                />
+              </div>
+              
               <Input
                 value={getSetting('site_name')}
                 onChange={(e) => onUpdate('site_name', e.target.value)}
                 placeholder="Star Gym"
               />
+              
+              <div className="space-y-2 pt-4 border-t">
+                <Label>Γραμματοσειρά Τίτλου</Label>
+                <Select
+                  value={getSetting('site_name_font') || 'default'}
+                  onValueChange={(value) => onUpdate('site_name_font', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Επιλέξτε γραμματοσειρά" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default (System)</SelectItem>
+                    <SelectItem value="Bebas Neue">Bebas Neue</SelectItem>
+                    <SelectItem value="Montserrat">Montserrat</SelectItem>
+                    <SelectItem value="Oswald">Oswald</SelectItem>
+                    <SelectItem value="Playfair Display">Playfair Display</SelectItem>
+                    <SelectItem value="Poppins">Poppins</SelectItem>
+                    <SelectItem value="Roboto">Roboto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="space-y-2 pt-4 border-t">
                 <Label>Χρώμα Τίτλου</Label>
                 <div className="flex gap-2">
