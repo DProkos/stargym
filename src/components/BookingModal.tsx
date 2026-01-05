@@ -243,7 +243,7 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
           user_id: userId,
           class_id: classItem.id,
           booking_date: bookingDate.toISOString().split('T')[0],
-          status: 'confirmed',
+          status: 'pending', // Κράτηση σε αναμονή έγκρισης από τον trainer
         });
       }
 
@@ -255,7 +255,7 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
         .eq('user_id', userId)
         .eq('class_id', classItem.id)
         .in('booking_date', bookingDates)
-        .eq('status', 'confirmed');
+        .in('status', ['confirmed', 'pending']);
 
       if (existingBookings && existingBookings.length > 0) {
         const existingDates = existingBookings.map(b => 
@@ -313,8 +313,8 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
       if (error) throw error;
 
       const successMessage = isRecurring 
-        ? `Επιτυχής κράτηση για ${weeks} εβδομάδες!`
-        : 'Your booking has been confirmed successfully';
+        ? `Η κράτηση για ${weeks} εβδομάδες υποβλήθηκε! Αναμένει έγκριση από τον trainer.`
+        : 'Η κράτησή σας υποβλήθηκε! Αναμένει έγκριση από τον trainer.';
 
       // Fire confetti celebration
       fireConfetti();
