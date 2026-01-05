@@ -1,0 +1,171 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://esm.sh/zod@3.25.76';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+const contactFormSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email().max(255),
+  phone: z.string().max(20).optional(),
+  message: z.string().min(10).max(1000),
+});
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Validate input
+    const requestBody = await req.json();
+    const validationResult = contactFormSchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      console.error('Validation failed:', validationResult.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validationResult.error.format() }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { name, email, phone, message } = validationResult.data;
+
+    // Get recipient email from settings
+    const { data: recipientSetting, error: settingError } = await supabase
+      .from('app_settings')
+      .select('setting_value')
+      .eq('setting_key', 'contact_form_recipient_email')
+      .maybeSingle();
+
+    if (settingError) {
+      console.error('Error fetching recipient email:', settingError);
+      return new Response(
+        JSON.stringify({ error: 'Configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const recipientEmail = recipientSetting?.setting_value;
+    
+    if (!recipientEmail) {
+      console.error('Contact form recipient email not configured');
+      return new Response(
+        JSON.stringify({ error: 'Contact form recipient not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Sending contact form from ${name} (${email}) to ${recipientEmail}`);
+
+    // Build email HTML
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; background-color: #0d0d0d; color: #fff8e1; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #141414; border-radius: 12px; overflow: hidden; border: 1px solid #4a3d1d; }
+          .header { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 30px; text-align: center; }
+          .header h1 { color: #0d0d0d; margin: 0; font-size: 24px; }
+          .content { padding: 30px; }
+          .field { margin-bottom: 20px; }
+          .label { color: #FFD700; font-weight: bold; margin-bottom: 5px; display: block; }
+          .value { color: #fff8e1; padding: 10px; background-color: #1a1a1a; border-radius: 8px; border-left: 3px solid #FFD700; }
+          .message-value { white-space: pre-wrap; }
+          .footer { padding: 20px; text-align: center; border-top: 1px solid #4a3d1d; color: #a89a6d; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>📩 Νέο Μήνυμα Επικοινωνίας</h1>
+          </div>
+          <div class="content">
+            <div class="field">
+              <span class="label">Όνομα:</span>
+              <div class="value">${name}</div>
+            </div>
+            <div class="field">
+              <span class="label">Email:</span>
+              <div class="value"><a href="mailto:${email}" style="color: #FFD700;">${email}</a></div>
+            </div>
+            ${phone ? `
+            <div class="field">
+              <span class="label">Τηλέφωνο:</span>
+              <div class="value"><a href="tel:${phone}" style="color: #FFD700;">${phone}</a></div>
+            </div>
+            ` : ''}
+            <div class="field">
+              <span class="label">Μήνυμα:</span>
+              <div class="value message-value">${message}</div>
+            </div>
+          </div>
+          <div class="footer">
+            Αυτό το email στάλθηκε από τη φόρμα επικοινωνίας του website σας.
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+Νέο Μήνυμα Επικοινωνίας
+
+Όνομα: ${name}
+Email: ${email}
+${phone ? `Τηλέφωνο: ${phone}` : ''}
+
+Μήνυμα:
+${message}
+
+---
+Αυτό το email στάλθηκε από τη φόρμα επικοινωνίας του website σας.
+    `;
+
+    // Call the send-email function internally
+    const { error: emailError } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: recipientEmail,
+        subject: `Νέο μήνυμα από ${name}`,
+        html: htmlContent,
+        text: textContent,
+      },
+      headers: {
+        'X-Internal-Call': 'true',
+      },
+    });
+
+    if (emailError) {
+      console.error('Error sending email:', emailError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send email', details: emailError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Contact form email sent successfully');
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Message sent successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    console.error('Error processing contact form:', error.message, error.stack);
+    return new Response(
+      JSON.stringify({ error: 'Failed to process contact form', details: error.message }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+});

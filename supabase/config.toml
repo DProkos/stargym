@@ -53,3 +53,9 @@ verify_jwt = true
 
 [functions.reset-password-with-token]
 verify_jwt = false
+
+[functions.send-contact-form]
+verify_jwt = false
+
+[functions.send-password-change-code]
+verify_jwt = true

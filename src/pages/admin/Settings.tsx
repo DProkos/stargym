@@ -73,6 +73,9 @@ export default function Settings() {
   const [authSettings, setAuthSettings] = useState({
     signupEnabled: true,
   });
+  const [contactSettings, setContactSettings] = useState({
+    recipientEmail: '',
+  });
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
@@ -105,6 +108,7 @@ export default function Settings() {
       loadRecaptchaSettings();
       loadSmtpSettings();
       loadAuthSettings();
+      loadContactSettings();
       loadNewsletterSubscribers();
       loadCampaigns();
       loadEmailTemplates();
@@ -257,6 +261,46 @@ export default function Settings() {
     setAuthSettings({
       signupEnabled: data?.setting_value !== 'false',
     });
+  };
+
+  const loadContactSettings = async () => {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .eq('setting_key', 'contact_form_recipient_email')
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to load contact settings:', error);
+      return;
+    }
+
+    setContactSettings({
+      recipientEmail: data?.setting_value || '',
+    });
+  };
+
+  const handleSaveContactSettings = async () => {
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert(
+          { 
+            setting_key: 'contact_form_recipient_email', 
+            setting_value: contactSettings.recipientEmail,
+            is_sensitive: false,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'setting_key' }
+        );
+
+      if (error) throw error;
+
+      toast.success('Οι ρυθμίσεις φόρμας επικοινωνίας αποθηκεύτηκαν');
+    } catch (error) {
+      console.error('Failed to save contact settings:', error);
+      toast.error('Αποτυχία αποθήκευσης ρυθμίσεων');
+    }
   };
 
   const loadNewsletterSubscribers = async () => {
@@ -637,12 +681,13 @@ Test Email - ${editingTemplate.name}
 
           <div className="p-6">
             <Tabs defaultValue="memberships" className="space-y-4">
-              <TabsList>
+              <TabsList className="flex-wrap">
                 <TabsTrigger value="memberships">Membership Tiers</TabsTrigger>
                 <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
                 <TabsTrigger value="stripe">Stripe Settings</TabsTrigger>
                 <TabsTrigger value="recaptcha">reCAPTCHA Settings</TabsTrigger>
                 <TabsTrigger value="smtp">SMTP Settings</TabsTrigger>
+                <TabsTrigger value="contact">Φόρμα Επικοινωνίας</TabsTrigger>
                 <TabsTrigger value="auth">Authentication</TabsTrigger>
                 <TabsTrigger value="email-templates">Email Templates</TabsTrigger>
                 <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
@@ -939,6 +984,32 @@ Test Email - ${editingTemplate.name}
                         Το test email θα σταλεί στο: <strong>{userEmail}</strong>
                       </p>
                     )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="contact" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Ρυθμίσεις Φόρμας Επικοινωνίας</CardTitle>
+                    <CardDescription>
+                      Ορίστε το email στο οποίο θα αποστέλλονται τα μηνύματα από τη φόρμα επικοινωνίας
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Email Παραλήπτη</Label>
+                      <Input
+                        type="email"
+                        placeholder="info@yourgym.com"
+                        value={contactSettings.recipientEmail}
+                        onChange={(e) => setContactSettings({ ...contactSettings, recipientEmail: e.target.value })}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Τα μηνύματα που υποβάλλονται μέσω της φόρμας επικοινωνίας θα αποστέλλονται σε αυτό το email
+                      </p>
+                    </div>
+                    <Button onClick={handleSaveContactSettings}>Αποθήκευση</Button>
                   </CardContent>
                 </Card>
               </TabsContent>
