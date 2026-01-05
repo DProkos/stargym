@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import Classes from "./pages/Classes";
+
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import MyBookings from "./pages/MyBookings";
@@ -57,7 +57,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/classes" element={<Classes />} />
+          
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/memberships" element={<Memberships />} />
