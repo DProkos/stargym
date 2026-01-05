@@ -42,6 +42,29 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Show skeleton while loading to prevent flash
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navigation user={user} isAdmin={isAdmin} />
+        <main className="flex-grow">
+          {/* Hero Skeleton */}
+          <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+            <div className="container mx-auto relative z-10 text-center">
+              <div className="h-16 md:h-24 w-3/4 mx-auto mb-6 rounded-lg page-skeleton" />
+              <div className="h-6 md:h-8 w-1/2 mx-auto mb-8 rounded page-skeleton" />
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="h-12 w-40 rounded-lg page-skeleton" />
+                <div className="h-12 w-40 rounded-lg page-skeleton" />
+              </div>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   // If there are dynamic sections, use them
   if (sections.length > 0) {
     return (
