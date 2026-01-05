@@ -21,6 +21,7 @@ interface PageSection {
   settings: any;
   sort_order: number;
   is_visible: boolean;
+  updated_at?: string;
 }
 
 interface SiteSetting {

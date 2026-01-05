@@ -52,6 +52,7 @@ interface PageSection {
   text_color: string;
   settings: any;
   is_visible: boolean;
+  updated_at?: string;
 }
 
 interface DynamicSectionProps {
@@ -61,6 +62,13 @@ interface DynamicSectionProps {
 
 const ICONS: Record<string, any> = {
   Dumbbell, Users, Award, Clock, Star, Heart, Zap, Target, Trophy, Flame
+};
+
+const withCacheBust = (url: string | null, version?: string | null) => {
+  if (!url) return url;
+  if (!version) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${encodeURIComponent(version)}`;
 };
 
 // Hero Section Component with Parallax and Neon
@@ -137,7 +145,7 @@ function HeroSection({
       {section.image_url && (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
           <img 
-            src={section.image_url} 
+            src={withCacheBust(section.image_url, section.updated_at)}
             alt="" 
             className={`w-full h-full ${imagePosition} transition-transform duration-100`}
             style={{ 
@@ -591,9 +599,10 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
             {title && <h2 className="text-3xl font-bold mb-6 text-center">{title}</h2>}
             {section.image_url && (
               <img 
-                src={section.image_url} 
+                src={withCacheBust(section.image_url, section.updated_at)}
                 alt={title || ''} 
                 className="w-full rounded-lg shadow-lg"
+                loading="lazy"
               />
             )}
           </div>
@@ -646,9 +655,13 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       const galleryImages = section.settings?.images || [];
       // Filter out images with no src
       const validImages = galleryImages.filter((img: { src: string; alt: string }) => img.src);
+      const cacheBustedImages = validImages.map((img: { src: string; alt: string }) => ({
+        ...img,
+        src: withCacheBust(img.src, section.updated_at) || img.src,
+      }));
       return (
         <GymGallery3D 
-          images={validImages}
+          images={cacheBustedImages}
           title={title}
           subtitle={subtitle}
         />
