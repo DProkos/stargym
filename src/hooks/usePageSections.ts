@@ -29,11 +29,14 @@ interface SiteSetting {
 }
 
 export function usePageSections(pageKey: string) {
-  const [sections, setSections] = useState<PageSection[]>([]);
+  const [sections, setSections] = useState<PageSection[] | null>(null);
   const [siteSettings, setSiteSettings] = useState<SiteSetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const loadData = async () => {
       setLoading(true);
       
@@ -49,8 +52,12 @@ export function usePageSections(pageKey: string) {
           .select('setting_key, setting_value')
       ]);
 
+      if (!isMounted) return;
+
       if (sectionsResult.data) {
         setSections(sectionsResult.data);
+      } else {
+        setSections([]);
       }
       
       if (settingsResult.data) {
@@ -58,14 +65,25 @@ export function usePageSections(pageKey: string) {
       }
       
       setLoading(false);
+      setIsInitialized(true);
     };
 
     loadData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [pageKey]);
 
   const getSetting = (key: string) => {
     return siteSettings.find(s => s.setting_key === key)?.setting_value || '';
   };
 
-  return { sections, siteSettings, loading, getSetting };
+  // Return loading true until we have fetched at least once
+  return { 
+    sections: sections || [], 
+    siteSettings, 
+    loading: loading || !isInitialized, 
+    getSetting 
+  };
 }
