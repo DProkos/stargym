@@ -41,7 +41,6 @@ export function AppSidebarCustomer() {
 
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
-    { title: 'Browse Classes', url: "/classes", icon: Search },
     { title: t('booking.myBookings'), url: "/customer/bookings", icon: Calendar },
     { title: t('nav.profile'), url: "/customer/profile", icon: User },
   ];
