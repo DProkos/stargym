@@ -16,7 +16,10 @@ import {
   Flame,
   MapPin,
   Phone,
-  Check
+  Check,
+  Facebook,
+  Instagram,
+  Twitter
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GymGallery3D from '@/components/GymGallery3D';
@@ -466,6 +469,72 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                 className="w-full"
                 title={title || '3D Virtual Tour'}
               />
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'social':
+      const facebookUrl = getSetting('facebook_url');
+      const instagramUrl = getSetting('instagram_url');
+      const twitterUrl = getSetting('twitter_url');
+      const hasSocial = facebookUrl || instagramUrl || twitterUrl;
+
+      if (!hasSocial) {
+        return (
+          <section className={`py-16 px-4 ${bgClass}`}>
+            <div className="container mx-auto text-center">
+              <p className="text-muted-foreground">
+                Ρυθμίστε τα social media στο Page Builder → Ρυθμίσεις Site → Επικοινωνία
+              </p>
+            </div>
+          </section>
+        );
+      }
+
+      return (
+        <section className={`py-16 px-4 ${bgClass}`}>
+          <div className="container mx-auto">
+            {(title || subtitle) && (
+              <div className="text-center mb-8">
+                {title && <h2 className="text-3xl font-bold mb-2">{title}</h2>}
+                {subtitle && <p className="text-xl text-muted-foreground">{subtitle}</p>}
+              </div>
+            )}
+            <div className="flex justify-center gap-6">
+              {facebookUrl && (
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-8 w-8" />
+                </a>
+              )}
+              {instagramUrl && (
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-8 w-8" />
+                </a>
+              )}
+              {twitterUrl && (
+                <a
+                  href={twitterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="h-8 w-8" />
+                </a>
+              )}
             </div>
           </div>
         </section>
