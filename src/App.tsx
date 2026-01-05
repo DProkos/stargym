@@ -62,6 +62,9 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/memberships" element={<Memberships />} />
           <Route path="/virtual-tour" element={<DynamicPage pageKeyOverride="virtual-tour" />} />
+          
+          {/* Dynamic pages from Page Builder */}
+          <Route path="/page/:pageKey" element={<DynamicPage />} />
             
             {/* Customer routes */}
             <Route path="/customer/*" element={
