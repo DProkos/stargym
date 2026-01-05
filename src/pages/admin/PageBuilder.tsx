@@ -27,7 +27,8 @@ import {
   FilePlus,
   Package,
   Layers,
-  Navigation
+  Navigation,
+  RefreshCw
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -500,6 +501,25 @@ export default function PageBuilder() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs sm:text-sm" 
+                  onClick={() => {
+                    // Force reload all assets by clearing caches
+                    if ('caches' in window) {
+                      caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                      });
+                    }
+                    // Reload with cache bypass
+                    window.location.reload();
+                    toast.success('Cache cleared - reloading...');
+                  }}
+                >
+                  <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Clear</span> Cache
+                </Button>
                 <Button variant="default" size="sm" className="text-xs sm:text-sm" onClick={() => setShowPreview(!showPreview)}>
                   <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Live</span> Edit
