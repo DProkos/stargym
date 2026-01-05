@@ -79,25 +79,47 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "hero-fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "hero-fade-up": {
+          "0%": { opacity: "0", transform: "translateY(30px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "hero-fade-down": {
+          "0%": { opacity: "0", transform: "translateY(-30px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "hero-scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.9)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "hero-slide-left": {
+          "0%": { opacity: "0", transform: "translateX(50px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "hero-slide-right": {
+          "0%": { opacity: "0", transform: "translateX(-50px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "hero-fade-in": "hero-fade-in var(--hero-duration, 0.5s) ease-out forwards",
+        "hero-fade-up": "hero-fade-up var(--hero-duration, 0.5s) ease-out forwards",
+        "hero-fade-down": "hero-fade-down var(--hero-duration, 0.5s) ease-out forwards",
+        "hero-scale-in": "hero-scale-in var(--hero-duration, 0.5s) ease-out forwards",
+        "hero-slide-left": "hero-slide-left var(--hero-duration, 0.5s) ease-out forwards",
+        "hero-slide-right": "hero-slide-right var(--hero-duration, 0.5s) ease-out forwards",
       },
     },
   },
