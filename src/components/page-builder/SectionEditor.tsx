@@ -1034,6 +1034,44 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="font-medium mb-3">Parallax Effect</h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Parallax Εικόνας</Label>
+                      <Select
+                        value={localSettings.parallax_enabled ? 'true' : 'false'}
+                        onValueChange={(value) => updateSettings('parallax_enabled', value === 'true')}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="false">Απενεργοποιημένο</SelectItem>
+                          <SelectItem value="true">Ενεργοποιημένο</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Ένταση Parallax</Label>
+                      <Select
+                        value={localSettings.parallax_intensity || 'medium'}
+                        onValueChange={(value) => updateSettings('parallax_intensity', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="subtle">Ελαφρύ (0.1)</SelectItem>
+                          <SelectItem value="medium">Μεσαίο (0.3)</SelectItem>
+                          <SelectItem value="strong">Έντονο (0.5)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </>
               )}
             </div>

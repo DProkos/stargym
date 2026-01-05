@@ -1,7 +1,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Dumbbell, 
@@ -62,6 +62,141 @@ interface DynamicSectionProps {
 const ICONS: Record<string, any> = {
   Dumbbell, Users, Award, Clock, Star, Heart, Zap, Target, Trophy, Flame
 };
+
+// Hero Section Component with Parallax
+function HeroSection({
+  section,
+  bgClass,
+  titleSize,
+  subtitleSize,
+  imagePosition,
+  imageSize,
+  overlayEnabled,
+  overlayColor,
+  overlayOpacity,
+  titleAnimation,
+  subtitleAnimation,
+  buttonsAnimation,
+  animationDuration,
+  staggerDelay,
+  parallaxEnabled,
+  parallaxFactor,
+  title,
+  subtitle,
+}: {
+  section: PageSection;
+  bgClass: string;
+  titleSize: string;
+  subtitleSize: string;
+  imagePosition: string;
+  imageSize: string;
+  overlayEnabled: boolean;
+  overlayColor: string;
+  overlayOpacity: number;
+  titleAnimation: string;
+  subtitleAnimation: string;
+  buttonsAnimation: string;
+  animationDuration: string;
+  staggerDelay: number;
+  parallaxEnabled: boolean;
+  parallaxFactor: number;
+  title: string;
+  subtitle: string;
+}) {
+  const [scrollY, setScrollY] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!parallaxEnabled) return;
+
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+          setScrollY(window.scrollY);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [parallaxEnabled]);
+
+  const parallaxStyle = parallaxEnabled
+    ? { transform: `translateY(${scrollY * parallaxFactor}px)` }
+    : {};
+
+  return (
+    <section ref={sectionRef} className={`pt-32 pb-20 px-4 relative overflow-hidden ${bgClass}`}>
+      {section.image_url && (
+        <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
+          <img 
+            src={section.image_url} 
+            alt="" 
+            className={`w-full h-full ${imagePosition} transition-transform duration-100`}
+            style={{ 
+              objectFit: imageSize as 'cover' | 'contain' | undefined,
+              ...parallaxStyle,
+              scale: parallaxEnabled ? '1.2' : '1'
+            }}
+          />
+          {overlayEnabled && (
+            <div 
+              className="absolute inset-0"
+              style={{ 
+                backgroundColor: overlayColor === 'dark' ? `rgba(0,0,0,${overlayOpacity/100})` 
+                  : overlayColor === 'light' ? `rgba(255,255,255,${overlayOpacity/100})`
+                  : `rgba(var(--primary-rgb, 139, 92, 246),${overlayOpacity/100})`
+              }}
+            />
+          )}
+        </div>
+      )}
+      <div className="container mx-auto relative z-10 text-center">
+        <h1 
+          className={`${titleSize} font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent opacity-0 ${titleAnimation}`}
+          style={{ 
+            '--hero-duration': animationDuration,
+            animationDelay: '0ms'
+          } as React.CSSProperties}
+        >
+          {title}
+        </h1>
+        <p 
+          className={`${subtitleSize} text-muted-foreground mb-8 max-w-2xl mx-auto opacity-0 ${subtitleAnimation}`}
+          style={{ 
+            '--hero-duration': animationDuration,
+            animationDelay: `${staggerDelay}ms`
+          } as React.CSSProperties}
+        >
+          {subtitle}
+        </p>
+        <div 
+          className={`flex flex-col sm:flex-row gap-4 justify-center opacity-0 ${buttonsAnimation}`}
+          style={{ 
+            '--hero-duration': animationDuration,
+            animationDelay: `${staggerDelay * 2}ms`
+          } as React.CSSProperties}
+        >
+          {section.settings?.button_text && (
+            <Button size="lg" className="shadow-neon-strong" asChild>
+              <Link to={section.settings.button_link || '/auth'}>
+                {section.settings.button_text}
+              </Link>
+            </Button>
+          )}
+          {section.settings?.button_text_2 && (
+            <Button size="lg" variant="secondary" asChild>
+              <Link to={section.settings.button_link_2 || '/classes'}>
+                {section.settings.button_text_2}
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 // Packages Section Component
 function PackagesSection({ 
@@ -318,72 +453,40 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       const buttonsAnimation = getAnimationClass(heroSettings.buttons_animation || 'fade-up');
       const animationDuration = getAnimationDuration(heroSettings.animation_speed || 'normal');
       const staggerDelay = parseInt(heroSettings.stagger_delay || '200');
+      
+      // Parallax settings
+      const parallaxEnabled = heroSettings.parallax_enabled === true;
+      const parallaxIntensity = heroSettings.parallax_intensity || 'medium';
+      const getParallaxFactor = () => {
+        switch (parallaxIntensity) {
+          case 'subtle': return 0.1;
+          case 'medium': return 0.3;
+          case 'strong': return 0.5;
+          default: return 0.3;
+        }
+      };
 
       return (
-        <section className={`pt-32 pb-20 px-4 relative overflow-hidden ${bgClass}`}>
-          {section.image_url && (
-            <div className="absolute inset-0">
-              <img 
-                src={section.image_url} 
-                alt="" 
-                className={`w-full h-full ${imagePosition}`}
-                style={{ objectFit: imageSize as 'cover' | 'contain' | undefined }}
-              />
-              {overlayEnabled && (
-                <div 
-                  className="absolute inset-0"
-                  style={{ 
-                    backgroundColor: overlayColor === 'dark' ? `rgba(0,0,0,${overlayOpacity/100})` 
-                      : overlayColor === 'light' ? `rgba(255,255,255,${overlayOpacity/100})`
-                      : `rgba(var(--primary-rgb, 139, 92, 246),${overlayOpacity/100})`
-                  }}
-                />
-              )}
-            </div>
-          )}
-          <div className="container mx-auto relative z-10 text-center">
-            <h1 
-              className={`${titleSize} font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent opacity-0 ${titleAnimation}`}
-              style={{ 
-                '--hero-duration': animationDuration,
-                animationDelay: '0ms'
-              } as React.CSSProperties}
-            >
-              {title}
-            </h1>
-            <p 
-              className={`${subtitleSize} text-muted-foreground mb-8 max-w-2xl mx-auto opacity-0 ${subtitleAnimation}`}
-              style={{ 
-                '--hero-duration': animationDuration,
-                animationDelay: `${staggerDelay}ms`
-              } as React.CSSProperties}
-            >
-              {subtitle}
-            </p>
-            <div 
-              className={`flex flex-col sm:flex-row gap-4 justify-center opacity-0 ${buttonsAnimation}`}
-              style={{ 
-                '--hero-duration': animationDuration,
-                animationDelay: `${staggerDelay * 2}ms`
-              } as React.CSSProperties}
-            >
-              {section.settings?.button_text && (
-                <Button size="lg" className="shadow-neon-strong" asChild>
-                  <Link to={section.settings.button_link || '/auth'}>
-                    {section.settings.button_text}
-                  </Link>
-                </Button>
-              )}
-              {section.settings?.button_text_2 && (
-                <Button size="lg" variant="secondary" asChild>
-                  <Link to={section.settings.button_link_2 || '/classes'}>
-                    {section.settings.button_text_2}
-                  </Link>
-                </Button>
-              )}
-            </div>
-          </div>
-        </section>
+        <HeroSection
+          section={section}
+          bgClass={bgClass}
+          titleSize={titleSize}
+          subtitleSize={subtitleSize}
+          imagePosition={imagePosition}
+          imageSize={imageSize}
+          overlayEnabled={overlayEnabled}
+          overlayColor={overlayColor}
+          overlayOpacity={overlayOpacity}
+          titleAnimation={titleAnimation}
+          subtitleAnimation={subtitleAnimation}
+          buttonsAnimation={buttonsAnimation}
+          animationDuration={animationDuration}
+          staggerDelay={staggerDelay}
+          parallaxEnabled={parallaxEnabled}
+          parallaxFactor={getParallaxFactor()}
+          title={title}
+          subtitle={subtitle}
+        />
       );
 
     case 'header':
