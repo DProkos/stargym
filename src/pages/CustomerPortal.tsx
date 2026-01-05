@@ -48,6 +48,7 @@ export default function CustomerPortal() {
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allBookings, setAllBookings] = useState<{ class_id: string; booking_date: string; status: string }[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -62,6 +63,7 @@ export default function CustomerPortal() {
         setUser(session.user);
         loadBookings(session.user.id);
         loadClasses();
+        loadAllBookings();
       }
     };
 
@@ -122,6 +124,26 @@ export default function CustomerPortal() {
     }
   };
 
+  const loadAllBookings = async () => {
+    // Load all bookings (not just user's) to calculate available spots
+    const { data } = await supabase
+      .from('bookings')
+      .select('class_id, booking_date, status')
+      .in('status', ['confirmed', 'pending']);
+
+    if (data) {
+      setAllBookings(data);
+    }
+  };
+
+  const getBookedCount = (classId: string, dateStr: string) => {
+    return allBookings.filter(b => 
+      b.class_id === classId && 
+      b.booking_date === dateStr &&
+      (b.status === 'confirmed' || b.status === 'pending')
+    ).length;
+  };
+
   const handleBookClass = (classItem: Class) => {
     setSelectedClass(classItem);
     setIsBookingModalOpen(true);
@@ -178,7 +200,7 @@ export default function CustomerPortal() {
         const endTime = new Date(startTime);
         endTime.setMinutes(endTime.getMinutes() + cls.duration_minutes);
 
-        // Check if already booked
+        // Check if already booked by user
         const isBooked = bookings.some(b => 
           b.class_id === cls.id && 
           b.booking_date === cls.specific_date &&
@@ -186,13 +208,16 @@ export default function CustomerPortal() {
         );
 
         if (!isBooked && startTime >= today) {
+          const bookedCount = getBookedCount(cls.id, cls.specific_date);
+          const availableSpots = cls.max_capacity - bookedCount;
+          
           events.push({
             id: `class-${cls.id}-${cls.specific_date}`,
-            title: `📅 ${cls.name}`,
+            title: `📅 ${cls.name} (${availableSpots}/${cls.max_capacity})`,
             start: startTime,
             end: endTime,
-            resource: { ...cls, type: 'class', eventDate: cls.specific_date },
-            status: 'available',
+            resource: { ...cls, type: 'class', eventDate: cls.specific_date, availableSpots },
+            status: availableSpots > 0 ? 'available' : 'full',
           });
         }
       } else if (cls.schedules && cls.schedules.length > 0) {
@@ -208,7 +233,7 @@ export default function CustomerPortal() {
               const endTime = new Date(startTime);
               endTime.setMinutes(endTime.getMinutes() + cls.duration_minutes);
 
-              // Check if already booked
+              // Check if already booked by user
               const isBooked = bookings.some(b => 
                 b.class_id === cls.id && 
                 b.booking_date === dateStr &&
@@ -216,13 +241,16 @@ export default function CustomerPortal() {
               );
 
               if (!isBooked) {
+                const bookedCount = getBookedCount(cls.id, dateStr);
+                const availableSpots = cls.max_capacity - bookedCount;
+                
                 events.push({
                   id: `class-${cls.id}-${schedule.id}-${dateStr}`,
-                  title: `📅 ${cls.name}`,
+                  title: `📅 ${cls.name} (${availableSpots}/${cls.max_capacity})`,
                   start: startTime,
                   end: endTime,
-                  resource: { ...cls, type: 'class', eventDate: dateStr, scheduleTime: schedule.time },
-                  status: 'available',
+                  resource: { ...cls, type: 'class', eventDate: dateStr, scheduleTime: schedule.time, availableSpots },
+                  status: availableSpots > 0 ? 'available' : 'full',
                 });
               }
             }
@@ -241,7 +269,7 @@ export default function CustomerPortal() {
             const endTime = new Date(startTime);
             endTime.setMinutes(endTime.getMinutes() + cls.duration_minutes);
 
-            // Check if already booked
+            // Check if already booked by user
             const isBooked = bookings.some(b => 
               b.class_id === cls.id && 
               b.booking_date === dateStr &&
@@ -249,13 +277,16 @@ export default function CustomerPortal() {
             );
 
             if (!isBooked) {
+              const bookedCount = getBookedCount(cls.id, dateStr);
+              const availableSpots = cls.max_capacity - bookedCount;
+              
               events.push({
                 id: `class-${cls.id}-${dateStr}`,
-                title: `📅 ${cls.name}`,
+                title: `📅 ${cls.name} (${availableSpots}/${cls.max_capacity})`,
                 start: startTime,
                 end: endTime,
-                resource: { ...cls, type: 'class', eventDate: dateStr },
-                status: 'available',
+                resource: { ...cls, type: 'class', eventDate: dateStr, availableSpots },
+                status: availableSpots > 0 ? 'available' : 'full',
               });
             }
           }
