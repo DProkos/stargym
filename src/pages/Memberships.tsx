@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { Navigation } from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
 import { useConfetti } from '@/hooks/useConfetti';
 
 interface MembershipTier {
@@ -121,64 +122,68 @@ export default function Memberships() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       
-      <section className="pt-32 pb-16">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">{t('memberships.title')}</h1>
-            <p className="text-xl text-muted-foreground">
-              {t('memberships.subtitle')}
-            </p>
-          </div>
+      <main className="flex-grow">
+        <section className="pt-32 pb-16">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold mb-4">{t('memberships.title')}</h1>
+              <p className="text-xl text-muted-foreground">
+                {t('memberships.subtitle')}
+              </p>
+            </div>
 
-          {loading ? (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {tiers.map((tier) => (
-                <Card 
-                  key={tier.id}
-                  className={currentSubscription === tier.id ? 'border-primary' : ''}
-                >
-                  <CardHeader>
-                    <CardTitle className="text-2xl">{tier.name}</CardTitle>
-                    <CardDescription>{tier.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-4xl font-bold">
-                      ${tier.price}
-                      <span className="text-lg font-normal text-muted-foreground">{t('memberships.perMonth')}</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {tier.features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleSubscribe(tier)}
-                      disabled={currentSubscription === tier.id}
-                    >
-                      {currentSubscription === tier.id ? t('memberships.currentPlan') : t('memberships.subscribe')}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+            {loading ? (
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                {tiers.map((tier) => (
+                  <Card 
+                    key={tier.id}
+                    className={currentSubscription === tier.id ? 'border-primary' : ''}
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-2xl">{tier.name}</CardTitle>
+                      <CardDescription>{tier.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-4xl font-bold">
+                        ${tier.price}
+                        <span className="text-lg font-normal text-muted-foreground">{t('memberships.perMonth')}</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {tier.features.map((feature, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        className="w-full"
+                        onClick={() => handleSubscribe(tier)}
+                        disabled={currentSubscription === tier.id}
+                      >
+                        {currentSubscription === tier.id ? t('memberships.currentPlan') : t('memberships.subscribe')}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }

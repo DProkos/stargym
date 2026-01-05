@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -176,244 +177,246 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {t('contact.title')}
-            </h1>
-            <p className="text-xl text-muted-foreground">{t('contact.subtitle')}</p>
-          </div>
+      <main className="flex-grow">
+        <section className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-16">
+              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {t('contact.title')}
+              </h1>
+              <p className="text-xl text-muted-foreground">{t('contact.subtitle')}</p>
+            </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="bg-gradient-card border-border">
-              <CardHeader>
-                <CardTitle>{t('contact.send')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">{t('contact.name')}</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="bg-secondary border-border"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">{t('contact.email')}</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                      className="bg-secondary border-border"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">{t('contact.phone')}</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="bg-secondary border-border"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">{t('contact.message')}</Label>
-                    <Textarea
-                      id="message"
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      required
-                      rows={5}
-                      className="bg-secondary border-border"
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? '...' : t('contact.send')}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-              {siteSettings.contact_address && (
-                <Card className="bg-gradient-card border-border">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                      <div>
-                        <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
-                        <p className="text-muted-foreground whitespace-pre-line">
-                          {siteSettings.contact_address}
-                        </p>
-                      </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card className="bg-gradient-card border-border">
+                <CardHeader>
+                  <CardTitle>{t('contact.send')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">{t('contact.name')}</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        className="bg-secondary border-border"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {(siteSettings.contact_phone || siteSettings.contact_email) && (
-                <Card className="bg-gradient-card border-border">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                      <div>
-                        <h3 className="font-semibold mb-2">{t('contact.phone')}</h3>
-                        {siteSettings.contact_phone && (
-                          <p className="text-muted-foreground">
-                            <a href={`tel:${siteSettings.contact_phone}`} className="hover:text-primary transition-colors">
-                              {siteSettings.contact_phone}
-                            </a>
-                          </p>
-                        )}
-                        {siteSettings.contact_email && (
-                          <p className="text-muted-foreground">
-                            <a href={`mailto:${siteSettings.contact_email}`} className="hover:text-primary transition-colors">
-                              {siteSettings.contact_email}
-                            </a>
-                          </p>
-                        )}
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t('contact.email')}</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        required
+                        className="bg-secondary border-border"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {siteSettings.working_hours && (
-                <Card className="bg-gradient-card border-border">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <Clock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                      <div>
-                        <h3 className="font-semibold mb-2">{t('contact.hours')}</h3>
-                        <p className="text-muted-foreground whitespace-pre-line">
-                          {siteSettings.working_hours}
-                        </p>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">{t('contact.phone')}</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="bg-secondary border-border"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {hasSocialLinks && (
-                <Card className="bg-gradient-card border-border">
-                  <CardContent className="pt-6">
-                    <h3 className="font-semibold mb-4">Social Media</h3>
-                    <div className="flex gap-4">
-                      {siteSettings.facebook_url && (
-                        <a
-                          href={ensureHttps(siteSettings.facebook_url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          referrerPolicy="no-referrer"
-                          onClick={(e) => {
-                            // In embedded previews some external sites (like Facebook) refuse to load.
-                            // Force opening in a new tab/window.
-                            e.preventDefault();
-                            window.open(ensureHttps(siteSettings.facebook_url), '_blank', 'noopener,noreferrer');
-                          }}
-                          className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                          aria-label="Facebook"
-                        >
-                          <Facebook className="h-5 w-5" />
-                        </a>
-                      )}
-                      {siteSettings.instagram_url && (
-                        <a
-                          href={ensureHttps(siteSettings.instagram_url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          referrerPolicy="no-referrer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open(ensureHttps(siteSettings.instagram_url), '_blank', 'noopener,noreferrer');
-                          }}
-                          className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                          aria-label="Instagram"
-                        >
-                          <Instagram className="h-5 w-5" />
-                        </a>
-                      )}
-                      {siteSettings.twitter_url && (
-                        <a
-                          href={ensureHttps(siteSettings.twitter_url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          referrerPolicy="no-referrer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            window.open(ensureHttps(siteSettings.twitter_url), '_blank', 'noopener,noreferrer');
-                          }}
-                          className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                          aria-label="Twitter"
-                        >
-                          <Twitter className="h-5 w-5" />
-                        </a>
-                      )}
+                    <div className="space-y-2">
+                      <Label htmlFor="message">{t('contact.message')}</Label>
+                      <Textarea
+                        id="message"
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        required
+                        rows={5}
+                        className="bg-secondary border-border"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? '...' : t('contact.send')}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-              {/* Fallback if no settings configured */}
-              {!siteSettings.contact_address && !siteSettings.contact_phone && !siteSettings.contact_email && !siteSettings.working_hours && (
-                <>
+              <div className="space-y-6">
+                {siteSettings.contact_address && (
                   <Card className="bg-gradient-card border-border">
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
                         <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                         <div>
                           <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
-                          <p className="text-muted-foreground">
-                            Ρυθμίστε τη διεύθυνση στο Page Builder → Site Settings → Επικοινωνία
+                          <p className="text-muted-foreground whitespace-pre-line">
+                            {siteSettings.contact_address}
                           </p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </>
-              )}
-            </div>
-          </div>
+                )}
 
-          {/* Google Maps Section */}
-          {siteSettings.contact_address && (
-            <div className="mt-12">
-              <Card className="bg-gradient-card border-border overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    {t('contact.location')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <iframe
-                    src={getGoogleMapsEmbedUrl(siteSettings.contact_address)}
-                    width="100%"
-                    height="400"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Location Map"
-                    className="w-full"
-                  />
-                </CardContent>
-              </Card>
+                {(siteSettings.contact_phone || siteSettings.contact_email) && (
+                  <Card className="bg-gradient-card border-border">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-4">
+                        <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                        <div>
+                          <h3 className="font-semibold mb-2">{t('contact.phone')}</h3>
+                          {siteSettings.contact_phone && (
+                            <p className="text-muted-foreground">
+                              <a href={`tel:${siteSettings.contact_phone}`} className="hover:text-primary transition-colors">
+                                {siteSettings.contact_phone}
+                              </a>
+                            </p>
+                          )}
+                          {siteSettings.contact_email && (
+                            <p className="text-muted-foreground">
+                              <a href={`mailto:${siteSettings.contact_email}`} className="hover:text-primary transition-colors">
+                                {siteSettings.contact_email}
+                              </a>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {siteSettings.working_hours && (
+                  <Card className="bg-gradient-card border-border">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-4">
+                        <Clock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                        <div>
+                          <h3 className="font-semibold mb-2">{t('contact.hours')}</h3>
+                          <p className="text-muted-foreground whitespace-pre-line">
+                            {siteSettings.working_hours}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {hasSocialLinks && (
+                  <Card className="bg-gradient-card border-border">
+                    <CardContent className="pt-6">
+                      <h3 className="font-semibold mb-4">Social Media</h3>
+                      <div className="flex gap-4">
+                        {siteSettings.facebook_url && (
+                          <a
+                            href={ensureHttps(siteSettings.facebook_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            referrerPolicy="no-referrer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(ensureHttps(siteSettings.facebook_url), '_blank', 'noopener,noreferrer');
+                            }}
+                            className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                            aria-label="Facebook"
+                          >
+                            <Facebook className="h-5 w-5" />
+                          </a>
+                        )}
+                        {siteSettings.instagram_url && (
+                          <a
+                            href={ensureHttps(siteSettings.instagram_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            referrerPolicy="no-referrer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(ensureHttps(siteSettings.instagram_url), '_blank', 'noopener,noreferrer');
+                            }}
+                            className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                            aria-label="Instagram"
+                          >
+                            <Instagram className="h-5 w-5" />
+                          </a>
+                        )}
+                        {siteSettings.twitter_url && (
+                          <a
+                            href={ensureHttps(siteSettings.twitter_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            referrerPolicy="no-referrer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(ensureHttps(siteSettings.twitter_url), '_blank', 'noopener,noreferrer');
+                            }}
+                            className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                            aria-label="Twitter"
+                          >
+                            <Twitter className="h-5 w-5" />
+                          </a>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Fallback if no settings configured */}
+                {!siteSettings.contact_address && !siteSettings.contact_phone && !siteSettings.contact_email && !siteSettings.working_hours && (
+                  <>
+                    <Card className="bg-gradient-card border-border">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                          <div>
+                            <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
+                            <p className="text-muted-foreground">
+                              Ρυθμίστε τη διεύθυνση στο Page Builder → Site Settings → Επικοινωνία
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </section>
+
+            {/* Google Maps Section */}
+            {siteSettings.contact_address && (
+              <div className="mt-12">
+                <Card className="bg-gradient-card border-border overflow-hidden">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      {t('contact.location')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <iframe
+                      src={getGoogleMapsEmbedUrl(siteSettings.contact_address)}
+                      width="100%"
+                      height="400"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Location Map"
+                      className="w-full"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }
