@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, Save, Trash2, Clock, Users, Calendar, XCircle, Pause } from 'lucide-react';
+import { Loader2, Plus, Save, Trash2, Clock, Users, Calendar, XCircle, Pause, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -41,6 +41,9 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditScheduleDialogOpen, setIsEditScheduleDialogOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<Class | null>(null);
+  const [editingSchedules, setEditingSchedules] = useState<Schedule[]>([]);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedClassForStatus, setSelectedClassForStatus] = useState<Class | null>(null);
   const [statusChangeReason, setStatusChangeReason] = useState('');
@@ -78,20 +81,29 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
 
   const loadClasses = async () => {
     try {
-      const { data, error } = await supabase
+      // Load classes
+      const { data: classesData, error: classesError } = await supabase
         .from('classes')
         .select('*')
         .eq('trainer_id', trainerId)
         .order('day_of_week')
         .order('time');
 
-      if (error) throw error;
+      if (classesError) throw classesError;
 
-      if (data) {
-        // Type assertion for status field
-        const typedClasses = data.map(cls => ({
+      // Load schedules for all classes
+      const { data: schedulesData, error: schedulesError } = await supabase
+        .from('class_schedules')
+        .select('*');
+
+      if (schedulesError) throw schedulesError;
+
+      if (classesData) {
+        // Combine classes with their schedules
+        const typedClasses = classesData.map(cls => ({
           ...cls,
-          status: cls.status as 'active' | 'cancelled' | 'postponed'
+          status: cls.status as 'active' | 'cancelled' | 'postponed',
+          schedules: schedulesData?.filter(s => s.class_id === cls.id) || []
         }));
         setClasses(typedClasses);
       }
@@ -332,6 +344,81 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
     }
   };
 
+  const openEditScheduleDialog = (classItem: Class) => {
+    setEditingClass(classItem);
+    setEditingSchedules(classItem.schedules?.length ? 
+      classItem.schedules.map(s => ({ id: s.id, day_of_week: s.day_of_week, time: s.time })) :
+      [{ day_of_week: classItem.day_of_week, time: classItem.time }]
+    );
+    setIsEditScheduleDialogOpen(true);
+  };
+
+  const handleSaveSchedules = async () => {
+    if (!editingClass) return;
+    
+    const validSchedules = editingSchedules.filter(s => s.time);
+    if (validSchedules.length === 0) {
+      toast({
+        title: 'Σφάλμα',
+        description: 'Πρέπει να υπάρχει τουλάχιστον ένα πρόγραμμα',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Delete existing schedules for this class
+      await supabase
+        .from('class_schedules')
+        .delete()
+        .eq('class_id', editingClass.id);
+
+      // Insert new schedules
+      const schedulesToInsert = validSchedules.map(s => ({
+        class_id: editingClass.id,
+        day_of_week: s.day_of_week,
+        time: s.time,
+      }));
+
+      const { error: insertError } = await supabase
+        .from('class_schedules')
+        .insert(schedulesToInsert);
+
+      if (insertError) throw insertError;
+
+      // Update the main class with the first schedule's day/time for backwards compatibility
+      const { error: updateError } = await supabase
+        .from('classes')
+        .update({
+          day_of_week: validSchedules[0].day_of_week,
+          time: validSchedules[0].time,
+        })
+        .eq('id', editingClass.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: 'Πρόγραμμα ενημερώθηκε',
+        description: `Αποθηκεύτηκαν ${validSchedules.length} χρονοθυρίδες`,
+      });
+
+      setIsEditScheduleDialogOpen(false);
+      setEditingClass(null);
+      setEditingSchedules([]);
+      loadClasses();
+      if (onClassesChange) onClassesChange();
+    } catch (error: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateClassField = (id: string, field: keyof Class, value: any) => {
     setClasses(prev =>
       prev.map(cls =>
@@ -555,11 +642,17 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                   <div className="flex gap-2 flex-wrap">
                     <Badge variant="outline" className="bg-primary/20 text-primary border-primary">
                       <Calendar className="h-3 w-3 mr-1" />
-                      {daysOfWeek[classItem.day_of_week]}
+                      {classItem.schedules && classItem.schedules.length > 0 
+                        ? classItem.schedules.map(s => daysOfWeek[s.day_of_week]).join(', ')
+                        : daysOfWeek[classItem.day_of_week]
+                      }
                     </Badge>
                     <Badge variant="outline">
                       <Clock className="h-3 w-3 mr-1" />
-                      {classItem.time}
+                      {classItem.schedules && classItem.schedules.length > 0
+                        ? classItem.schedules.map(s => s.time).join(', ')
+                        : classItem.time
+                      }
                     </Badge>
                     <Badge variant="outline">
                       {classItem.duration_minutes} min
@@ -568,6 +661,15 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                       <Users className="h-3 w-3 mr-1" />
                       Max {classItem.max_capacity}
                     </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2"
+                      onClick={() => openEditScheduleDialog(classItem)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Επεξεργασία Προγράμματος
+                    </Button>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -763,6 +865,108 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={isEditScheduleDialogOpen} onOpenChange={setIsEditScheduleDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Επεξεργασία Προγράμματος</DialogTitle>
+            <DialogDescription>
+              {editingClass?.name} - Προσθέστε ή αφαιρέστε ημέρες και ώρες
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between">
+              <Label>Χρονοθυρίδες</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingSchedules([...editingSchedules, { day_of_week: 1, time: '' }])}
+              >
+                <Plus className="h-4 w-4 mr-1" /> Προσθήκη
+              </Button>
+            </div>
+            
+            {editingSchedules.map((schedule, index) => (
+              <div key={index} className="flex gap-2 items-end">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs">Ημέρα</Label>
+                  <Select
+                    value={schedule.day_of_week.toString()}
+                    onValueChange={(value) => {
+                      const updated = [...editingSchedules];
+                      updated[index].day_of_week = parseInt(value);
+                      setEditingSchedules(updated);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {daysOfWeek.map((day, idx) => (
+                        <SelectItem key={idx} value={idx.toString()}>
+                          {day}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label className="text-xs">Ώρα</Label>
+                  <Input
+                    type="time"
+                    value={schedule.time}
+                    onChange={(e) => {
+                      const updated = [...editingSchedules];
+                      updated[index].time = e.target.value;
+                      setEditingSchedules(updated);
+                    }}
+                  />
+                </div>
+                {editingSchedules.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const updated = editingSchedules.filter((_, i) => i !== index);
+                      setEditingSchedules(updated);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditScheduleDialogOpen(false);
+                  setEditingClass(null);
+                  setEditingSchedules([]);
+                }}
+                className="flex-1"
+              >
+                Ακύρωση
+              </Button>
+              <Button
+                onClick={handleSaveSchedules}
+                disabled={saving}
+                className="flex-1"
+              >
+                {saving ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Αποθήκευση...</>
+                ) : (
+                  <><Save className="h-4 w-4 mr-2" /> Αποθήκευση</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
