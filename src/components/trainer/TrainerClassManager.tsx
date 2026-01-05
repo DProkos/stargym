@@ -53,6 +53,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
   const daysOfWeek = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
 
   // New class form state
+  const [classType, setClassType] = useState<'recurring' | 'onetime'>('recurring');
   const [newClass, setNewClass] = useState({
     name: '',
     description: '',
@@ -119,12 +120,31 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
   };
 
   const handleCreateClass = async () => {
-    // Validate schedules
+    // Validate based on class type
     const validSchedules = newClass.schedules.filter(s => s.time);
-    if (!newClass.name || validSchedules.length === 0) {
+    
+    if (!newClass.name) {
       toast({
-        title: 'Missing information',
-        description: 'Παρακαλώ συμπληρώστε το όνομα και τουλάχιστον μία ημέρα/ώρα',
+        title: 'Λείπουν πληροφορίες',
+        description: 'Παρακαλώ συμπληρώστε το όνομα του μαθήματος',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (classType === 'onetime' && !newClass.specific_date) {
+      toast({
+        title: 'Λείπουν πληροφορίες',
+        description: 'Παρακαλώ επιλέξτε ημερομηνία για το μάθημα',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (validSchedules.length === 0) {
+      toast({
+        title: 'Λείπουν πληροφορίες',
+        description: 'Παρακαλώ συμπληρώστε τουλάχιστον μία ώρα',
         variant: 'destructive',
       });
       return;
@@ -133,7 +153,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
     setSaving(true);
     try {
       // For one-time classes with specific date
-      if (newClass.specific_date) {
+      if (classType === 'onetime') {
         const dayOfWeek = new Date(newClass.specific_date).getDay();
         const { error } = await supabase
           .from('classes')
@@ -189,6 +209,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
       });
 
       setIsDialogOpen(false);
+      setClassType('recurring');
       setNewClass({
         name: '',
         description: '',
@@ -476,24 +497,48 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="new-specific-date">Συγκεκριμένη Ημερομηνία (προαιρετικό)</Label>
-                <Input
-                  id="new-specific-date"
-                  type="date"
-                  value={newClass.specific_date}
-                  onChange={(e) => setNewClass({ ...newClass, specific_date: e.target.value })}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Αν επιλέξετε ημερομηνία, το μάθημα θα γίνει μόνο εκείνη τη μέρα. Αλλιώς θα επαναλαμβάνεται εβδομαδιαία.
-                </p>
+              {/* Class Type Toggle */}
+              <div className="space-y-3">
+                <Label>Τύπος Μαθήματος *</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={classType === 'recurring' ? 'default' : 'outline'}
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setClassType('recurring');
+                      setNewClass({ ...newClass, specific_date: '' });
+                    }}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <div className="text-left">
+                      <div className="font-medium">Επαναλαμβανόμενο</div>
+                      <div className="text-xs opacity-70">Κάθε εβδομάδα</div>
+                    </div>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={classType === 'onetime' ? 'default' : 'outline'}
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setClassType('onetime');
+                      setNewClass({ ...newClass, schedules: [{ day_of_week: 1, time: '' }] });
+                    }}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    <div className="text-left">
+                      <div className="font-medium">Μοναδική Ημερομηνία</div>
+                      <div className="text-xs opacity-70">Μία φορά μόνο</div>
+                    </div>
+                  </Button>
+                </div>
               </div>
 
-              {/* Schedule entries - multiple day/time */}
-              {!newClass.specific_date && (
-                <div className="space-y-3">
+              {/* Recurring class - multiple schedules */}
+              {classType === 'recurring' && (
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
                   <div className="flex items-center justify-between">
-                    <Label>Πρόγραμμα (Ημέρες & Ώρες) *</Label>
+                    <Label className="text-base font-medium">Πρόγραμμα (Ημέρες & Ώρες) *</Label>
                     <Button
                       type="button"
                       variant="outline"
@@ -503,9 +548,12 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                         schedules: [...newClass.schedules, { day_of_week: 1, time: '' }]
                       })}
                     >
-                      <Plus className="h-4 w-4 mr-1" /> Προσθήκη
+                      <Plus className="h-4 w-4 mr-1" /> Προσθήκη ημέρας
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Το μάθημα θα εμφανίζεται κάθε εβδομάδα στις επιλεγμένες ημέρες/ώρες
+                  </p>
                   
                   {newClass.schedules.map((schedule, index) => (
                     <div key={index} className="flex gap-2 items-end">
@@ -561,19 +609,35 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 </div>
               )}
 
-              {/* For specific date - single time */}
-              {newClass.specific_date && (
-                <div className="space-y-2">
-                  <Label htmlFor="new-time">Ώρα *</Label>
-                  <Input
-                    id="new-time"
-                    type="time"
-                    value={newClass.schedules[0]?.time || ''}
-                    onChange={(e) => setNewClass({ 
-                      ...newClass, 
-                      schedules: [{ day_of_week: new Date(newClass.specific_date).getDay(), time: e.target.value }] 
-                    })}
-                  />
+              {/* One-time class - specific date */}
+              {classType === 'onetime' && (
+                <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+                  <Label className="text-base font-medium">Ημερομηνία & Ώρα *</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Το μάθημα θα γίνει μόνο μία φορά στην επιλεγμένη ημερομηνία
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Ημερομηνία</Label>
+                      <Input
+                        type="date"
+                        value={newClass.specific_date}
+                        onChange={(e) => setNewClass({ ...newClass, specific_date: e.target.value })}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Ώρα</Label>
+                      <Input
+                        type="time"
+                        value={newClass.schedules[0]?.time || ''}
+                        onChange={(e) => setNewClass({ 
+                          ...newClass, 
+                          schedules: [{ day_of_week: newClass.specific_date ? new Date(newClass.specific_date).getDay() : 1, time: e.target.value }] 
+                        })}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
