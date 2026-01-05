@@ -232,20 +232,88 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
   const subtitle = getSubtitle();
   const content = getContent();
 
+  // Helper function for hero title size
+  const getTitleSizeClass = (size: string) => {
+    switch (size) {
+      case 'small': return 'text-3xl md:text-4xl';
+      case 'medium': return 'text-4xl md:text-5xl';
+      case 'large': return 'text-5xl md:text-7xl';
+      case 'xlarge': return 'text-6xl md:text-8xl';
+      default: return 'text-5xl md:text-7xl';
+    }
+  };
+
+  // Helper function for hero subtitle size
+  const getSubtitleSizeClass = (size: string) => {
+    switch (size) {
+      case 'small': return 'text-base md:text-lg';
+      case 'medium': return 'text-lg md:text-xl';
+      case 'large': return 'text-xl md:text-2xl';
+      case 'xlarge': return 'text-2xl md:text-3xl';
+      default: return 'text-xl md:text-2xl';
+    }
+  };
+
+  // Helper function for image position
+  const getImagePositionClass = (position: string) => {
+    switch (position) {
+      case 'top': return 'object-top';
+      case 'bottom': return 'object-bottom';
+      case 'left': return 'object-left';
+      case 'right': return 'object-right';
+      default: return 'object-center';
+    }
+  };
+
+  // Helper function for overlay
+  const getOverlayClass = (color: string, opacity: number) => {
+    const opacityValue = opacity / 100;
+    switch (color) {
+      case 'dark': return `bg-black/${opacity}`;
+      case 'light': return `bg-white/${opacity}`;
+      case 'primary': return `bg-primary/${opacity}`;
+      default: return `bg-black/${opacity}`;
+    }
+  };
+
   switch (section.section_type) {
     case 'hero':
+      const heroSettings = section.settings || {};
+      const titleSize = getTitleSizeClass(heroSettings.title_size || 'large');
+      const subtitleSize = getSubtitleSizeClass(heroSettings.subtitle_size || 'medium');
+      const imagePosition = getImagePositionClass(heroSettings.image_position || 'center');
+      const imageSize = heroSettings.image_size || 'cover';
+      const overlayEnabled = heroSettings.overlay_enabled !== false;
+      const overlayColor = heroSettings.overlay_color || 'dark';
+      const overlayOpacity = heroSettings.overlay_opacity || 20;
+
       return (
         <section className={`pt-32 pb-20 px-4 relative overflow-hidden ${bgClass}`}>
           {section.image_url && (
-            <div className="absolute inset-0 opacity-20">
-              <img src={section.image_url} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0">
+              <img 
+                src={section.image_url} 
+                alt="" 
+                className={`w-full h-full ${imagePosition}`}
+                style={{ objectFit: imageSize as 'cover' | 'contain' | undefined }}
+              />
+              {overlayEnabled && (
+                <div 
+                  className="absolute inset-0"
+                  style={{ 
+                    backgroundColor: overlayColor === 'dark' ? `rgba(0,0,0,${overlayOpacity/100})` 
+                      : overlayColor === 'light' ? `rgba(255,255,255,${overlayOpacity/100})`
+                      : `rgba(var(--primary-rgb, 139, 92, 246),${overlayOpacity/100})`
+                  }}
+                />
+              )}
             </div>
           )}
           <div className="container mx-auto relative z-10 text-center">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <h1 className={`${titleSize} font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent`}>
               {title}
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className={`${subtitleSize} text-muted-foreground mb-8 max-w-2xl mx-auto`}>
               {subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
