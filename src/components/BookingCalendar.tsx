@@ -61,13 +61,13 @@ export default function BookingCalendar({
   };
 
   return (
-    <div className="min-h-[600px] h-[calc(100vh-350px)] bg-card rounded-lg p-4 border border-border overflow-hidden">
+    <div className="min-h-[400px] h-[500px] md:h-[600px] lg:h-[calc(100vh-350px)] bg-card rounded-lg p-2 md:p-4 border border-border overflow-auto">
       <Calendar
         localizer={localizer}
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: '100%' }}
+        style={{ height: '100%', minHeight: '380px' }}
         onSelectEvent={onSelectEvent}
         eventPropGetter={eventStyleGetter}
         view={view}
@@ -77,6 +77,16 @@ export default function BookingCalendar({
         views={views}
         popup
         selectable
+        messages={{
+          today: 'Σήμερα',
+          previous: 'Προηγούμενο',
+          next: 'Επόμενο',
+          month: 'Μήνας',
+          week: 'Εβδομάδα',
+          day: 'Ημέρα',
+          agenda: 'Ατζέντα',
+          noEventsInRange: 'Δεν υπάρχουν γεγονότα',
+        }}
       />
     </div>
   );
