@@ -53,7 +53,7 @@ export default function BookingCalendar({
   };
 
   return (
-    <div className="h-[600px] bg-card rounded-lg p-4 border border-border">
+    <div className="min-h-[600px] h-[calc(100vh-350px)] bg-card rounded-lg p-4 border border-border overflow-hidden">
       <Calendar
         localizer={localizer}
         events={events}
