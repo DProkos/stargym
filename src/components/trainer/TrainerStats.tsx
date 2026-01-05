@@ -224,20 +224,8 @@ export const TrainerStats = ({ trainerId }: TrainerStatsProps) => {
         </Card>
       </div>
 
-      {/* Secondary Stats - Revenue & Bookings */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-gradient-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Συνολικά Έσοδα</CardTitle>
-            <DollarSign className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">€{stats.totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              +€{stats.thisMonthRevenue.toFixed(2)} αυτό το μήνα
-            </p>
-          </CardContent>
-        </Card>
+      {/* Secondary Stats - Bookings */}
+      <div className="grid gap-4 md:grid-cols-1">
 
         <Card className="bg-gradient-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
