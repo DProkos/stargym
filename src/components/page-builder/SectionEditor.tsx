@@ -67,6 +67,27 @@ const ICON_OPTIONS = [
   'Dumbbell', 'Users', 'Award', 'Clock', 'Star', 'Heart', 'Zap', 'Target', 'Trophy', 'Flame'
 ];
 
+const FONT_SIZE_OPTIONS = [
+  { value: 'small', label: 'Μικρό' },
+  { value: 'medium', label: 'Μεσαίο' },
+  { value: 'large', label: 'Μεγάλο' },
+  { value: 'xlarge', label: 'Πολύ Μεγάλο' },
+];
+
+const IMAGE_POSITION_OPTIONS = [
+  { value: 'center', label: 'Κέντρο' },
+  { value: 'top', label: 'Πάνω' },
+  { value: 'bottom', label: 'Κάτω' },
+  { value: 'left', label: 'Αριστερά' },
+  { value: 'right', label: 'Δεξιά' },
+];
+
+const IMAGE_SIZE_OPTIONS = [
+  { value: 'cover', label: 'Cover (Γεμάτο)' },
+  { value: 'contain', label: 'Contain (Ολόκληρη)' },
+  { value: 'auto', label: 'Auto' },
+];
+
 export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
   const [localSettings, setLocalSettings] = useState(section.settings || {});
   const [activeLang, setActiveLang] = useState<'el' | 'en'>('el');
@@ -764,6 +785,131 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Hero-specific style options */}
+              {section.section_type === 'hero' && (
+                <>
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="font-medium mb-3">Ρυθμίσεις Hero</h4>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Μέγεθος Τίτλου</Label>
+                      <Select
+                        value={localSettings.title_size || 'large'}
+                        onValueChange={(value) => updateSettings('title_size', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FONT_SIZE_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Μέγεθος Υπότιτλου</Label>
+                      <Select
+                        value={localSettings.subtitle_size || 'medium'}
+                        onValueChange={(value) => updateSettings('subtitle_size', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FONT_SIZE_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Θέση Εικόνας</Label>
+                      <Select
+                        value={localSettings.image_position || 'center'}
+                        onValueChange={(value) => updateSettings('image_position', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {IMAGE_POSITION_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Μέγεθος Εικόνας</Label>
+                      <Select
+                        value={localSettings.image_size || 'cover'}
+                        onValueChange={(value) => updateSettings('image_size', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {IMAGE_SIZE_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Overlay (Διαφάνεια)</Label>
+                    <Select
+                      value={localSettings.overlay_enabled === false ? 'none' : (localSettings.overlay_color || 'dark')}
+                      onValueChange={(value) => {
+                        if (value === 'none') {
+                          updateSettings('overlay_enabled', false);
+                        } else {
+                          updateSettings('overlay_enabled', true);
+                          updateSettings('overlay_color', value);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Χωρίς Overlay</SelectItem>
+                        <SelectItem value="dark">Σκούρο</SelectItem>
+                        <SelectItem value="light">Φωτεινό</SelectItem>
+                        <SelectItem value="primary">Primary</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Ένταση Overlay: {localSettings.overlay_opacity || 20}%</Label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="80"
+                      step="5"
+                      value={localSettings.overlay_opacity || 20}
+                      onChange={(e) => updateSettings('overlay_opacity', parseInt(e.target.value))}
+                      className="w-full mt-2"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </TabsContent>
         </Tabs>
