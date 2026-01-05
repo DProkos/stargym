@@ -93,6 +93,7 @@ const SECTION_TYPES = [
   { type: 'matterport', label: '3D Tour (Matterport)', icon: Eye },
   { type: 'contact_form', label: 'Contact Form', icon: Phone },
   { type: 'contact_info', label: 'Contact Info', icon: Phone },
+  { type: 'social', label: 'Social Media', icon: Layers },
 ];
 
 export default function PageBuilder() {
