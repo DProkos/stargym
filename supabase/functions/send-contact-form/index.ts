@@ -145,14 +145,90 @@ ${message}
     });
 
     if (emailError) {
-      console.error('Error sending email:', emailError);
+      console.error('Error sending email to recipient:', emailError);
       return new Response(
         JSON.stringify({ error: 'Failed to send email', details: emailError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Contact form email sent successfully');
+    console.log('Contact form email sent to recipient successfully');
+
+    // Send auto-reply to the sender
+    const autoReplyHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; background-color: #0d0d0d; color: #fff8e1; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #141414; border-radius: 12px; overflow: hidden; border: 1px solid #4a3d1d; }
+          .header { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 30px; text-align: center; }
+          .header h1 { color: #0d0d0d; margin: 0; font-size: 24px; }
+          .content { padding: 30px; }
+          .greeting { color: #FFD700; font-size: 18px; margin-bottom: 20px; }
+          .message { color: #fff8e1; line-height: 1.6; }
+          .footer { padding: 20px; text-align: center; border-top: 1px solid #4a3d1d; color: #a89a6d; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>✉️ Ευχαριστούμε για το μήνυμά σας!</h1>
+          </div>
+          <div class="content">
+            <p class="greeting">Αγαπητέ/ή ${name},</p>
+            <p class="message">
+              Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.
+            </p>
+            <p class="message">
+              Σας ευχαριστούμε για το ενδιαφέρον σας!
+            </p>
+            <p class="message" style="margin-top: 30px;">
+              Με εκτίμηση,<br>
+              <strong style="color: #FFD700;">Η Ομάδα μας</strong>
+            </p>
+          </div>
+          <div class="footer">
+            Αυτό είναι ένα αυτόματο email επιβεβαίωσης. Παρακαλούμε μην απαντήσετε σε αυτό το μήνυμα.
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const autoReplyText = `
+Αγαπητέ/ή ${name},
+
+Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.
+
+Σας ευχαριστούμε για το ενδιαφέρον σας!
+
+Με εκτίμηση,
+Η Ομάδα μας
+
+---
+Αυτό είναι ένα αυτόματο email επιβεβαίωσης.
+    `;
+
+    const { error: autoReplyError } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: email,
+        subject: 'Λάβαμε το μήνυμά σας!',
+        html: autoReplyHtml,
+        text: autoReplyText,
+      },
+      headers: {
+        'X-Internal-Call': 'true',
+      },
+    });
+
+    if (autoReplyError) {
+      console.error('Error sending auto-reply:', autoReplyError);
+      // Don't fail the request, just log the error
+    } else {
+      console.log('Auto-reply email sent successfully to:', email);
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: 'Message sent successfully' }),
