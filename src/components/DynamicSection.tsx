@@ -514,6 +514,13 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   href={ensureHttps(facebookUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  referrerPolicy="no-referrer"
+                  onClick={(e) => {
+                    // In embedded previews some external sites (like Facebook) refuse to load.
+                    // Force opening in a new tab/window.
+                    e.preventDefault();
+                    window.open(ensureHttps(facebookUrl), '_blank', 'noopener,noreferrer');
+                  }}
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
                   aria-label="Facebook"
                 >
@@ -525,6 +532,11 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   href={ensureHttps(instagramUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  referrerPolicy="no-referrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(ensureHttps(instagramUrl), '_blank', 'noopener,noreferrer');
+                  }}
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
                   aria-label="Instagram"
                 >
@@ -536,6 +548,11 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   href={ensureHttps(twitterUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  referrerPolicy="no-referrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(ensureHttps(twitterUrl), '_blank', 'noopener,noreferrer');
+                  }}
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
                   aria-label="Twitter"
                 >
