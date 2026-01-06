@@ -515,6 +515,94 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
         />
       );
 
+    case 'hero_dark':
+      // Fittopia-style dark hero section
+      const darkHeroSettings = section.settings || {};
+      const darkTitleSize = darkHeroSettings.title_size || 'large';
+      const darkSubtitleSize = darkHeroSettings.subtitle_size || 'medium';
+      
+      const getDarkTitleClass = () => {
+        switch (darkTitleSize) {
+          case 'small': return 'text-2xl sm:text-3xl md:text-4xl';
+          case 'medium': return 'text-3xl sm:text-4xl md:text-5xl lg:text-6xl';
+          case 'large': return 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl';
+          case 'xlarge': return 'text-5xl sm:text-6xl md:text-7xl lg:text-8xl';
+          default: return 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl';
+        }
+      };
+      
+      const getDarkSubtitleClass = () => {
+        switch (darkSubtitleSize) {
+          case 'small': return 'text-sm sm:text-base';
+          case 'medium': return 'text-base sm:text-lg md:text-xl';
+          case 'large': return 'text-lg sm:text-xl md:text-2xl';
+          default: return 'text-base sm:text-lg md:text-xl';
+        }
+      };
+      
+      return (
+        <section className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
+          {/* Background image with overlay */}
+          {section.image_url && (
+            <div className="absolute inset-0">
+              <img 
+                src={withCacheBust(section.image_url, section.updated_at)}
+                alt="" 
+                className="w-full h-full object-cover opacity-30"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+            </div>
+          )}
+          
+          {/* Content */}
+          <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
+            <h1 
+              className={`${getDarkTitleClass()} font-bold text-white uppercase tracking-wider mb-6 sm:mb-8 animate-fade-in`}
+              style={{ 
+                textShadow: '0 0 40px rgba(255,255,255,0.1)',
+                letterSpacing: '0.05em'
+              }}
+            >
+              {title}
+            </h1>
+            
+            {subtitle && (
+              <p 
+                className={`${getDarkSubtitleClass()} text-white/70 mb-8 sm:mb-12 max-w-2xl mx-auto animate-fade-in`}
+                style={{ animationDelay: '0.2s' }}
+              >
+                {subtitle}
+              </p>
+            )}
+            
+            {darkHeroSettings.button_text && (
+              <div 
+                className="animate-fade-in"
+                style={{ animationDelay: '0.4s' }}
+              >
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-black transition-all duration-300 px-8 py-6 text-base sm:text-lg font-medium tracking-wide"
+                  asChild
+                >
+                  <Link to={darkHeroSettings.button_link || '/contact'}>
+                    {darkHeroSettings.button_text}
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {/* Scroll indicator */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
+              <div className="w-1.5 h-3 bg-white/50 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </section>
+      );
+
     case 'header':
       return (
         <section className={`pt-32 pb-16 px-4 ${bgClass}`}>
