@@ -557,10 +557,10 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
           {/* Content */}
           <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto">
             <h1 
-              className={`${getDarkTitleClass()} font-bold text-white uppercase tracking-wider mb-6 sm:mb-8 animate-fade-in`}
+              className={`${getDarkTitleClass()} font-black text-white uppercase tracking-wider mb-6 sm:mb-8 animate-fade-in`}
               style={{ 
-                textShadow: '0 0 40px rgba(255,255,255,0.1)',
-                letterSpacing: '0.05em'
+                textShadow: '0 0 60px rgba(255,255,255,0.5), 0 0 120px rgba(255,255,255,0.3), 0 0 180px rgba(255,255,255,0.15)',
+                letterSpacing: '0.08em'
               }}
             >
               {title}
@@ -568,8 +568,11 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
             
             {subtitle && (
               <p 
-                className={`${getDarkSubtitleClass()} text-white/70 mb-8 sm:mb-12 max-w-2xl mx-auto animate-fade-in`}
-                style={{ animationDelay: '0.2s' }}
+                className={`${getDarkSubtitleClass()} text-white mb-8 sm:mb-12 max-w-2xl mx-auto animate-fade-in`}
+                style={{
+                  animationDelay: '0.2s',
+                  textShadow: '0 0 30px rgba(255,255,255,0.3)'
+                }}
               >
                 {subtitle}
               </p>
