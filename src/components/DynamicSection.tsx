@@ -164,7 +164,7 @@ function HeroSection({
   };
 
   return (
-    <section ref={sectionRef} className={`pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden flex items-center ${bgClass}`} style={{ minHeight: getHeroMinHeight() }}>
+    <section ref={sectionRef} className={`pt-28 sm:pt-36 pb-12 sm:pb-20 px-4 relative overflow-hidden flex items-center ${bgClass}`} style={{ minHeight: getHeroMinHeight() }}>
       {/* Video or Image background */}
       {section.settings?.media_type === 'video' && videoUrl ? (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
