@@ -271,16 +271,28 @@ export default function Settings() {
     const { data, error } = await supabase
       .from('app_settings')
       .select('setting_key, setting_value')
-      .eq('setting_key', 'contact_form_recipient_email')
-      .maybeSingle();
+      .in('setting_key', [
+        'contact_form_recipient_email',
+        'contact_auto_reply_subject',
+        'contact_auto_reply_heading',
+        'contact_auto_reply_body',
+        'contact_auto_reply_signature',
+      ]);
 
     if (error) {
       console.error('Failed to load contact settings:', error);
       return;
     }
 
+    const getValue = (key: string, fallback: string) => 
+      data?.find(s => s.setting_key === key)?.setting_value || fallback;
+
     setContactSettings({
-      recipientEmail: data?.setting_value || '',
+      recipientEmail: getValue('contact_form_recipient_email', ''),
+      autoReplySubject: getValue('contact_auto_reply_subject', 'Λάβαμε το μήνυμά σας!'),
+      autoReplyHeading: getValue('contact_auto_reply_heading', '✉️ Ευχαριστούμε για το μήνυμά σας!'),
+      autoReplyBody: getValue('contact_auto_reply_body', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!'),
+      autoReplySignature: getValue('contact_auto_reply_signature', 'Η Ομάδα μας'),
     });
   };
 
