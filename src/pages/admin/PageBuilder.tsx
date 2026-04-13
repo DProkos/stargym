@@ -388,8 +388,8 @@ export default function PageBuilder() {
   };
 
   const createNewPage = async () => {
-    if (!newPageName.trim() || !newPageKey.trim()) {
-      toast.error('Συμπληρώστε όνομα και key σελίδας');
+    if ((!newPageNameEl.trim() && !newPageNameEn.trim()) || !newPageKey.trim()) {
+      toast.error('Συμπληρώστε τουλάχιστον ένα όνομα και URL key');
       return;
     }
 
@@ -400,6 +400,8 @@ export default function PageBuilder() {
       return;
     }
 
+    const displayName = newPageNameEl.trim() || newPageNameEn.trim();
+
     // Create a default header section for the new page
     const { error } = await supabase
       .from('page_sections')
@@ -407,7 +409,9 @@ export default function PageBuilder() {
         page_key: pageKey,
         section_key: 'header',
         section_type: 'header',
-        title: newPageName,
+        title: displayName,
+        title_el: newPageNameEl.trim() || null,
+        title_en: newPageNameEn.trim() || null,
         subtitle: 'New page subtitle',
         background_color: 'default',
         text_color: 'default',
@@ -419,18 +423,34 @@ export default function PageBuilder() {
     if (error) {
       toast.error('Σφάλμα δημιουργίας σελίδας');
       console.error(error);
-    } else {
-      const newPage: PageInfo = {
-        key: pageKey,
-        label: newPageName,
-      };
-      setPages([...pages, newPage]);
-      setActivePage(pageKey);
-      setNewPageName('');
-      setNewPageKey('');
-      setShowNewPageDialog(false);
-      toast.success('Η σελίδα δημιουργήθηκε');
+      return;
     }
+
+    // Save page labels to site_settings
+    const labelInserts = [];
+    if (newPageNameEl.trim()) {
+      labelInserts.push({ setting_key: `page_${pageKey}_label_el`, setting_value: newPageNameEl.trim(), setting_type: 'text', category: 'pages' });
+    }
+    if (newPageNameEn.trim()) {
+      labelInserts.push({ setting_key: `page_${pageKey}_label_en`, setting_value: newPageNameEn.trim(), setting_type: 'text', category: 'pages' });
+    }
+    if (labelInserts.length > 0) {
+      await supabase.from('site_settings').insert(labelInserts);
+    }
+
+    const newPage: PageInfo = {
+      key: pageKey,
+      label: displayName,
+      labelEl: newPageNameEl.trim() || undefined,
+      labelEn: newPageNameEn.trim() || undefined,
+    };
+    setPages([...pages, newPage]);
+    setActivePage(pageKey);
+    setNewPageNameEl('');
+    setNewPageNameEn('');
+    setNewPageKey('');
+    setShowNewPageDialog(false);
+    toast.success('Η σελίδα δημιουργήθηκε');
   };
 
   const deletePage = async () => {
