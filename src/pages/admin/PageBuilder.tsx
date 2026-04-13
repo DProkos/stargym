@@ -472,34 +472,18 @@ export default function PageBuilder() {
   };
 
   const updateSiteSetting = async (settingKey: string, value: string | null) => {
-    // First try to update
-    const { data: existingData, error: selectError } = await supabase
+    const { error } = await supabase
       .from('site_settings')
-      .select('id')
-      .eq('setting_key', settingKey)
-      .maybeSingle();
-
-    let error;
-    
-    if (existingData) {
-      // Update existing
-      const result = await supabase
-        .from('site_settings')
-        .update({ setting_value: value, updated_at: new Date().toISOString() })
-        .eq('setting_key', settingKey);
-      error = result.error;
-    } else {
-      // Insert new
-      const result = await supabase
-        .from('site_settings')
-        .insert({ 
+      .upsert(
+        { 
           setting_key: settingKey, 
           setting_value: value,
           setting_type: 'text',
-          category: 'branding'
-        });
-      error = result.error;
-    }
+          category: 'branding',
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'setting_key' }
+      );
 
     if (error) {
       toast.error('Σφάλμα ενημέρωσης ρύθμισης');
