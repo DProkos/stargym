@@ -73,6 +73,8 @@ interface SiteSetting {
 interface PageInfo {
   key: string;
   label: string;
+  labelEn?: string;
+  labelEl?: string;
 }
 
 const DEFAULT_PAGES: PageInfo[] = [
@@ -107,7 +109,8 @@ export default function PageBuilder() {
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [pages, setPages] = useState<PageInfo[]>(DEFAULT_PAGES);
-  const [newPageName, setNewPageName] = useState('');
+  const [newPageNameEl, setNewPageNameEl] = useState('');
+  const [newPageNameEn, setNewPageNameEn] = useState('');
   const [newPageKey, setNewPageKey] = useState('');
   const [showNewPageDialog, setShowNewPageDialog] = useState(false);
   const [showDeletePageDialog, setShowDeletePageDialog] = useState(false);
@@ -153,42 +156,62 @@ export default function PageBuilder() {
   };
 
   const loadPages = async () => {
-    // Get all unique page_keys from page_sections
-    const { data, error } = await supabase
-      .from('page_sections')
-      .select('page_key');
+    // Get all unique page_keys from page_sections and page labels from site_settings
+    const [sectionsResult, labelsResult] = await Promise.all([
+      supabase.from('page_sections').select('page_key'),
+      supabase.from('site_settings').select('setting_key, setting_value').like('setting_key', 'page_%_label%'),
+    ]);
 
-    if (error) {
-      console.error('Error loading pages:', error);
-      // On error, use default pages
+    if (sectionsResult.error) {
+      console.error('Error loading pages:', sectionsResult.error);
       setPages(DEFAULT_PAGES);
       return;
     }
 
-    // Get unique page keys that have sections in the database
-    const existingPageKeys = [...new Set(data?.map(d => d.page_key) || [])];
+    // Build a map of page labels from site_settings
+    const labelMap: Record<string, { el?: string; en?: string }> = {};
+    (labelsResult.data || []).forEach(s => {
+      const matchEl = s.setting_key.match(/^page_(.+)_label_el$/);
+      const matchEn = s.setting_key.match(/^page_(.+)_label_en$/);
+      if (matchEl) {
+        const k = matchEl[1];
+        labelMap[k] = { ...labelMap[k], el: s.setting_value || undefined };
+      }
+      if (matchEn) {
+        const k = matchEn[1];
+        labelMap[k] = { ...labelMap[k], en: s.setting_value || undefined };
+      }
+    });
+
+    const existingPageKeys = [...new Set(sectionsResult.data?.map(d => d.page_key) || [])];
     
-    // Only show pages that actually have sections in the database
     const allPages: PageInfo[] = [];
     
-    // First add default pages that exist in database
     DEFAULT_PAGES.forEach(page => {
       if (existingPageKeys.includes(page.key)) {
-        allPages.push(page);
+        // Use stored label if available, otherwise default
+        const stored = labelMap[page.key];
+        allPages.push({
+          key: page.key,
+          label: stored?.el || page.label,
+          labelEn: stored?.en,
+          labelEl: stored?.el,
+        });
       }
     });
     
-    // Then add any custom pages that exist in database but not in defaults
     existingPageKeys.forEach(key => {
       if (!allPages.find(p => p.key === key)) {
+        const stored = labelMap[key];
         allPages.push({
           key,
-          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          label: stored?.el || stored?.en || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          labelEn: stored?.en,
+          labelEl: stored?.el,
         });
       }
     });
 
-    // If no pages exist yet, show default pages so user can create sections
     if (allPages.length === 0) {
       setPages(DEFAULT_PAGES);
     } else {
@@ -365,8 +388,8 @@ export default function PageBuilder() {
   };
 
   const createNewPage = async () => {
-    if (!newPageName.trim() || !newPageKey.trim()) {
-      toast.error('Συμπληρώστε όνομα και key σελίδας');
+    if ((!newPageNameEl.trim() && !newPageNameEn.trim()) || !newPageKey.trim()) {
+      toast.error('Συμπληρώστε τουλάχιστον ένα όνομα και URL key');
       return;
     }
 
@@ -377,6 +400,8 @@ export default function PageBuilder() {
       return;
     }
 
+    const displayName = newPageNameEl.trim() || newPageNameEn.trim();
+
     // Create a default header section for the new page
     const { error } = await supabase
       .from('page_sections')
@@ -384,7 +409,9 @@ export default function PageBuilder() {
         page_key: pageKey,
         section_key: 'header',
         section_type: 'header',
-        title: newPageName,
+        title: displayName,
+        title_el: newPageNameEl.trim() || null,
+        title_en: newPageNameEn.trim() || null,
         subtitle: 'New page subtitle',
         background_color: 'default',
         text_color: 'default',
@@ -396,18 +423,34 @@ export default function PageBuilder() {
     if (error) {
       toast.error('Σφάλμα δημιουργίας σελίδας');
       console.error(error);
-    } else {
-      const newPage: PageInfo = {
-        key: pageKey,
-        label: newPageName,
-      };
-      setPages([...pages, newPage]);
-      setActivePage(pageKey);
-      setNewPageName('');
-      setNewPageKey('');
-      setShowNewPageDialog(false);
-      toast.success('Η σελίδα δημιουργήθηκε');
+      return;
     }
+
+    // Save page labels to site_settings
+    const labelInserts = [];
+    if (newPageNameEl.trim()) {
+      labelInserts.push({ setting_key: `page_${pageKey}_label_el`, setting_value: newPageNameEl.trim(), setting_type: 'text', category: 'pages' });
+    }
+    if (newPageNameEn.trim()) {
+      labelInserts.push({ setting_key: `page_${pageKey}_label_en`, setting_value: newPageNameEn.trim(), setting_type: 'text', category: 'pages' });
+    }
+    if (labelInserts.length > 0) {
+      await supabase.from('site_settings').insert(labelInserts);
+    }
+
+    const newPage: PageInfo = {
+      key: pageKey,
+      label: displayName,
+      labelEl: newPageNameEl.trim() || undefined,
+      labelEn: newPageNameEn.trim() || undefined,
+    };
+    setPages([...pages, newPage]);
+    setActivePage(pageKey);
+    setNewPageNameEl('');
+    setNewPageNameEn('');
+    setNewPageKey('');
+    setShowNewPageDialog(false);
+    toast.success('Η σελίδα δημιουργήθηκε');
   };
 
   const deletePage = async () => {
@@ -708,14 +751,29 @@ export default function PageBuilder() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label>Όνομα Σελίδας</Label>
+                    <Label>🇬🇷 Όνομα Σελίδας (Ελληνικά)</Label>
                     <Input
-                      value={newPageName}
+                      value={newPageNameEl}
                       onChange={(e) => {
-                        setNewPageName(e.target.value);
-                        setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                        setNewPageNameEl(e.target.value);
+                        // Auto-generate URL key from Greek name if English is empty
+                        if (!newPageNameEn.trim()) {
+                          setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                        }
                       }}
                       placeholder="π.χ. Υπηρεσίες"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>🇬🇧 Page Name (English)</Label>
+                    <Input
+                      value={newPageNameEn}
+                      onChange={(e) => {
+                        setNewPageNameEn(e.target.value);
+                        // Auto-generate URL key from English name
+                        setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                      }}
+                      placeholder="e.g. Services"
                     />
                   </div>
                   <div className="space-y-2">
