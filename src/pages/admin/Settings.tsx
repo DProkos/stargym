@@ -1066,21 +1066,40 @@ Test Email - ${editingTemplate.name}
                         Η γλώσσα του email εξαρτάται από τη γλώσσα που έχει επιλέξει ο χρήστης στο site.
                       </p>
 
-                      <div className="space-y-2 mb-4">
-                        <Label>Χρώμα Επικεφαλίδας</Label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={contactSettings.autoReplyHeadingColor}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
-                            className="w-10 h-10 rounded border cursor-pointer"
-                          />
-                          <Input
-                            value={contactSettings.autoReplyHeadingColor}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
-                            className="w-32"
-                            placeholder="#FFD700"
-                          />
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-2">
+                          <Label>Χρώμα Φόντου Επικεφαλίδας</Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={contactSettings.autoReplyHeadingColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                              className="w-10 h-10 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={contactSettings.autoReplyHeadingColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                              className="w-32"
+                              placeholder="#FFD700"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Χρώμα Γραμμάτων Επικεφαλίδας</Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={contactSettings.autoReplyHeadingTextColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingTextColor: e.target.value })}
+                              className="w-10 h-10 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={contactSettings.autoReplyHeadingTextColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingTextColor: e.target.value })}
+                              className="w-32"
+                              placeholder="#0d0d0d"
+                            />
+                          </div>
                         </div>
                       </div>
 
