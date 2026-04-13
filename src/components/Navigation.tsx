@@ -282,8 +282,29 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     return translated !== page.label ? translated : page.label;
   };
 
+  // Build nav bar style
+  const navStyle: React.CSSProperties = {};
+  if (navBgColor) {
+    const opacity = navOpacity / 100;
+    // Convert hex to rgba
+    const r = parseInt(navBgColor.slice(1, 3), 16);
+    const g = parseInt(navBgColor.slice(3, 5), 16);
+    const b = parseInt(navBgColor.slice(5, 7), 16);
+    navStyle.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  if (navBlur) {
+    navStyle.backdropFilter = 'blur(12px)';
+    navStyle.WebkitBackdropFilter = 'blur(12px)';
+  } else {
+    navStyle.backdropFilter = 'none';
+  }
+  const navTextStyle: React.CSSProperties = navTextColor ? { color: navTextColor } : {};
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 border-b border-border ${!navBgColor ? 'bg-background/80 backdrop-blur-lg' : ''}`}
+      style={navBgColor ? navStyle : undefined}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 min-h-[32px]">
