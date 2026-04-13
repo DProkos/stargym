@@ -103,6 +103,7 @@ function HeroSection({
   neonIntensity,
   title,
   subtitle,
+  heroHeight,
 }: {
   section: PageSection;
   bgClass: string;
