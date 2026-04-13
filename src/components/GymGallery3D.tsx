@@ -21,7 +21,7 @@ const GymGallery3D: React.FC<GymGallery3DProps> = ({
     skipSnaps: false,
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
