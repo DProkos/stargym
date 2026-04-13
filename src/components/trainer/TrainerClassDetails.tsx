@@ -154,7 +154,6 @@ export const TrainerClassDetails = ({
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
   const availableSpots = maxCapacity - confirmedBookings.length;
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const handleCancelBooking = async (bookingId: string) => {
     setCancellingId(bookingId);
