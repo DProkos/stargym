@@ -321,15 +321,6 @@ export default function TrainerPortal() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="schedule" className="space-y-4">
-                  {user && (
-                    <TrainerCalendarWithDnD 
-                      trainerId={user.id}
-                      classes={classes}
-                      onClassesChange={() => loadClasses(user.id)}
-                    />
-                  )}
-                </TabsContent>
 
                 <TabsContent value="list" className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
