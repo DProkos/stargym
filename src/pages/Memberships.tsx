@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SEOHead } from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -123,6 +124,7 @@ export default function Memberships() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/memberships" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       
