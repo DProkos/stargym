@@ -1,3 +1,4 @@
+import { SEOHead } from '@/components/SEOHead';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -100,6 +101,7 @@ export default function Home() {
   // Fallback to static content if no sections in database
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SEOHead } from '@/components/SEOHead';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -188,6 +189,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/contact" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       

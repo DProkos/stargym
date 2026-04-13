@@ -1,3 +1,4 @@
+import { SEOHead } from '@/components/SEOHead';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -83,6 +84,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/pricing" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       
