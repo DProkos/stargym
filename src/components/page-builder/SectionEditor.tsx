@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageUpload from '@/components/ImageUpload';
+import VideoUpload from '@/components/VideoUpload';
 import { Plus, Trash2, Languages, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -333,14 +334,41 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
               />
             </div>
             <div>
-              <Label>Hero Image</Label>
-              <ImageUpload
-                currentImageUrl={section.image_url}
-                onImageUploaded={(url) => onUpdate({ image_url: url })}
-                bucket="cms-images"
-                folder="hero"
-              />
+              <Label>Τύπος Background Media</Label>
+              <Select
+                value={localSettings.media_type || 'image'}
+                onValueChange={(value) => updateSettings('media_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="image">Εικόνα</SelectItem>
+                  <SelectItem value="video">Βίντεο</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            {(localSettings.media_type || 'image') === 'image' ? (
+              <div>
+                <Label>Hero Image</Label>
+                <ImageUpload
+                  currentImageUrl={section.image_url}
+                  onImageUploaded={(url) => onUpdate({ image_url: url })}
+                  bucket="cms-images"
+                  folder="hero"
+                />
+              </div>
+            ) : (
+              <div>
+                <VideoUpload
+                  currentVideoUrl={localSettings.video_url || ''}
+                  onVideoUploaded={(url) => updateSettings('video_url', url)}
+                  bucket="cms-images"
+                  folder="hero-videos"
+                  maxSizeMB={50}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Button 1 Text</Label>
