@@ -349,6 +349,7 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
               </Select>
             </div>
             {(localSettings.media_type || 'image') === 'image' ? (
+              <>
               <div>
                 <Label>Ύψος Hero Section</Label>
                 <Select
@@ -376,6 +377,7 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                   folder="hero"
                 />
               </div>
+              </>
             ) : (
               <div>
                 <div className="mb-4">
