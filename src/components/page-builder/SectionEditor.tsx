@@ -365,7 +365,7 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
                   onVideoUploaded={(url) => updateSettings('video_url', url)}
                   bucket="cms-images"
                   folder="hero-videos"
-                  maxSizeMB={50}
+                  maxSizeMB={60}
                 />
               </div>
             )}
