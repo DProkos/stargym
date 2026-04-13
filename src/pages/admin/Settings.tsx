@@ -75,11 +75,17 @@ export default function Settings() {
   });
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
-    autoReplySubject: 'Λάβαμε το μήνυμά σας!',
-    autoReplyHeading: '✉️ Ευχαριστούμε για το μήνυμά σας!',
-    autoReplyBody: 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!',
-    autoReplySignature: 'Η Ομάδα μας',
+    autoReplySubjectEl: 'Λάβαμε το μήνυμά σας!',
+    autoReplySubjectEn: 'We received your message!',
+    autoReplyHeadingEl: '✉️ Ευχαριστούμε για το μήνυμά σας!',
+    autoReplyHeadingEn: '✉️ Thank you for your message!',
+    autoReplyBodyEl: 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!',
+    autoReplyBodyEn: 'We received your message and will get back to you as soon as possible.\n\nThank you for your interest!',
+    autoReplySignatureEl: 'Η Ομάδα μας',
+    autoReplySignatureEn: 'Our Team',
+    autoReplyHeadingColor: '#FFD700',
   });
+  const [contactLangTab, setContactLangTab] = useState<'el' | 'en'>('el');
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
@@ -273,10 +279,15 @@ export default function Settings() {
       .select('setting_key, setting_value')
       .in('setting_key', [
         'contact_form_recipient_email',
-        'contact_auto_reply_subject',
-        'contact_auto_reply_heading',
-        'contact_auto_reply_body',
-        'contact_auto_reply_signature',
+        'contact_auto_reply_subject_el',
+        'contact_auto_reply_subject_en',
+        'contact_auto_reply_heading_el',
+        'contact_auto_reply_heading_en',
+        'contact_auto_reply_body_el',
+        'contact_auto_reply_body_en',
+        'contact_auto_reply_signature_el',
+        'contact_auto_reply_signature_en',
+        'contact_auto_reply_heading_color',
       ]);
 
     if (error) {
@@ -289,10 +300,15 @@ export default function Settings() {
 
     setContactSettings({
       recipientEmail: getValue('contact_form_recipient_email', ''),
-      autoReplySubject: getValue('contact_auto_reply_subject', 'Λάβαμε το μήνυμά σας!'),
-      autoReplyHeading: getValue('contact_auto_reply_heading', '✉️ Ευχαριστούμε για το μήνυμά σας!'),
-      autoReplyBody: getValue('contact_auto_reply_body', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!'),
-      autoReplySignature: getValue('contact_auto_reply_signature', 'Η Ομάδα μας'),
+      autoReplySubjectEl: getValue('contact_auto_reply_subject_el', 'Λάβαμε το μήνυμά σας!'),
+      autoReplySubjectEn: getValue('contact_auto_reply_subject_en', 'We received your message!'),
+      autoReplyHeadingEl: getValue('contact_auto_reply_heading_el', '✉️ Ευχαριστούμε για το μήνυμά σας!'),
+      autoReplyHeadingEn: getValue('contact_auto_reply_heading_en', '✉️ Thank you for your message!'),
+      autoReplyBodyEl: getValue('contact_auto_reply_body_el', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!'),
+      autoReplyBodyEn: getValue('contact_auto_reply_body_en', 'We received your message and will get back to you as soon as possible.\n\nThank you for your interest!'),
+      autoReplySignatureEl: getValue('contact_auto_reply_signature_el', 'Η Ομάδα μας'),
+      autoReplySignatureEn: getValue('contact_auto_reply_signature_en', 'Our Team'),
+      autoReplyHeadingColor: getValue('contact_auto_reply_heading_color', '#FFD700'),
     });
   };
 
@@ -300,10 +316,15 @@ export default function Settings() {
     try {
       const settingsToSave = [
         { setting_key: 'contact_form_recipient_email', setting_value: contactSettings.recipientEmail },
-        { setting_key: 'contact_auto_reply_subject', setting_value: contactSettings.autoReplySubject },
-        { setting_key: 'contact_auto_reply_heading', setting_value: contactSettings.autoReplyHeading },
-        { setting_key: 'contact_auto_reply_body', setting_value: contactSettings.autoReplyBody },
-        { setting_key: 'contact_auto_reply_signature', setting_value: contactSettings.autoReplySignature },
+        { setting_key: 'contact_auto_reply_subject_el', setting_value: contactSettings.autoReplySubjectEl },
+        { setting_key: 'contact_auto_reply_subject_en', setting_value: contactSettings.autoReplySubjectEn },
+        { setting_key: 'contact_auto_reply_heading_el', setting_value: contactSettings.autoReplyHeadingEl },
+        { setting_key: 'contact_auto_reply_heading_en', setting_value: contactSettings.autoReplyHeadingEn },
+        { setting_key: 'contact_auto_reply_body_el', setting_value: contactSettings.autoReplyBodyEl },
+        { setting_key: 'contact_auto_reply_body_en', setting_value: contactSettings.autoReplyBodyEn },
+        { setting_key: 'contact_auto_reply_signature_el', setting_value: contactSettings.autoReplySignatureEl },
+        { setting_key: 'contact_auto_reply_signature_en', setting_value: contactSettings.autoReplySignatureEn },
+        { setting_key: 'contact_auto_reply_heading_color', setting_value: contactSettings.autoReplyHeadingColor },
       ];
 
       for (const setting of settingsToSave) {
@@ -1037,50 +1058,124 @@ Test Email - ${editingTemplate.name}
                     <div className="border-t pt-6">
                       <h3 className="text-lg font-semibold mb-4">Αυτόματο Email Απάντησης</h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Αυτό το email στέλνεται αυτόματα στον αποστολέα όταν συμπληρώσει τη φόρμα επικοινωνίας
+                        Αυτό το email στέλνεται αυτόματα στον αποστολέα όταν συμπληρώσει τη φόρμα επικοινωνίας.
+                        Η γλώσσα του email εξαρτάται από τη γλώσσα που έχει επιλέξει ο χρήστης στο site.
                       </p>
-                      
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Θέμα Email</Label>
-                          <Input
-                            placeholder="π.χ. Λάβαμε το μήνυμά σας!"
-                            value={contactSettings.autoReplySubject}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubject: e.target.value })}
-                          />
-                        </div>
 
-                        <div className="space-y-2">
-                          <Label>Επικεφαλίδα</Label>
-                          <Input
-                            placeholder="π.χ. ✉️ Ευχαριστούμε για το μήνυμά σας!"
-                            value={contactSettings.autoReplyHeading}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeading: e.target.value })}
+                      <div className="space-y-2 mb-4">
+                        <Label>Χρώμα Επικεφαλίδας</Label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={contactSettings.autoReplyHeadingColor}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                            className="w-10 h-10 rounded border cursor-pointer"
                           />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Κείμενο Μηνύματος</Label>
-                          <Textarea
-                            placeholder="Γράψτε το κείμενο του αυτόματου email..."
-                            value={contactSettings.autoReplyBody}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBody: e.target.value })}
-                            rows={5}
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            Χρησιμοποιήστε {"{{name}}"} για να εμφανίζεται το όνομα του αποστολέα
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Υπογραφή</Label>
                           <Input
-                            placeholder="π.χ. Η Ομάδα μας"
-                            value={contactSettings.autoReplySignature}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignature: e.target.value })}
+                            value={contactSettings.autoReplyHeadingColor}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                            className="w-32"
+                            placeholder="#FFD700"
                           />
                         </div>
                       </div>
+
+                      <div className="flex gap-2 mb-4">
+                        <Button
+                          variant={contactLangTab === 'el' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setContactLangTab('el')}
+                        >
+                          🇬🇷 Ελληνικά
+                        </Button>
+                        <Button
+                          variant={contactLangTab === 'en' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setContactLangTab('en')}
+                        >
+                          🇬🇧 English
+                        </Button>
+                      </div>
+                      
+                      {contactLangTab === 'el' ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Θέμα Email (EL)</Label>
+                            <Input
+                              placeholder="π.χ. Λάβαμε το μήνυμά σας!"
+                              value={contactSettings.autoReplySubjectEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubjectEl: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Επικεφαλίδα (EL)</Label>
+                            <Input
+                              placeholder="π.χ. ✉️ Ευχαριστούμε για το μήνυμά σας!"
+                              value={contactSettings.autoReplyHeadingEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingEl: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Κείμενο Μηνύματος (EL)</Label>
+                            <Textarea
+                              placeholder="Γράψτε το κείμενο του αυτόματου email..."
+                              value={contactSettings.autoReplyBodyEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBodyEl: e.target.value })}
+                              rows={5}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Χρησιμοποιήστε {"{{name}}"} για να εμφανίζεται το όνομα του αποστολέα
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Υπογραφή (EL)</Label>
+                            <Input
+                              placeholder="π.χ. Η Ομάδα μας"
+                              value={contactSettings.autoReplySignatureEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignatureEl: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Email Subject (EN)</Label>
+                            <Input
+                              placeholder="e.g. We received your message!"
+                              value={contactSettings.autoReplySubjectEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubjectEn: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Heading (EN)</Label>
+                            <Input
+                              placeholder="e.g. ✉️ Thank you for your message!"
+                              value={contactSettings.autoReplyHeadingEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingEn: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Message Body (EN)</Label>
+                            <Textarea
+                              placeholder="Write the auto-reply email text..."
+                              value={contactSettings.autoReplyBodyEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBodyEn: e.target.value })}
+                              rows={5}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Use {"{{name}}"} to display the sender's name
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Signature (EN)</Label>
+                            <Input
+                              placeholder="e.g. Our Team"
+                              value={contactSettings.autoReplySignatureEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignatureEn: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <Button onClick={handleSaveContactSettings}>Αποθήκευση</Button>
