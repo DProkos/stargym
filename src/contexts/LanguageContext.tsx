@@ -61,6 +61,8 @@ const translations = {
     'contact.send': 'Send Message',
     'contact.location': 'Location',
     'contact.hours': 'Opening Hours',
+    'contact.success': 'Message Sent Successfully!',
+    'contact.successDesc': 'Your message has been sent. We will get back to you as soon as possible.',
     
     // Auth
     'auth.signIn': 'Sign In',
@@ -197,6 +199,8 @@ const translations = {
     'contact.send': 'Αποστολή Μηνύματος',
     'contact.location': 'Τοποθεσία',
     'contact.hours': 'Ωράριο Λειτουργίας',
+    'contact.success': 'Το μήνυμά σας εστάλη επιτυχώς!',
+    'contact.successDesc': 'Θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.',
     
     // Auth
     'auth.signIn': 'Σύνδεση',
