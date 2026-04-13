@@ -21,6 +21,8 @@ interface NavigationProps {
 interface NavPage {
   key: string;
   label: string;
+  labelEn?: string;
+  labelEl?: string;
   path: string;
 }
 
@@ -122,15 +124,17 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
 
     const existingPageKeys = [...new Set(pagesData?.map(d => d.page_key) || [])];
 
-    // Get saved nav config from site_settings
+    // Get saved nav config from site_settings (including bilingual page labels)
     const { data: settingsData } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['nav_order', 'nav_labels', 'nav_visibility']);
+      .or('setting_key.in.(nav_order,nav_labels,nav_visibility),setting_key.like.page_%_label%');
 
     let navOrder: string[] = [];
     let navLabels: Record<string, string> = {};
     let navVisibility: Record<string, boolean> = {};
+    let pageLabelEn: Record<string, string> = {};
+    let pageLabelEl: Record<string, string> = {};
 
     settingsData?.forEach(setting => {
       try {
@@ -142,6 +146,15 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
         }
         if (setting.setting_key === 'nav_visibility' && setting.setting_value) {
           navVisibility = JSON.parse(setting.setting_value);
+        }
+        // Parse bilingual labels: page_{key}_label_en / page_{key}_label_el
+        const labelEnMatch = setting.setting_key.match(/^page_(.+)_label_en$/);
+        if (labelEnMatch && setting.setting_value) {
+          pageLabelEn[labelEnMatch[1]] = setting.setting_value;
+        }
+        const labelElMatch = setting.setting_key.match(/^page_(.+)_label_el$/);
+        if (labelElMatch && setting.setting_value) {
+          pageLabelEl[labelElMatch[1]] = setting.setting_value;
         }
       } catch (e) {
         console.error('Error parsing nav setting:', e);
@@ -166,6 +179,8 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             navLabels[key] ||
             defaultPage?.label ||
             key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          labelEn: pageLabelEn[key],
+          labelEl: pageLabelEl[key],
           path: defaultPage?.path || `/page/${key}`,
         });
       });
@@ -180,6 +195,8 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
               navLabels[key] ||
               defaultPage?.label ||
               key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+            labelEn: pageLabelEn[key],
+            labelEl: pageLabelEl[key],
             path: defaultPage?.path || `/page/${key}`,
           });
         }
@@ -233,6 +250,13 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     await supabase.auth.signOut();
     navigate('/');
   };
+  const getPageLabel = (page: NavPage) => {
+    if (language === 'el' && page.labelEl) return page.labelEl;
+    if (language === 'en' && page.labelEn) return page.labelEn;
+    // Fallback: try translation key, then raw label
+    const translated = t(page.label);
+    return translated !== page.label ? translated : page.label;
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -277,7 +301,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 to={page.path} 
                 className="hover:text-primary transition-colors"
               >
-                {t(page.label)}
+                {getPageLabel(page)}
               </Link>
             ))}
           </div>
@@ -341,7 +365,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 className="hover:text-primary transition-colors" 
                 onClick={() => setMobileMenuOpen(false)}
               >
-                {t(page.label)}
+                {getPageLabel(page)}
               </Link>
             ))}
             <DropdownMenu>
