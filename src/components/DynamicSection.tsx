@@ -71,6 +71,15 @@ const withCacheBust = (url: string | null, version?: string | null) => {
   return `${url}${sep}v=${encodeURIComponent(version)}`;
 };
 
+const getVideoMimeType = (url: string) => {
+  const cleanUrl = url.split('?')[0].toLowerCase();
+
+  if (cleanUrl.endsWith('.mov')) return 'video/quicktime';
+  if (cleanUrl.endsWith('.webm')) return 'video/webm';
+
+  return 'video/mp4';
+};
+
 // Hero Section Component with Parallax and Neon
 function HeroSection({
   section,
@@ -139,13 +148,15 @@ function HeroSection({
   const parallaxStyle = parallaxEnabled
     ? { transform: `translateY(${scrollY * parallaxFactor}px)` }
     : {};
+  const videoUrl = withCacheBust(section.settings?.video_url || null, section.updated_at);
 
   return (
     <section ref={sectionRef} className={`pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden ${bgClass}`}>
       {/* Video or Image background */}
-      {section.settings?.media_type === 'video' && section.settings?.video_url ? (
+      {section.settings?.media_type === 'video' && videoUrl ? (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
           <video
+            key={videoUrl}
             className={`w-full h-full object-cover transition-transform duration-100`}
             style={{
               ...parallaxStyle,
@@ -157,11 +168,8 @@ function HeroSection({
             playsInline
             preload="auto"
           >
-            <source src={section.settings.video_url} type={
-              section.settings.video_url.endsWith('.mov') ? 'video/quicktime' :
-              section.settings.video_url.endsWith('.webm') ? 'video/webm' : 'video/mp4'
-            } />
-            <source src={section.settings.video_url} />
+            <source src={videoUrl} type={getVideoMimeType(videoUrl)} />
+            <source src={videoUrl} />
           </video>
           {overlayEnabled && (
             <div 
