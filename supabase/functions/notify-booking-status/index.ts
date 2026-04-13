@@ -286,12 +286,15 @@ serve(async (req) => {
     });
 
     const isConfirmed = status === 'confirmed';
-    const statusText = isConfirmed ? 'Επιβεβαιώθηκε' : 'Απορρίφθηκε';
+    const isCancelled = status === 'cancelled';
+    const statusText = isConfirmed ? 'Επιβεβαιώθηκε' : isCancelled ? 'Ακυρώθηκε' : 'Απορρίφθηκε';
     const statusColor = isConfirmed ? '#22c55e' : '#ef4444';
     const statusIcon = isConfirmed ? '✓' : '✗';
 
     const subject = isConfirmed 
       ? `Η κράτησή σας για ${booking.class.name} επιβεβαιώθηκε!`
+      : isCancelled
+      ? `Η κράτησή σας για ${booking.class.name} ακυρώθηκε`
       : `Η κράτησή σας για ${booking.class.name} απορρίφθηκε`;
 
     const html = `
