@@ -105,7 +105,7 @@ export default function TrainerPortal() {
           .from('bookings')
           .select('*')
           .eq('class_id', cls.id)
-          .eq('status', 'pending')
+          .eq('status', 'confirmed')
           .gte('booking_date', today);
         
         if (error) {
