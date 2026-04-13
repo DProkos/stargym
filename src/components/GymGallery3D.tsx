@@ -119,7 +119,7 @@ const GymGallery3D: React.FC<GymGallery3DProps> = ({
                 >
                   <div 
                     className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-2xl"
-                    onClick={() => setFullscreenImage(image.src)}
+                    onClick={() => setFullscreenIndex(index)}
                   >
                     <div className="aspect-[16/10]">
                       <img
