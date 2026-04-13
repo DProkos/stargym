@@ -1012,15 +1012,15 @@ Test Email - ${editingTemplate.name}
                 </Card>
               </TabsContent>
 
-              <TabsContent value="contact" className="space-y-4">
+               <TabsContent value="contact" className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Ρυθμίσεις Φόρμας Επικοινωνίας</CardTitle>
                     <CardDescription>
-                      Ορίστε το email στο οποίο θα αποστέλλονται τα μηνύματα από τη φόρμα επικοινωνίας
+                      Ορίστε το email παραλήπτη και προσαρμόστε το αυτόματο email απάντησης
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     <div className="space-y-2">
                       <Label>Email Παραλήπτη</Label>
                       <Input
@@ -1033,6 +1033,56 @@ Test Email - ${editingTemplate.name}
                         Τα μηνύματα που υποβάλλονται μέσω της φόρμας επικοινωνίας θα αποστέλλονται σε αυτό το email
                       </p>
                     </div>
+
+                    <div className="border-t pt-6">
+                      <h3 className="text-lg font-semibold mb-4">Αυτόματο Email Απάντησης</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Αυτό το email στέλνεται αυτόματα στον αποστολέα όταν συμπληρώσει τη φόρμα επικοινωνίας
+                      </p>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Θέμα Email</Label>
+                          <Input
+                            placeholder="π.χ. Λάβαμε το μήνυμά σας!"
+                            value={contactSettings.autoReplySubject}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubject: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Επικεφαλίδα</Label>
+                          <Input
+                            placeholder="π.χ. ✉️ Ευχαριστούμε για το μήνυμά σας!"
+                            value={contactSettings.autoReplyHeading}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeading: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Κείμενο Μηνύματος</Label>
+                          <Textarea
+                            placeholder="Γράψτε το κείμενο του αυτόματου email..."
+                            value={contactSettings.autoReplyBody}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBody: e.target.value })}
+                            rows={5}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Χρησιμοποιήστε {"{{name}}"} για να εμφανίζεται το όνομα του αποστολέα
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Υπογραφή</Label>
+                          <Input
+                            placeholder="π.χ. Η Ομάδα μας"
+                            value={contactSettings.autoReplySignature}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignature: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <Button onClick={handleSaveContactSettings}>Αποθήκευση</Button>
                   </CardContent>
                 </Card>
