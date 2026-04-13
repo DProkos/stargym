@@ -22,7 +22,7 @@ interface Booking {
 }
 
 export default function MyBookings() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
