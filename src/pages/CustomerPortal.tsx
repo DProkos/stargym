@@ -44,7 +44,7 @@ interface Class {
 }
 
 export default function CustomerPortal() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
