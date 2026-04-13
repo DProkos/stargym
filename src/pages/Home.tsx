@@ -47,6 +47,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
+        <SEOHead path="/" />
         <Navigation user={user} isAdmin={isAdmin} />
         <main className="flex-grow">
           {/* Hero Skeleton - Mobile Optimized */}
