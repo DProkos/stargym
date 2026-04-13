@@ -26,6 +26,13 @@ interface NavPage {
   path: string;
 }
 
+const parseStoredNumber = (value: string | null | undefined, fallback: number) => {
+  if (value === null || value === undefined || value === '') return fallback;
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
 // Default navigation structure - will be filtered by what exists in DB
 const DEFAULT_NAV_PAGES: NavPage[] = [
   { key: 'home', label: 'nav.home', path: '/' },
@@ -104,7 +111,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
         loadedLogo = setting.setting_value;
       }
       if (setting.setting_key === 'logo_size' && setting.setting_value) {
-        loadedSize = parseInt(setting.setting_value) || 32;
+        loadedSize = parseStoredNumber(setting.setting_value, 32);
       }
       if (setting.setting_key === 'nav_bg_color' && setting.setting_value) {
         loadedNavBg = setting.setting_value;
@@ -113,7 +120,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
         loadedNavText = setting.setting_value;
       }
       if (setting.setting_key === 'nav_opacity' && setting.setting_value) {
-        loadedNavOpacity = parseInt(setting.setting_value) || 80;
+        loadedNavOpacity = parseStoredNumber(setting.setting_value, 80);
       }
       if (setting.setting_key === 'nav_blur') {
         loadedNavBlur = setting.setting_value !== 'false';
