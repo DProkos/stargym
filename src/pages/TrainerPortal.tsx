@@ -237,14 +237,14 @@ export default function TrainerPortal() {
                               <Badge 
                                 variant="outline" 
                                 className={`text-lg px-4 py-2 ${
-                                  Number(utilization) >= 80 
-                                    ? 'bg-green-500/20 text-green-600 border-green-500'
+                                  Number(utilization) >= 90 
+                                    ? 'bg-red-500/20 text-red-600 border-red-500'
                                     : Number(utilization) >= 50
                                     ? 'bg-amber-500/20 text-amber-600 border-amber-500'
-                                    : 'bg-red-500/20 text-red-600 border-red-500'
+                                    : 'bg-green-500/20 text-green-600 border-green-500'
                                 }`}
                               >
-                                {utilization}% Full
+                                {utilization}%
                               </Badge>
                             </div>
                           </CardHeader>
@@ -267,11 +267,11 @@ export default function TrainerPortal() {
                               <div className="w-full bg-muted rounded-full h-3">
                                 <div 
                                   className={`h-3 rounded-full transition-all ${
-                                    Number(utilization) >= 80 
-                                      ? 'bg-green-500'
+                                    Number(utilization) >= 90 
+                                      ? 'bg-red-500'
                                       : Number(utilization) >= 50
                                       ? 'bg-amber-500'
-                                      : 'bg-red-500'
+                                      : 'bg-green-500'
                                   }`}
                                   style={{ width: `${utilization}%` }}
                                 />
