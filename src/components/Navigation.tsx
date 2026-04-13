@@ -63,7 +63,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     const { data, error } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['site_name', 'site_name_color', 'site_name_font', 'site_name_visible', 'logo_url', 'logo_size']);
+      .in('setting_key', ['site_name', 'site_name_color', 'site_name_font', 'site_name_visible', 'logo_url', 'logo_size', 'nav_bg_color', 'nav_text_color', 'nav_opacity', 'nav_blur']);
 
     if (error) {
       console.error('Error loading site settings:', error);
