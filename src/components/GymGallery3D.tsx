@@ -161,14 +161,38 @@ const GymGallery3D: React.FC<GymGallery3DProps> = ({
       </div>
 
       {/* Fullscreen Dialog */}
-      <Dialog open={!!fullscreenImage} onOpenChange={() => setFullscreenImage(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
-          {fullscreenImage && (
-            <img
-              src={fullscreenImage}
-              alt="Fullscreen view"
-              className="w-full h-full object-contain"
-            />
+      <Dialog open={fullscreenIndex !== null} onOpenChange={() => setFullscreenIndex(null)}>
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-[95vw] h-[95vh] p-0 bg-black/95 border-none flex items-center justify-center">
+          {fullscreenIndex !== null && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-background/80 backdrop-blur-sm hover:bg-background"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFullscreenIndex((fullscreenIndex - 1 + images.length) % images.length);
+                }}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <img
+                src={images[fullscreenIndex].src}
+                alt={images[fullscreenIndex].alt}
+                className="max-w-full max-h-full object-contain"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-background/80 backdrop-blur-sm hover:bg-background"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFullscreenIndex((fullscreenIndex + 1) % images.length);
+                }}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            </>
           )}
         </DialogContent>
       </Dialog>
