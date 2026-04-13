@@ -20,7 +20,7 @@ import {
 
 export function AppSidebarCustomer() {
   const { state } = useSidebar();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
 
