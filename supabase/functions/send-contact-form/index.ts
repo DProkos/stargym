@@ -101,7 +101,7 @@ serve(async (req) => {
         'contact_auto_reply_signature_el',
         'contact_auto_reply_signature_en',
         'contact_auto_reply_heading_color',
-        // Legacy fallback keys
+        'contact_auto_reply_heading_text_color',
         'contact_auto_reply_subject',
         'contact_auto_reply_heading',
         'contact_auto_reply_body',
@@ -129,6 +129,7 @@ serve(async (req) => {
       : getVal('contact_auto_reply_signature_el', getVal('contact_auto_reply_signature', 'Η Ομάδα μας'));
 
     const headingColor = getVal('contact_auto_reply_heading_color', '#FFD700');
+    const headingTextColor = getVal('contact_auto_reply_heading_text_color', '#0d0d0d');
 
     const arBody = arBodyRaw.replace(/\{\{name\}\}/g, name);
 
@@ -138,7 +139,7 @@ serve(async (req) => {
       ? 'This is an automatic confirmation email. Please do not reply to this message.'
       : 'Αυτό είναι ένα αυτόματο email επιβεβαίωσης. Παρακαλούμε μην απαντήσετε σε αυτό το μήνυμα.';
 
-    const autoReplyHtml = buildAutoReplyEmail(arHeading, greeting, arBody, regards, arSignature, footerText, headingColor);
+    const autoReplyHtml = buildAutoReplyEmail(arHeading, greeting, arBody, regards, arSignature, footerText, headingColor, headingTextColor);
     const autoReplyText = `${greeting}\n\n${arBody}\n\n${regards}\n${arSignature}`;
 
     const { error: autoReplyError } = await supabase.functions.invoke('send-email', {
@@ -190,12 +191,12 @@ function buildNotificationEmail(name: string, email: string, phone: string | und
   </body></html>`;
 }
 
-function buildAutoReplyEmail(heading: string, greeting: string, body: string, regards: string, signature: string, footerText: string, headingColor: string): string {
+function buildAutoReplyEmail(heading: string, greeting: string, body: string, regards: string, signature: string, footerText: string, headingColor: string, headingTextColor: string): string {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
     body { font-family: Arial, sans-serif; background-color: #0d0d0d; color: #fff8e1; margin: 0; padding: 20px; }
     .container { max-width: 600px; margin: 0 auto; background-color: #141414; border-radius: 12px; overflow: hidden; border: 1px solid #4a3d1d; }
     .header { background: linear-gradient(135deg, ${headingColor} 0%, ${headingColor}cc 100%); padding: 30px; text-align: center; }
-    .header h1 { color: #0d0d0d; margin: 0; font-size: 24px; }
+    .header h1 { color: ${headingTextColor}; margin: 0; font-size: 24px; }
     .content { padding: 30px; }
     .greeting { color: ${headingColor}; font-size: 18px; margin-bottom: 20px; }
     .message { color: #fff8e1; line-height: 1.6; }

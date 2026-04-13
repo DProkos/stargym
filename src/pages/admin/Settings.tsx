@@ -84,6 +84,7 @@ export default function Settings() {
     autoReplySignatureEl: 'Η Ομάδα μας',
     autoReplySignatureEn: 'Our Team',
     autoReplyHeadingColor: '#FFD700',
+    autoReplyHeadingTextColor: '#0d0d0d',
   });
   const [contactLangTab, setContactLangTab] = useState<'el' | 'en'>('el');
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
@@ -288,6 +289,7 @@ export default function Settings() {
         'contact_auto_reply_signature_el',
         'contact_auto_reply_signature_en',
         'contact_auto_reply_heading_color',
+        'contact_auto_reply_heading_text_color',
       ]);
 
     if (error) {
@@ -309,6 +311,7 @@ export default function Settings() {
       autoReplySignatureEl: getValue('contact_auto_reply_signature_el', 'Η Ομάδα μας'),
       autoReplySignatureEn: getValue('contact_auto_reply_signature_en', 'Our Team'),
       autoReplyHeadingColor: getValue('contact_auto_reply_heading_color', '#FFD700'),
+      autoReplyHeadingTextColor: getValue('contact_auto_reply_heading_text_color', '#0d0d0d'),
     });
   };
 
@@ -325,6 +328,7 @@ export default function Settings() {
         { setting_key: 'contact_auto_reply_signature_el', setting_value: contactSettings.autoReplySignatureEl },
         { setting_key: 'contact_auto_reply_signature_en', setting_value: contactSettings.autoReplySignatureEn },
         { setting_key: 'contact_auto_reply_heading_color', setting_value: contactSettings.autoReplyHeadingColor },
+        { setting_key: 'contact_auto_reply_heading_text_color', setting_value: contactSettings.autoReplyHeadingTextColor },
       ];
 
       for (const setting of settingsToSave) {
@@ -1062,21 +1066,40 @@ Test Email - ${editingTemplate.name}
                         Η γλώσσα του email εξαρτάται από τη γλώσσα που έχει επιλέξει ο χρήστης στο site.
                       </p>
 
-                      <div className="space-y-2 mb-4">
-                        <Label>Χρώμα Επικεφαλίδας</Label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={contactSettings.autoReplyHeadingColor}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
-                            className="w-10 h-10 rounded border cursor-pointer"
-                          />
-                          <Input
-                            value={contactSettings.autoReplyHeadingColor}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
-                            className="w-32"
-                            placeholder="#FFD700"
-                          />
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-2">
+                          <Label>Χρώμα Φόντου Επικεφαλίδας</Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={contactSettings.autoReplyHeadingColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                              className="w-10 h-10 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={contactSettings.autoReplyHeadingColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                              className="w-32"
+                              placeholder="#FFD700"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Χρώμα Γραμμάτων Επικεφαλίδας</Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={contactSettings.autoReplyHeadingTextColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingTextColor: e.target.value })}
+                              className="w-10 h-10 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={contactSettings.autoReplyHeadingTextColor}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingTextColor: e.target.value })}
+                              className="w-32"
+                              placeholder="#0d0d0d"
+                            />
+                          </div>
                         </div>
                       </div>
 
