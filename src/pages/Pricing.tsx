@@ -84,6 +84,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/pricing" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       

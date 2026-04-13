@@ -101,6 +101,7 @@ export default function Home() {
   // Fallback to static content if no sections in database
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       

@@ -189,6 +189,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead path="/contact" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
       
