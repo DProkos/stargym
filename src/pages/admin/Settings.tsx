@@ -1058,50 +1058,124 @@ Test Email - ${editingTemplate.name}
                     <div className="border-t pt-6">
                       <h3 className="text-lg font-semibold mb-4">Αυτόματο Email Απάντησης</h3>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Αυτό το email στέλνεται αυτόματα στον αποστολέα όταν συμπληρώσει τη φόρμα επικοινωνίας
+                        Αυτό το email στέλνεται αυτόματα στον αποστολέα όταν συμπληρώσει τη φόρμα επικοινωνίας.
+                        Η γλώσσα του email εξαρτάται από τη γλώσσα που έχει επιλέξει ο χρήστης στο site.
                       </p>
-                      
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Θέμα Email</Label>
-                          <Input
-                            placeholder="π.χ. Λάβαμε το μήνυμά σας!"
-                            value={contactSettings.autoReplySubject}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubject: e.target.value })}
-                          />
-                        </div>
 
-                        <div className="space-y-2">
-                          <Label>Επικεφαλίδα</Label>
-                          <Input
-                            placeholder="π.χ. ✉️ Ευχαριστούμε για το μήνυμά σας!"
-                            value={contactSettings.autoReplyHeading}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeading: e.target.value })}
+                      <div className="space-y-2 mb-4">
+                        <Label>Χρώμα Επικεφαλίδας</Label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={contactSettings.autoReplyHeadingColor}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                            className="w-10 h-10 rounded border cursor-pointer"
                           />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Κείμενο Μηνύματος</Label>
-                          <Textarea
-                            placeholder="Γράψτε το κείμενο του αυτόματου email..."
-                            value={contactSettings.autoReplyBody}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBody: e.target.value })}
-                            rows={5}
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            Χρησιμοποιήστε {"{{name}}"} για να εμφανίζεται το όνομα του αποστολέα
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Υπογραφή</Label>
                           <Input
-                            placeholder="π.χ. Η Ομάδα μας"
-                            value={contactSettings.autoReplySignature}
-                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignature: e.target.value })}
+                            value={contactSettings.autoReplyHeadingColor}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingColor: e.target.value })}
+                            className="w-32"
+                            placeholder="#FFD700"
                           />
                         </div>
                       </div>
+
+                      <div className="flex gap-2 mb-4">
+                        <Button
+                          variant={contactLangTab === 'el' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setContactLangTab('el')}
+                        >
+                          🇬🇷 Ελληνικά
+                        </Button>
+                        <Button
+                          variant={contactLangTab === 'en' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setContactLangTab('en')}
+                        >
+                          🇬🇧 English
+                        </Button>
+                      </div>
+                      
+                      {contactLangTab === 'el' ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Θέμα Email (EL)</Label>
+                            <Input
+                              placeholder="π.χ. Λάβαμε το μήνυμά σας!"
+                              value={contactSettings.autoReplySubjectEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubjectEl: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Επικεφαλίδα (EL)</Label>
+                            <Input
+                              placeholder="π.χ. ✉️ Ευχαριστούμε για το μήνυμά σας!"
+                              value={contactSettings.autoReplyHeadingEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingEl: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Κείμενο Μηνύματος (EL)</Label>
+                            <Textarea
+                              placeholder="Γράψτε το κείμενο του αυτόματου email..."
+                              value={contactSettings.autoReplyBodyEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBodyEl: e.target.value })}
+                              rows={5}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Χρησιμοποιήστε {"{{name}}"} για να εμφανίζεται το όνομα του αποστολέα
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Υπογραφή (EL)</Label>
+                            <Input
+                              placeholder="π.χ. Η Ομάδα μας"
+                              value={contactSettings.autoReplySignatureEl}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignatureEl: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Email Subject (EN)</Label>
+                            <Input
+                              placeholder="e.g. We received your message!"
+                              value={contactSettings.autoReplySubjectEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubjectEn: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Heading (EN)</Label>
+                            <Input
+                              placeholder="e.g. ✉️ Thank you for your message!"
+                              value={contactSettings.autoReplyHeadingEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeadingEn: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Message Body (EN)</Label>
+                            <Textarea
+                              placeholder="Write the auto-reply email text..."
+                              value={contactSettings.autoReplyBodyEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBodyEn: e.target.value })}
+                              rows={5}
+                            />
+                            <p className="text-sm text-muted-foreground">
+                              Use {"{{name}}"} to display the sender's name
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Signature (EN)</Label>
+                            <Input
+                              placeholder="e.g. Our Team"
+                              value={contactSettings.autoReplySignatureEn}
+                              onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignatureEn: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <Button onClick={handleSaveContactSettings}>Αποθήκευση</Button>
