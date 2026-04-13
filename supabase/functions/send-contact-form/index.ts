@@ -155,6 +155,28 @@ ${message}
 
     console.log('Contact form email sent to recipient successfully');
 
+    // Load auto-reply template settings
+    const { data: autoReplySettings } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'contact_auto_reply_subject',
+        'contact_auto_reply_heading',
+        'contact_auto_reply_body',
+        'contact_auto_reply_signature',
+      ]);
+
+    const getVal = (key: string, fallback: string) =>
+      autoReplySettings?.find(s => s.setting_key === key)?.setting_value || fallback;
+
+    const arSubject = getVal('contact_auto_reply_subject', 'Λάβαμε το μήνυμά σας!');
+    const arHeading = getVal('contact_auto_reply_heading', '✉️ Ευχαριστούμε για το μήνυμά σας!');
+    const arBodyRaw = getVal('contact_auto_reply_body', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!');
+    const arSignature = getVal('contact_auto_reply_signature', 'Η Ομάδα μας');
+
+    // Replace {{name}} placeholder
+    const arBody = arBodyRaw.replace(/\{\{name\}\}/g, name);
+
     // Send auto-reply to the sender
     const autoReplyHtml = `
       <!DOCTYPE html>
@@ -175,19 +197,14 @@ ${message}
       <body>
         <div class="container">
           <div class="header">
-            <h1>✉️ Ευχαριστούμε για το μήνυμά σας!</h1>
+            <h1>${arHeading}</h1>
           </div>
           <div class="content">
             <p class="greeting">Αγαπητέ/ή ${name},</p>
-            <p class="message">
-              Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.
-            </p>
-            <p class="message">
-              Σας ευχαριστούμε για το ενδιαφέρον σας!
-            </p>
+            ${arBody.split('\n').map(line => `<p class="message">${line}</p>`).join('')}
             <p class="message" style="margin-top: 30px;">
               Με εκτίμηση,<br>
-              <strong style="color: #FFD700;">Η Ομάδα μας</strong>
+              <strong style="color: #FFD700;">${arSignature}</strong>
             </p>
           </div>
           <div class="footer">
@@ -198,24 +215,12 @@ ${message}
       </html>
     `;
 
-    const autoReplyText = `
-Αγαπητέ/ή ${name},
-
-Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.
-
-Σας ευχαριστούμε για το ενδιαφέρον σας!
-
-Με εκτίμηση,
-Η Ομάδα μας
-
----
-Αυτό είναι ένα αυτόματο email επιβεβαίωσης.
-    `;
+    const autoReplyText = `Αγαπητέ/ή ${name},\n\n${arBody}\n\nΜε εκτίμηση,\n${arSignature}`;
 
     const { error: autoReplyError } = await supabase.functions.invoke('send-email', {
       body: {
         to: email,
-        subject: 'Λάβαμε το μήνυμά σας!',
+        subject: arSubject,
         html: autoReplyHtml,
         text: autoReplyText,
       },
@@ -226,7 +231,6 @@ ${message}
 
     if (autoReplyError) {
       console.error('Error sending auto-reply:', autoReplyError);
-      // Don't fail the request, just log the error
     } else {
       console.log('Auto-reply email sent successfully to:', email);
     }

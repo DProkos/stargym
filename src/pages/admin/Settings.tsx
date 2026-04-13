@@ -75,6 +75,10 @@ export default function Settings() {
   });
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
+    autoReplySubject: 'Λάβαμε το μήνυμά σας!',
+    autoReplyHeading: '✉️ Ευχαριστούμε για το μήνυμά σας!',
+    autoReplyBody: 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!',
+    autoReplySignature: 'Η Ομάδα μας',
   });
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -267,34 +271,54 @@ export default function Settings() {
     const { data, error } = await supabase
       .from('app_settings')
       .select('setting_key, setting_value')
-      .eq('setting_key', 'contact_form_recipient_email')
-      .maybeSingle();
+      .in('setting_key', [
+        'contact_form_recipient_email',
+        'contact_auto_reply_subject',
+        'contact_auto_reply_heading',
+        'contact_auto_reply_body',
+        'contact_auto_reply_signature',
+      ]);
 
     if (error) {
       console.error('Failed to load contact settings:', error);
       return;
     }
 
+    const getValue = (key: string, fallback: string) => 
+      data?.find(s => s.setting_key === key)?.setting_value || fallback;
+
     setContactSettings({
-      recipientEmail: data?.setting_value || '',
+      recipientEmail: getValue('contact_form_recipient_email', ''),
+      autoReplySubject: getValue('contact_auto_reply_subject', 'Λάβαμε το μήνυμά σας!'),
+      autoReplyHeading: getValue('contact_auto_reply_heading', '✉️ Ευχαριστούμε για το μήνυμά σας!'),
+      autoReplyBody: getValue('contact_auto_reply_body', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!'),
+      autoReplySignature: getValue('contact_auto_reply_signature', 'Η Ομάδα μας'),
     });
   };
 
   const handleSaveContactSettings = async () => {
     try {
-      const { error } = await supabase
-        .from('app_settings')
-        .upsert(
-          { 
-            setting_key: 'contact_form_recipient_email', 
-            setting_value: contactSettings.recipientEmail,
-            is_sensitive: false,
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: 'setting_key' }
-        );
+      const settingsToSave = [
+        { setting_key: 'contact_form_recipient_email', setting_value: contactSettings.recipientEmail },
+        { setting_key: 'contact_auto_reply_subject', setting_value: contactSettings.autoReplySubject },
+        { setting_key: 'contact_auto_reply_heading', setting_value: contactSettings.autoReplyHeading },
+        { setting_key: 'contact_auto_reply_body', setting_value: contactSettings.autoReplyBody },
+        { setting_key: 'contact_auto_reply_signature', setting_value: contactSettings.autoReplySignature },
+      ];
 
-      if (error) throw error;
+      for (const setting of settingsToSave) {
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert(
+            { 
+              ...setting,
+              is_sensitive: false,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'setting_key' }
+          );
+        if (error) throw error;
+      }
 
       toast.success('Οι ρυθμίσεις φόρμας επικοινωνίας αποθηκεύτηκαν');
     } catch (error) {
@@ -988,15 +1012,15 @@ Test Email - ${editingTemplate.name}
                 </Card>
               </TabsContent>
 
-              <TabsContent value="contact" className="space-y-4">
+               <TabsContent value="contact" className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Ρυθμίσεις Φόρμας Επικοινωνίας</CardTitle>
                     <CardDescription>
-                      Ορίστε το email στο οποίο θα αποστέλλονται τα μηνύματα από τη φόρμα επικοινωνίας
+                      Ορίστε το email παραλήπτη και προσαρμόστε το αυτόματο email απάντησης
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     <div className="space-y-2">
                       <Label>Email Παραλήπτη</Label>
                       <Input
@@ -1009,6 +1033,56 @@ Test Email - ${editingTemplate.name}
                         Τα μηνύματα που υποβάλλονται μέσω της φόρμας επικοινωνίας θα αποστέλλονται σε αυτό το email
                       </p>
                     </div>
+
+                    <div className="border-t pt-6">
+                      <h3 className="text-lg font-semibold mb-4">Αυτόματο Email Απάντησης</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Αυτό το email στέλνεται αυτόματα στον αποστολέα όταν συμπληρώσει τη φόρμα επικοινωνίας
+                      </p>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Θέμα Email</Label>
+                          <Input
+                            placeholder="π.χ. Λάβαμε το μήνυμά σας!"
+                            value={contactSettings.autoReplySubject}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySubject: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Επικεφαλίδα</Label>
+                          <Input
+                            placeholder="π.χ. ✉️ Ευχαριστούμε για το μήνυμά σας!"
+                            value={contactSettings.autoReplyHeading}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyHeading: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Κείμενο Μηνύματος</Label>
+                          <Textarea
+                            placeholder="Γράψτε το κείμενο του αυτόματου email..."
+                            value={contactSettings.autoReplyBody}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplyBody: e.target.value })}
+                            rows={5}
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Χρησιμοποιήστε {"{{name}}"} για να εμφανίζεται το όνομα του αποστολέα
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Υπογραφή</Label>
+                          <Input
+                            placeholder="π.χ. Η Ομάδα μας"
+                            value={contactSettings.autoReplySignature}
+                            onChange={(e) => setContactSettings({ ...contactSettings, autoReplySignature: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <Button onClick={handleSaveContactSettings}>Αποθήκευση</Button>
                   </CardContent>
                 </Card>
