@@ -47,6 +47,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const [siteNameVisible, setSiteNameVisible] = useState<boolean | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoSize, setLogoSize] = useState<number | null>(null);
+  const [navBgColor, setNavBgColor] = useState<string | null>(null);
+  const [navTextColor, setNavTextColor] = useState<string | null>(null);
+  const [navOpacity, setNavOpacity] = useState<number>(80);
+  const [navBlur, setNavBlur] = useState<boolean>(true);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const navigate = useNavigate();
 
