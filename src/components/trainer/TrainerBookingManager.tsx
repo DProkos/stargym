@@ -240,7 +240,7 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
     }
   };
 
-
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
         return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500">Αναμονή</Badge>;
