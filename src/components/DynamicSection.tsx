@@ -125,6 +125,7 @@ function HeroSection({
   neonIntensity: string;
   title: string;
   subtitle: string;
+  heroHeight: string;
 }) {
   const [scrollY, setScrollY] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
@@ -150,8 +151,19 @@ function HeroSection({
     : {};
   const videoUrl = withCacheBust(section.settings?.video_url || null, section.updated_at);
 
+  const getHeroMinHeight = () => {
+    switch (heroHeight) {
+      case 'small': return '400px';
+      case 'medium': return '550px';
+      case 'large': return '700px';
+      case 'xlarge': return '850px';
+      case 'fullscreen': return '100vh';
+      default: return '550px';
+    }
+  };
+
   return (
-    <section ref={sectionRef} className={`pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden ${bgClass}`}>
+    <section ref={sectionRef} className={`pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden flex items-center ${bgClass}`} style={{ minHeight: getHeroMinHeight() }}>
       {/* Video or Image background */}
       {section.settings?.media_type === 'video' && videoUrl ? (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
@@ -552,6 +564,7 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
           neonIntensity={neonIntensity}
           title={title}
           subtitle={subtitle}
+          heroHeight={heroSettings.hero_height || 'medium'}
         />
       );
 
