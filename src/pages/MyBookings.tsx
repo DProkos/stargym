@@ -163,142 +163,69 @@ export default function MyBookings() {
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {t('booking.myBookings')}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {language === 'el' ? 'Μαθήματα' : 'Browse Classes'}
             </h1>
           </div>
 
-          <Tabs defaultValue="calendar" className="space-y-4">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="calendar" className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Calendar View
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                List View
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="calendar" className="space-y-4">
-              <BookingCalendar 
-                events={calendarEvents}
-                onSelectEvent={(event) => setSelectedBooking(event.resource)}
-              />
-              
-              {selectedBooking && (
-                <Card className="bg-gradient-card border-border">
+          <div className="space-y-4">
+            {bookings.length === 0 ? (
+              <Card className="bg-gradient-card border-border">
+                <CardContent className="pt-6">
+                  <p className="text-center text-muted-foreground">
+                    {language === 'el' ? 'Δεν υπάρχουν κρατήσεις' : 'No bookings yet'}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              bookings.map((booking) => (
+                <Card key={booking.id} className="bg-gradient-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span>{selectedBooking.class.name}</span>
+                      <span>{booking.class.name}</span>
                       <span className={`text-sm px-3 py-1 rounded-full ${
-                        selectedBooking.status === 'confirmed' 
+                        booking.status === 'confirmed' 
                           ? 'bg-primary/20 text-primary' 
                           : 'bg-destructive/20 text-destructive'
                       }`}>
-                        {selectedBooking.status}
+                        {booking.status}
                       </span>
                     </CardTitle>
                     <CardDescription>
                       <div className="flex flex-col gap-2 mt-2">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-primary" />
-                          <span>{new Date(selectedBooking.booking_date).toLocaleDateString()}</span>
+                          <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-primary" />
-                          <span>{selectedBooking.class.time} ({selectedBooking.class.duration_minutes} min)</span>
+                          <span>{booking.class.time} ({booking.class.duration_minutes} min)</span>
                         </div>
                       </div>
                     </CardDescription>
                   </CardHeader>
-                  {selectedBooking.status === 'confirmed' && (
+                  {booking.status === 'confirmed' && (
                     <CardContent>
-                      <div className="flex flex-col gap-3">
-                        {!canCancelBooking(selectedBooking) && (
+                      <div className="flex flex-col gap-2">
+                        {!canCancelBooking(booking) && (
                           <p className="text-sm text-muted-foreground">
-                            ⚠️ Η ακύρωση δεν είναι δυνατή (λιγότερο από 24 ώρες πριν το μάθημα)
+                            ⚠️ {language === 'el' ? 'Η ακύρωση δεν είναι δυνατή (λιγότερο από 24 ώρες πριν το μάθημα)' : 'Cancellation not possible (less than 24 hours before class)'}
                           </p>
                         )}
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="destructive" 
-                            onClick={() => handleCancelBooking(selectedBooking.id)}
-                            disabled={!canCancelBooking(selectedBooking)}
-                          >
-                            {t('booking.cancel')}
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setSelectedBooking(null)}
-                          >
-                            Κλείσιμο
-                          </Button>
-                        </div>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => handleCancelBooking(booking.id)}
+                          disabled={!canCancelBooking(booking)}
+                        >
+                          {t('booking.cancel')}
+                        </Button>
                       </div>
                     </CardContent>
                   )}
                 </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="list" className="space-y-4">
-              {bookings.length === 0 ? (
-                <Card className="bg-gradient-card border-border">
-                  <CardContent className="pt-6">
-                    <p className="text-center text-muted-foreground">No bookings yet</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                bookings.map((booking) => (
-                  <Card key={booking.id} className="bg-gradient-card border-border">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>{booking.class.name}</span>
-                        <span className={`text-sm px-3 py-1 rounded-full ${
-                          booking.status === 'confirmed' 
-                            ? 'bg-primary/20 text-primary' 
-                            : 'bg-destructive/20 text-destructive'
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </CardTitle>
-                      <CardDescription>
-                        <div className="flex flex-col gap-2 mt-2">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-primary" />
-                            <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-primary" />
-                            <span>{booking.class.time} ({booking.class.duration_minutes} min)</span>
-                          </div>
-                        </div>
-                      </CardDescription>
-                    </CardHeader>
-                    {booking.status === 'confirmed' && (
-                      <CardContent>
-                        <div className="flex flex-col gap-2">
-                          {!canCancelBooking(booking) && (
-                            <p className="text-sm text-muted-foreground">
-                              ⚠️ Η ακύρωση δεν είναι δυνατή (λιγότερο από 24 ώρες πριν το μάθημα)
-                            </p>
-                          )}
-                          <Button 
-                            variant="destructive" 
-                            onClick={() => handleCancelBooking(booking.id)}
-                            disabled={!canCancelBooking(booking)}
-                          >
-                            {t('booking.cancel')}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
-                ))
-              )}
-            </TabsContent>
-          </Tabs>
+              ))
+            )}
+          </div>
         </div>
       </section>
     </div>
