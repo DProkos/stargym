@@ -345,6 +345,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 key={page.key}
                 to={page.path} 
                 className="hover:text-primary transition-colors"
+                style={navTextStyle}
               >
                 {getPageLabel(page)}
               </Link>
