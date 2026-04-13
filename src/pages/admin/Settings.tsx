@@ -298,19 +298,27 @@ export default function Settings() {
 
   const handleSaveContactSettings = async () => {
     try {
-      const { error } = await supabase
-        .from('app_settings')
-        .upsert(
-          { 
-            setting_key: 'contact_form_recipient_email', 
-            setting_value: contactSettings.recipientEmail,
-            is_sensitive: false,
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: 'setting_key' }
-        );
+      const settingsToSave = [
+        { setting_key: 'contact_form_recipient_email', setting_value: contactSettings.recipientEmail },
+        { setting_key: 'contact_auto_reply_subject', setting_value: contactSettings.autoReplySubject },
+        { setting_key: 'contact_auto_reply_heading', setting_value: contactSettings.autoReplyHeading },
+        { setting_key: 'contact_auto_reply_body', setting_value: contactSettings.autoReplyBody },
+        { setting_key: 'contact_auto_reply_signature', setting_value: contactSettings.autoReplySignature },
+      ];
 
-      if (error) throw error;
+      for (const setting of settingsToSave) {
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert(
+            { 
+              ...setting,
+              is_sensitive: false,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'setting_key' }
+          );
+        if (error) throw error;
+      }
 
       toast.success('Οι ρυθμίσεις φόρμας επικοινωνίας αποθηκεύτηκαν');
     } catch (error) {
