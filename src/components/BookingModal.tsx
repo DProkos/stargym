@@ -249,7 +249,7 @@ export const BookingModal = ({ isOpen, onClose, classItem, userId, preSelectedDa
           user_id: userId,
           class_id: classItem.id,
           booking_date: bookingDate.toISOString().split('T')[0],
-          status: 'pending', // Κράτηση σε αναμονή έγκρισης από τον trainer
+          status: 'confirmed',
         });
       }
 
