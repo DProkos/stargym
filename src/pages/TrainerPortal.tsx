@@ -190,7 +190,7 @@ export default function TrainerPortal() {
               {user && <TrainerStats trainerId={user.id} />}
 
               <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList className="grid w-full max-w-4xl grid-cols-6">
+                <TabsList className="grid w-full max-w-4xl grid-cols-5">
                   <TabsTrigger value="overview" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Overview
