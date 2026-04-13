@@ -190,6 +190,12 @@ export function Footer() {
     setNavPages(items);
   };
 
+  const getPageLabel = (page: NavPage) => {
+    if (language === 'el' && page.labelEl) return page.labelEl;
+    if (language === 'en' && page.labelEn) return page.labelEn;
+    return t(page.label);
+  };
+
   const ensureHttps = (url: string | undefined) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -255,7 +261,7 @@ export function Footer() {
                     to={page.path} 
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {t(page.label)}
+                    {getPageLabel(page)}
                   </Link>
                 </li>
               ))}
