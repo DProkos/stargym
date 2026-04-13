@@ -368,6 +368,64 @@ export default function CustomerPortal() {
                     )}
                   </div>
               </div>
+
+              {/* My Bookings Section */}
+              {bookings.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text-xl font-bold mb-4">
+                    {language === 'el' ? 'Οι Κρατήσεις μου' : 'My Bookings'}
+                  </h2>
+                  <div className="space-y-3">
+                    {bookings.map((booking) => (
+                      <Card key={booking.id} className="bg-gradient-card border-border">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center justify-between text-lg">
+                            <span>{booking.class.name}</span>
+                            <span className={`text-sm px-3 py-1 rounded-full ${
+                              booking.status === 'confirmed' 
+                                ? 'bg-green-500/20 text-green-500' 
+                                : booking.status === 'pending'
+                                ? 'bg-yellow-500/20 text-yellow-500'
+                                : booking.status === 'rejected'
+                                ? 'bg-red-500/20 text-red-500'
+                                : 'bg-destructive/20 text-destructive'
+                            }`}>
+                              {booking.status === 'confirmed' ? (language === 'el' ? 'Επιβεβαιωμένη' : 'Confirmed')
+                                : booking.status === 'pending' ? (language === 'el' ? 'Αναμονή' : 'Pending')
+                                : booking.status === 'rejected' ? (language === 'el' ? 'Απορρίφθηκε' : 'Rejected')
+                                : booking.status === 'cancelled' ? (language === 'el' ? 'Ακυρώθηκε' : 'Cancelled')
+                                : booking.status}
+                            </span>
+                          </CardTitle>
+                          <CardDescription>
+                            <div className="flex gap-4 mt-1">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4 text-primary" />
+                                <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4 text-primary" />
+                                <span>{booking.class.time} ({booking.class.duration_minutes} min)</span>
+                              </div>
+                            </div>
+                          </CardDescription>
+                        </CardHeader>
+                        {(booking.status === 'confirmed' || booking.status === 'pending') && (
+                          <CardContent className="pt-0">
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={() => handleCancelBooking(booking.id)}
+                            >
+                              {t('booking.cancel')}
+                            </Button>
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </main>
         </div>
