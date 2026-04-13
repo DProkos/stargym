@@ -101,7 +101,7 @@ serve(async (req) => {
         'contact_auto_reply_signature_el',
         'contact_auto_reply_signature_en',
         'contact_auto_reply_heading_color',
-        // Legacy fallback keys
+        'contact_auto_reply_heading_text_color',
         'contact_auto_reply_subject',
         'contact_auto_reply_heading',
         'contact_auto_reply_body',
