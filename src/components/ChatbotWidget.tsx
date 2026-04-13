@@ -162,9 +162,19 @@ export function ChatbotWidget() {
       {isOpen && (
         <Card className="fixed inset-x-0 bottom-0 sm:inset-x-auto sm:bottom-20 sm:right-4 w-full sm:w-96 sm:max-w-[calc(100vw-2rem)] h-[100dvh] sm:h-[500px] sm:rounded-lg rounded-none shadow-neon-strong z-50 flex flex-col bg-background border-2 border-primary/30">
           <CardHeader className="border-b border-primary/30 bg-card">
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <MessageCircle className="h-5 w-5" />
-              {language === 'el' ? 'Star Gym Βοηθός' : 'Star Gym Assistant'}
+            <CardTitle className="flex items-center justify-between text-primary">
+              <span className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                {language === 'el' ? 'Star Gym Βοηθός' : 'Star Gym Assistant'}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 sm:hidden text-primary hover:text-primary/80"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </CardTitle>
           </CardHeader>
           
