@@ -84,6 +84,7 @@ export default function Settings() {
     autoReplySignatureEl: 'Η Ομάδα μας',
     autoReplySignatureEn: 'Our Team',
     autoReplyHeadingColor: '#FFD700',
+    autoReplyHeadingTextColor: '#0d0d0d',
   });
   const [contactLangTab, setContactLangTab] = useState<'el' | 'en'>('el');
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
