@@ -289,6 +289,7 @@ export default function Settings() {
         'contact_auto_reply_signature_el',
         'contact_auto_reply_signature_en',
         'contact_auto_reply_heading_color',
+        'contact_auto_reply_heading_text_color',
       ]);
 
     if (error) {
@@ -310,6 +311,7 @@ export default function Settings() {
       autoReplySignatureEl: getValue('contact_auto_reply_signature_el', 'Η Ομάδα μας'),
       autoReplySignatureEn: getValue('contact_auto_reply_signature_en', 'Our Team'),
       autoReplyHeadingColor: getValue('contact_auto_reply_heading_color', '#FFD700'),
+      autoReplyHeadingTextColor: getValue('contact_auto_reply_heading_text_color', '#0d0d0d'),
     });
   };
 
@@ -326,6 +328,7 @@ export default function Settings() {
         { setting_key: 'contact_auto_reply_signature_el', setting_value: contactSettings.autoReplySignatureEl },
         { setting_key: 'contact_auto_reply_signature_en', setting_value: contactSettings.autoReplySignatureEn },
         { setting_key: 'contact_auto_reply_heading_color', setting_value: contactSettings.autoReplyHeadingColor },
+        { setting_key: 'contact_auto_reply_heading_text_color', setting_value: contactSettings.autoReplyHeadingTextColor },
       ];
 
       for (const setting of settingsToSave) {
