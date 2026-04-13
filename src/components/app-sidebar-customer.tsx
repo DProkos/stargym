@@ -1,4 +1,4 @@
-import { Calendar, User, LogOut, Home, Search } from "lucide-react";
+import { User, LogOut, Home, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ import {
 
 export function AppSidebarCustomer() {
   const { state } = useSidebar();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -41,7 +41,7 @@ export function AppSidebarCustomer() {
 
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
-    { title: t('booking.myBookings'), url: "/customer/bookings", icon: Calendar },
+    { title: language === 'el' ? 'Μαθήματα' : 'Browse Classes', url: "/customer/bookings", icon: Users },
     { title: t('nav.profile'), url: "/customer/profile", icon: User },
   ];
 
