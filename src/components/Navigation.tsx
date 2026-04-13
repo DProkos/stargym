@@ -47,6 +47,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const [siteNameVisible, setSiteNameVisible] = useState<boolean | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoSize, setLogoSize] = useState<number | null>(null);
+  const [navBgColor, setNavBgColor] = useState<string | null>(null);
+  const [navTextColor, setNavTextColor] = useState<string | null>(null);
+  const [navOpacity, setNavOpacity] = useState<number>(80);
+  const [navBlur, setNavBlur] = useState<boolean>(true);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const navigate = useNavigate();
 
@@ -59,7 +63,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     const { data, error } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['site_name', 'site_name_color', 'site_name_font', 'site_name_visible', 'logo_url', 'logo_size']);
+      .in('setting_key', ['site_name', 'site_name_color', 'site_name_font', 'site_name_visible', 'logo_url', 'logo_size', 'nav_bg_color', 'nav_text_color', 'nav_opacity', 'nav_blur']);
 
     if (error) {
       console.error('Error loading site settings:', error);
@@ -78,6 +82,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     let loadedColor: string | null = null;
     let loadedFont: string | null = null;
     let loadedLogo: string | null = null;
+    let loadedNavBg: string | null = null;
+    let loadedNavText: string | null = null;
+    let loadedNavOpacity = 80;
+    let loadedNavBlur = true;
 
     data?.forEach(setting => {
       if (setting.setting_key === 'site_name' && setting.setting_value) {
@@ -98,6 +106,18 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       if (setting.setting_key === 'logo_size' && setting.setting_value) {
         loadedSize = parseInt(setting.setting_value) || 32;
       }
+      if (setting.setting_key === 'nav_bg_color' && setting.setting_value) {
+        loadedNavBg = setting.setting_value;
+      }
+      if (setting.setting_key === 'nav_text_color' && setting.setting_value) {
+        loadedNavText = setting.setting_value;
+      }
+      if (setting.setting_key === 'nav_opacity' && setting.setting_value) {
+        loadedNavOpacity = parseInt(setting.setting_value) || 80;
+      }
+      if (setting.setting_key === 'nav_blur') {
+        loadedNavBlur = setting.setting_value !== 'false';
+      }
     });
 
     setSiteName(loadedSiteName);
@@ -106,6 +126,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     setSiteNameVisible(loadedVisible);
     setLogoUrl(loadedLogo);
     setLogoSize(loadedSize);
+    setNavBgColor(loadedNavBg);
+    setNavTextColor(loadedNavText);
+    setNavOpacity(loadedNavOpacity);
+    setNavBlur(loadedNavBlur);
     setSettingsLoaded(true);
   };
 
@@ -258,8 +282,29 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     return translated !== page.label ? translated : page.label;
   };
 
+  // Build nav bar style
+  const navStyle: React.CSSProperties = {};
+  if (navBgColor) {
+    const opacity = navOpacity / 100;
+    // Convert hex to rgba
+    const r = parseInt(navBgColor.slice(1, 3), 16);
+    const g = parseInt(navBgColor.slice(3, 5), 16);
+    const b = parseInt(navBgColor.slice(5, 7), 16);
+    navStyle.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+  if (navBlur) {
+    navStyle.backdropFilter = 'blur(12px)';
+    navStyle.WebkitBackdropFilter = 'blur(12px)';
+  } else {
+    navStyle.backdropFilter = 'none';
+  }
+  const navTextStyle: React.CSSProperties = navTextColor ? { color: navTextColor } : {};
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+    <nav 
+      className={`fixed top-0 left-0 right-0 z-50 border-b border-border ${!navBgColor ? 'bg-background/80 backdrop-blur-lg' : ''}`}
+      style={navBgColor ? navStyle : undefined}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 min-h-[32px]">
@@ -300,6 +345,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 key={page.key}
                 to={page.path} 
                 className="hover:text-primary transition-colors"
+                style={navTextStyle}
               >
                 {getPageLabel(page)}
               </Link>

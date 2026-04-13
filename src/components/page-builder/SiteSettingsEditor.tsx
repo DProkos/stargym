@@ -220,6 +220,106 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               </p>
             </CardContent>
           </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Navigation Bar Style</CardTitle>
+              <CardDescription>Ρυθμίσεις εμφάνισης του navigation bar</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Χρώμα Background</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={getSetting('nav_bg_color') || '#000000'}
+                      onChange={(e) => onUpdate('nav_bg_color', e.target.value)}
+                      className="w-16 h-10 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={getSetting('nav_bg_color') || ''}
+                      onChange={(e) => onUpdate('nav_bg_color', e.target.value)}
+                      placeholder="Κενό = default theme"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Αφήστε κενό για να χρησιμοποιηθεί το default theme χρώμα
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Χρώμα Κειμένου Links</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={getSetting('nav_text_color') || '#ffffff'}
+                      onChange={(e) => onUpdate('nav_text_color', e.target.value)}
+                      className="w-16 h-10 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={getSetting('nav_text_color') || ''}
+                      onChange={(e) => onUpdate('nav_text_color', e.target.value)}
+                      placeholder="Κενό = default"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <Label>Διαφάνεια (Opacity): {getSetting('nav_opacity') || '80'}%</Label>
+                <Slider
+                  value={[parseInt(getSetting('nav_opacity') || '80')]}
+                  onValueChange={(value) => onUpdate('nav_opacity', value[0].toString())}
+                  min={0}
+                  max={100}
+                  step={5}
+                />
+                <p className="text-xs text-muted-foreground">
+                  0% = πλήρως διαφανές, 100% = αδιαφανές
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Backdrop Blur</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Εφέ θολώματος στο φόντο πίσω από το navigation
+                    </p>
+                  </div>
+                  <Switch
+                    checked={getSetting('nav_blur') !== 'false'}
+                    onCheckedChange={(checked) => onUpdate('nav_blur', checked.toString())}
+                  />
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="pt-4 border-t">
+                <Label className="mb-2 block">Preview</Label>
+                <div 
+                  className="rounded-lg p-3 flex items-center justify-between"
+                  style={{
+                    backgroundColor: getSetting('nav_bg_color') 
+                      ? `${getSetting('nav_bg_color')}${Math.round((parseInt(getSetting('nav_opacity') || '80') / 100) * 255).toString(16).padStart(2, '0')}`
+                      : `rgba(0,0,0,${parseInt(getSetting('nav_opacity') || '80') / 100})`,
+                    color: getSetting('nav_text_color') || '#ffffff',
+                    backdropFilter: getSetting('nav_blur') !== 'false' ? 'blur(12px)' : 'none',
+                  }}
+                >
+                  <span className="font-bold">{getSetting('site_name') || 'Star Gym'}</span>
+                  <div className="flex gap-4 text-sm">
+                    <span>Αρχική</span>
+                    <span>Μαθήματα</span>
+                    <span>Επικοινωνία</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </TabsContent>
 
