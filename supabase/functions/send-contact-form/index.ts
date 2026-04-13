@@ -129,6 +129,7 @@ serve(async (req) => {
       : getVal('contact_auto_reply_signature_el', getVal('contact_auto_reply_signature', 'Η Ομάδα μας'));
 
     const headingColor = getVal('contact_auto_reply_heading_color', '#FFD700');
+    const headingTextColor = getVal('contact_auto_reply_heading_text_color', '#0d0d0d');
 
     const arBody = arBodyRaw.replace(/\{\{name\}\}/g, name);
 
