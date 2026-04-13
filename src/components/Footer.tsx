@@ -21,6 +21,8 @@ interface SiteSettings {
 interface NavPage {
   key: string;
   label: string;
+  labelEn?: string;
+  labelEl?: string;
   path: string;
 }
 
