@@ -301,7 +301,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 to={page.path} 
                 className="hover:text-primary transition-colors"
               >
-                {t(page.label)}
+                {getPageLabel(page)}
               </Link>
             ))}
           </div>
