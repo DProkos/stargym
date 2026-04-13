@@ -38,25 +38,26 @@ serve(async (req) => {
 
     const { name, email, phone, message } = validationResult.data;
 
-    // Get recipient email from settings
-    const { data: recipientSetting, error: settingError } = await supabase
+    // Get recipient email - use contact_form_recipient_email if set, otherwise fall back to smtp_from_email
+    const { data: emailSettings, error: settingError } = await supabase
       .from('app_settings')
-      .select('setting_value')
-      .eq('setting_key', 'contact_form_recipient_email')
-      .maybeSingle();
+      .select('setting_key, setting_value')
+      .in('setting_key', ['contact_form_recipient_email', 'smtp_from_email']);
 
     if (settingError) {
-      console.error('Error fetching recipient email:', settingError);
+      console.error('Error fetching email settings:', settingError);
       return new Response(
         JSON.stringify({ error: 'Configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const recipientEmail = recipientSetting?.setting_value;
+    const contactRecipient = emailSettings?.find(s => s.setting_key === 'contact_form_recipient_email')?.setting_value;
+    const smtpFromEmail = emailSettings?.find(s => s.setting_key === 'smtp_from_email')?.setting_value;
+    const recipientEmail = contactRecipient || smtpFromEmail;
     
     if (!recipientEmail) {
-      console.error('Contact form recipient email not configured');
+      console.error('No recipient email configured');
       return new Response(
         JSON.stringify({ error: 'Contact form recipient not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
