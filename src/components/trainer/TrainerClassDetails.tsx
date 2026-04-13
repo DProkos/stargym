@@ -12,9 +12,10 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Calendar, Users, Clock, Mail, Phone, UserCheck, UserX, AlertCircle } from 'lucide-react';
+import { Calendar, Users, Clock, Mail, Phone, UserCheck, UserX, AlertCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { el } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
 
 interface ClassDetailsProps {
   classId: string;
