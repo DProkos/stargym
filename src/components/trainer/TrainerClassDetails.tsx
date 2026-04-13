@@ -296,6 +296,7 @@ export const TrainerClassDetails = ({
                       <TableHead>Email</TableHead>
                       <TableHead>Τηλέφωνο</TableHead>
                       <TableHead>Κατάσταση</TableHead>
+                      <TableHead className="text-right">Ενέργειες</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -332,8 +333,19 @@ export const TrainerClassDetails = ({
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-green-500/20 text-green-600 border-green-500">
-                            {booking.status === 'confirmed' ? 'Επιβεβαιωμένη' : booking.status}
+                            Επιβεβαιωμένη
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={cancellingId === booking.id}
+                            onClick={() => handleCancelBooking(booking.id)}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            {cancellingId === booking.id ? 'Ακύρωση...' : 'Ακύρωση'}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
