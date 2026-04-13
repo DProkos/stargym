@@ -75,6 +75,10 @@ export default function Settings() {
   });
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
+    autoReplySubject: 'Λάβαμε το μήνυμά σας!',
+    autoReplyHeading: '✉️ Ευχαριστούμε για το μήνυμά σας!',
+    autoReplyBody: 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!',
+    autoReplySignature: 'Η Ομάδα μας',
   });
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
