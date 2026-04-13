@@ -213,7 +213,34 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const handleCancel = async (bookingId: string) => {
+    setProcessingId(bookingId);
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Κράτηση ακυρώθηκε',
+        description: 'Η κράτηση ακυρώθηκε επιτυχώς',
+      });
+
+      loadBookings();
+    } catch (error: any) {
+      toast({
+        title: 'Σφάλμα',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+
     switch (status) {
       case 'pending':
         return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500">Αναμονή</Badge>;
