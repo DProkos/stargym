@@ -75,11 +75,17 @@ export default function Settings() {
   });
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
-    autoReplySubject: 'Λάβαμε το μήνυμά σας!',
-    autoReplyHeading: '✉️ Ευχαριστούμε για το μήνυμά σας!',
-    autoReplyBody: 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!',
-    autoReplySignature: 'Η Ομάδα μας',
+    autoReplySubjectEl: 'Λάβαμε το μήνυμά σας!',
+    autoReplySubjectEn: 'We received your message!',
+    autoReplyHeadingEl: '✉️ Ευχαριστούμε για το μήνυμά σας!',
+    autoReplyHeadingEn: '✉️ Thank you for your message!',
+    autoReplyBodyEl: 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!',
+    autoReplyBodyEn: 'We received your message and will get back to you as soon as possible.\n\nThank you for your interest!',
+    autoReplySignatureEl: 'Η Ομάδα μας',
+    autoReplySignatureEn: 'Our Team',
+    autoReplyHeadingColor: '#FFD700',
   });
+  const [contactLangTab, setContactLangTab] = useState<'el' | 'en'>('el');
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);

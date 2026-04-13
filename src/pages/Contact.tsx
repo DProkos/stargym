@@ -139,6 +139,7 @@ export default function Contact() {
           email: validatedData.email,
           phone: validatedData.phone || '',
           message: validatedData.message,
+          language: t('lang') === 'el' ? 'el' : 'en',
         },
       });
 
