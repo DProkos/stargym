@@ -365,7 +365,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                 className="hover:text-primary transition-colors" 
                 onClick={() => setMobileMenuOpen(false)}
               >
-                {t(page.label)}
+                {getPageLabel(page)}
               </Link>
             ))}
             <DropdownMenu>
