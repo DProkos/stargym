@@ -82,6 +82,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     let loadedColor: string | null = null;
     let loadedFont: string | null = null;
     let loadedLogo: string | null = null;
+    let loadedNavBg: string | null = null;
+    let loadedNavText: string | null = null;
+    let loadedNavOpacity = 80;
+    let loadedNavBlur = true;
 
     data?.forEach(setting => {
       if (setting.setting_key === 'site_name' && setting.setting_value) {
@@ -102,6 +106,18 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
       if (setting.setting_key === 'logo_size' && setting.setting_value) {
         loadedSize = parseInt(setting.setting_value) || 32;
       }
+      if (setting.setting_key === 'nav_bg_color' && setting.setting_value) {
+        loadedNavBg = setting.setting_value;
+      }
+      if (setting.setting_key === 'nav_text_color' && setting.setting_value) {
+        loadedNavText = setting.setting_value;
+      }
+      if (setting.setting_key === 'nav_opacity' && setting.setting_value) {
+        loadedNavOpacity = parseInt(setting.setting_value) || 80;
+      }
+      if (setting.setting_key === 'nav_blur') {
+        loadedNavBlur = setting.setting_value !== 'false';
+      }
     });
 
     setSiteName(loadedSiteName);
@@ -110,6 +126,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
     setSiteNameVisible(loadedVisible);
     setLogoUrl(loadedLogo);
     setLogoSize(loadedSize);
+    setNavBgColor(loadedNavBg);
+    setNavTextColor(loadedNavText);
+    setNavOpacity(loadedNavOpacity);
+    setNavBlur(loadedNavBlur);
     setSettingsLoaded(true);
   };
 
