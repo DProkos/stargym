@@ -142,7 +142,33 @@ function HeroSection({
 
   return (
     <section ref={sectionRef} className={`pt-20 sm:pt-32 pb-12 sm:pb-20 px-4 relative overflow-hidden ${bgClass}`}>
-      {section.image_url && (
+      {/* Video or Image background */}
+      {section.settings?.media_type === 'video' && section.settings?.video_url ? (
+        <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
+          <video
+            src={section.settings.video_url}
+            className={`w-full h-full object-cover transition-transform duration-100`}
+            style={{
+              ...parallaxStyle,
+              scale: parallaxEnabled ? '1.2' : '1'
+            }}
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+          {overlayEnabled && (
+            <div 
+              className="absolute inset-0"
+              style={{ 
+                backgroundColor: overlayColor === 'dark' ? `rgba(0,0,0,${overlayOpacity/100})` 
+                  : overlayColor === 'light' ? `rgba(255,255,255,${overlayOpacity/100})`
+                  : `rgba(var(--primary-rgb, 139, 92, 246),${overlayOpacity/100})`
+              }}
+            />
+          )}
+        </div>
+      ) : section.image_url ? (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
           <img 
             src={withCacheBust(section.image_url, section.updated_at)}
@@ -165,7 +191,7 @@ function HeroSection({
             />
           )}
         </div>
-      )}
+      ) : null}
       <div className="container mx-auto relative z-10 text-center px-2 sm:px-4">
         <h1 
           className={`${titleSize} font-bold mb-4 sm:mb-6 opacity-0 ${titleAnimation} ${
