@@ -207,10 +207,6 @@ export default function TrainerPortal() {
                     <MessageSquare className="h-4 w-4" />
                     Messaging
                   </TabsTrigger>
-                  <TabsTrigger value="schedule" className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    Schedule (DnD)
-                  </TabsTrigger>
                   <TabsTrigger value="list" className="flex items-center gap-2">
                     <List className="h-4 w-4" />
                     Classes
