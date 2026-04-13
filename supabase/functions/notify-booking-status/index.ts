@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface NotifyRequest {
   bookingId: string;
-  status: 'confirmed' | 'rejected';
+  status: 'confirmed' | 'rejected' | 'cancelled';
   trainerNotes?: string;
 }
 
