@@ -152,7 +152,7 @@ export function ChatbotWidget() {
       {/* Chatbot Toggle Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-neon-strong z-50 bg-primary hover:bg-primary/90 text-primary-foreground border-2 border-primary/50"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-neon-strong z-50 bg-primary hover:bg-primary/90 text-primary-foreground border-2 border-primary/50"
         size="icon"
       >
         {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
@@ -160,7 +160,7 @@ export function ChatbotWidget() {
 
       {/* Chatbot Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-96 h-[500px] shadow-neon-strong z-50 flex flex-col bg-background border-2 border-primary/30">
+        <Card className="fixed inset-x-0 bottom-0 sm:inset-x-auto sm:bottom-24 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] sm:rounded-lg rounded-none shadow-neon-strong z-50 flex flex-col bg-background border-2 border-primary/30">
           <CardHeader className="border-b border-primary/30 bg-card">
             <CardTitle className="flex items-center gap-2 text-primary">
               <MessageCircle className="h-5 w-5" />
