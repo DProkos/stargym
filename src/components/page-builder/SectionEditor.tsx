@@ -350,6 +350,24 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
             </div>
             {(localSettings.media_type || 'image') === 'image' ? (
               <div>
+                <Label>Ύψος Hero Section</Label>
+                <Select
+                  value={localSettings.hero_height || 'medium'}
+                  onValueChange={(value) => updateSettings('hero_height', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Μικρό (400px)</SelectItem>
+                    <SelectItem value="medium">Μεσαίο (550px)</SelectItem>
+                    <SelectItem value="large">Μεγάλο (700px)</SelectItem>
+                    <SelectItem value="xlarge">Πολύ Μεγάλο (850px)</SelectItem>
+                    <SelectItem value="fullscreen">Πλήρης Οθόνη (100vh)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label>Hero Image</Label>
                 <ImageUpload
                   currentImageUrl={section.image_url}
@@ -360,6 +378,24 @@ export function SectionEditor({ section, onUpdate }: SectionEditorProps) {
               </div>
             ) : (
               <div>
+                <div className="mb-4">
+                  <Label>Ύψος Hero Section</Label>
+                  <Select
+                    value={localSettings.hero_height || 'medium'}
+                    onValueChange={(value) => updateSettings('hero_height', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Μικρό (400px)</SelectItem>
+                      <SelectItem value="medium">Μεσαίο (550px)</SelectItem>
+                      <SelectItem value="large">Μεγάλο (700px)</SelectItem>
+                      <SelectItem value="xlarge">Πολύ Μεγάλο (850px)</SelectItem>
+                      <SelectItem value="fullscreen">Πλήρης Οθόνη (100vh)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <VideoUpload
                   currentVideoUrl={localSettings.video_url || ''}
                   onVideoUploaded={(url) => updateSettings('video_url', url)}
