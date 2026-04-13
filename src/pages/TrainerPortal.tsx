@@ -190,7 +190,7 @@ export default function TrainerPortal() {
               {user && <TrainerStats trainerId={user.id} />}
 
               <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList className="grid w-full max-w-4xl grid-cols-6">
+                <TabsList className="grid w-full max-w-4xl grid-cols-5">
                   <TabsTrigger value="overview" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
                     Overview
@@ -206,10 +206,6 @@ export default function TrainerPortal() {
                   <TabsTrigger value="messaging" className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
                     Messaging
-                  </TabsTrigger>
-                  <TabsTrigger value="schedule" className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4" />
-                    Schedule (DnD)
                   </TabsTrigger>
                   <TabsTrigger value="list" className="flex items-center gap-2">
                     <List className="h-4 w-4" />
@@ -325,15 +321,6 @@ export default function TrainerPortal() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="schedule" className="space-y-4">
-                  {user && (
-                    <TrainerCalendarWithDnD 
-                      trainerId={user.id}
-                      classes={classes}
-                      onClassesChange={() => loadClasses(user.id)}
-                    />
-                  )}
-                </TabsContent>
 
                 <TabsContent value="list" className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
