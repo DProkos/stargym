@@ -117,11 +117,28 @@ export function PagePreview({ pageKey, sections, siteSettings, onClose }: PagePr
       case 'hero':
         return (
           <section key={section.id} className={`py-20 px-4 relative overflow-hidden ${bgClass}`}>
-            {section.image_url && (
+            {section.settings?.media_type === 'video' && section.settings?.video_url ? (
+              <div className="absolute inset-0">
+                <video
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                >
+                  <source src={section.settings.video_url} type={
+                    section.settings.video_url.endsWith('.mov') ? 'video/quicktime' :
+                    section.settings.video_url.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+                  } />
+                </video>
+                <div className="absolute inset-0 bg-black/40" />
+              </div>
+            ) : section.image_url ? (
               <div className="absolute inset-0 opacity-20">
                 <img src={section.image_url} alt="" className="w-full h-full object-cover" />
               </div>
-            )}
+            ) : null}
             <div className="container mx-auto relative z-10 text-center">
               <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {title}
