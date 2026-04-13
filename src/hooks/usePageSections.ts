@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+const LIVE_REFRESH_INTERVAL = 2000;
+
 interface PageSection {
   id: string;
   page_key: string;
@@ -37,42 +39,84 @@ export function usePageSections(pageKey: string) {
 
   useEffect(() => {
     let isMounted = true;
+    let isFetching = false;
     
-    const loadData = async () => {
-      setLoading(true);
-      
-      const [sectionsResult, settingsResult] = await Promise.all([
-        supabase
-          .from('page_sections')
-          .select('*')
-          .eq('page_key', pageKey)
-          .eq('is_visible', true)
-          .order('sort_order'),
-        supabase
-          .from('site_settings')
-          .select('setting_key, setting_value')
-      ]);
-
-      if (!isMounted) return;
-
-      if (sectionsResult.data) {
-        setSections(sectionsResult.data);
-      } else {
+    const loadData = async (showLoader = false) => {
+      if (!pageKey) {
+        if (!isMounted) return;
         setSections([]);
+        setSiteSettings([]);
+        setLoading(false);
+        setIsInitialized(true);
+        return;
       }
-      
-      if (settingsResult.data) {
-        setSiteSettings(settingsResult.data);
+
+      if (isFetching) return;
+      isFetching = true;
+
+      if (showLoader) {
+        setLoading(true);
       }
-      
-      setLoading(false);
-      setIsInitialized(true);
+
+      try {
+        const [sectionsResult, settingsResult] = await Promise.all([
+          supabase
+            .from('page_sections')
+            .select('*')
+            .eq('page_key', pageKey)
+            .eq('is_visible', true)
+            .order('sort_order'),
+          supabase
+            .from('site_settings')
+            .select('setting_key, setting_value')
+        ]);
+
+        if (!isMounted) return;
+
+        if (sectionsResult.error) {
+          console.error('Error loading page sections:', sectionsResult.error);
+        } else {
+          setSections(sectionsResult.data || []);
+        }
+
+        if (settingsResult.error) {
+          console.error('Error loading site settings:', settingsResult.error);
+        } else {
+          setSiteSettings(settingsResult.data || []);
+        }
+
+        setIsInitialized(true);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+        isFetching = false;
+      }
     };
 
-    loadData();
+    const refreshData = () => {
+      void loadData(false);
+    };
+
+    void loadData(true);
+
+    const intervalId = window.setInterval(refreshData, LIVE_REFRESH_INTERVAL);
+
+    const handleFocus = () => refreshData();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
       isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [pageKey]);
 
