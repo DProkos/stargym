@@ -388,8 +388,26 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
                         </p>
                       )}
                     </div>
-                    {getStatusBadge(booking.status)}
-                  </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(booking.status)}
+                      {booking.status === 'confirmed' && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleCancel(booking.id)}
+                          disabled={processingId === booking.id}
+                        >
+                          {processingId === booking.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <X className="h-4 w-4 mr-1" />
+                              Ακύρωση
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                 </CardContent>
               </Card>
             ))}
