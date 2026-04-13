@@ -153,6 +153,41 @@ export const TrainerClassDetails = ({
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
   const availableSpots = maxCapacity - confirmedBookings.length;
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleCancelBooking = async (bookingId: string) => {
+    setCancellingId(bookingId);
+    try {
+      // Update booking status to cancelled
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId);
+
+      if (updateError) throw updateError;
+
+      // Send cancellation email
+      await supabase.functions.invoke('notify-booking-status', {
+        body: { bookingId, status: 'cancelled' }
+      });
+
+      toast({
+        title: 'Η κράτηση ακυρώθηκε',
+        description: 'Στάλθηκε ειδοποίηση στο μέλος.',
+      });
+
+      loadClassData();
+    } catch (error: any) {
+      console.error('Error cancelling booking:', error);
+      toast({
+        title: 'Σφάλμα',
+        description: 'Δεν ήταν δυνατή η ακύρωση της κράτησης.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <Card className="bg-gradient-card border-border">
