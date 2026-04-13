@@ -136,7 +136,10 @@ export default function VideoUpload({
       )}
 
       <p className="text-sm text-muted-foreground">
-        MP4, WebM ή MOV (max {maxSizeMB}MB). Προτείνεται MP4 για καλύτερη συμβατότητα.
+        MP4, WebM ή MOV (max {maxSizeMB}MB).
+      </p>
+      <p className="text-xs text-amber-500 font-medium">
+        ⚠️ Προτείνεται MP4 — τα αρχεία .mov δεν παίζουν σε Chrome/Firefox, μόνο σε Safari.
       </p>
     </div>
   );

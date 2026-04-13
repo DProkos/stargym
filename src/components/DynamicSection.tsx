@@ -146,7 +146,6 @@ function HeroSection({
       {section.settings?.media_type === 'video' && section.settings?.video_url ? (
         <div className="absolute inset-0" style={{ overflow: 'hidden' }}>
           <video
-            src={section.settings.video_url}
             className={`w-full h-full object-cover transition-transform duration-100`}
             style={{
               ...parallaxStyle,
@@ -156,7 +155,14 @@ function HeroSection({
             muted
             loop
             playsInline
-          />
+            preload="auto"
+          >
+            <source src={section.settings.video_url} type={
+              section.settings.video_url.endsWith('.mov') ? 'video/quicktime' :
+              section.settings.video_url.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+            } />
+            <source src={section.settings.video_url} />
+          </video>
           {overlayEnabled && (
             <div 
               className="absolute inset-0"
