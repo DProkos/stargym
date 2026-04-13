@@ -140,6 +140,8 @@ export function Footer() {
         items.push({
           key,
           label: navLabels[key] || defaultPage?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          labelEn: pageLabelEn[key],
+          labelEl: pageLabelEl[key],
           path: defaultPage?.path || `/page/${key}`,
         });
       });
