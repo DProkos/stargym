@@ -139,7 +139,7 @@ serve(async (req) => {
       ? 'This is an automatic confirmation email. Please do not reply to this message.'
       : 'Αυτό είναι ένα αυτόματο email επιβεβαίωσης. Παρακαλούμε μην απαντήσετε σε αυτό το μήνυμα.';
 
-    const autoReplyHtml = buildAutoReplyEmail(arHeading, greeting, arBody, regards, arSignature, footerText, headingColor);
+    const autoReplyHtml = buildAutoReplyEmail(arHeading, greeting, arBody, regards, arSignature, footerText, headingColor, headingTextColor);
     const autoReplyText = `${greeting}\n\n${arBody}\n\n${regards}\n${arSignature}`;
 
     const { error: autoReplyError } = await supabase.functions.invoke('send-email', {
