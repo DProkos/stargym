@@ -41,9 +41,7 @@ export function AppSidebarTrainer() {
 
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
-    { title: t('trainer.schedule'), url: "/trainer/schedule", icon: Calendar },
     { title: t('trainer.classes'), url: "/trainer/classes", icon: Users },
-    { title: 'Κρατήσεις', url: "/trainer/bookings", icon: ClipboardList },
     { title: t('nav.profile'), url: "/trainer/profile", icon: User },
   ];
 
