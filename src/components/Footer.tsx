@@ -93,11 +93,13 @@ export function Footer() {
     const { data: settingsData } = await supabase
       .from('site_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['nav_order', 'nav_labels', 'nav_visibility']);
+      .or('setting_key.in.(nav_order,nav_labels,nav_visibility),setting_key.like.page_%_label%');
 
     let navOrder: string[] = [];
     let navLabels: Record<string, string> = {};
     let navVisibility: Record<string, boolean> = {};
+    let pageLabelEn: Record<string, string> = {};
+    let pageLabelEl: Record<string, string> = {};
 
     settingsData?.forEach(setting => {
       try {
@@ -109,6 +111,14 @@ export function Footer() {
         }
         if (setting.setting_key === 'nav_visibility' && setting.setting_value) {
           navVisibility = JSON.parse(setting.setting_value);
+        }
+        const labelEnMatch = setting.setting_key.match(/^page_(.+)_label_en$/);
+        if (labelEnMatch && setting.setting_value) {
+          pageLabelEn[labelEnMatch[1]] = setting.setting_value;
+        }
+        const labelElMatch = setting.setting_key.match(/^page_(.+)_label_el$/);
+        if (labelElMatch && setting.setting_value) {
+          pageLabelEl[labelElMatch[1]] = setting.setting_value;
         }
       } catch (e) {
         console.error('Error parsing nav setting:', e);
