@@ -279,10 +279,15 @@ export default function Settings() {
       .select('setting_key, setting_value')
       .in('setting_key', [
         'contact_form_recipient_email',
-        'contact_auto_reply_subject',
-        'contact_auto_reply_heading',
-        'contact_auto_reply_body',
-        'contact_auto_reply_signature',
+        'contact_auto_reply_subject_el',
+        'contact_auto_reply_subject_en',
+        'contact_auto_reply_heading_el',
+        'contact_auto_reply_heading_en',
+        'contact_auto_reply_body_el',
+        'contact_auto_reply_body_en',
+        'contact_auto_reply_signature_el',
+        'contact_auto_reply_signature_en',
+        'contact_auto_reply_heading_color',
       ]);
 
     if (error) {
@@ -295,10 +300,15 @@ export default function Settings() {
 
     setContactSettings({
       recipientEmail: getValue('contact_form_recipient_email', ''),
-      autoReplySubject: getValue('contact_auto_reply_subject', 'Λάβαμε το μήνυμά σας!'),
-      autoReplyHeading: getValue('contact_auto_reply_heading', '✉️ Ευχαριστούμε για το μήνυμά σας!'),
-      autoReplyBody: getValue('contact_auto_reply_body', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!'),
-      autoReplySignature: getValue('contact_auto_reply_signature', 'Η Ομάδα μας'),
+      autoReplySubjectEl: getValue('contact_auto_reply_subject_el', 'Λάβαμε το μήνυμά σας!'),
+      autoReplySubjectEn: getValue('contact_auto_reply_subject_en', 'We received your message!'),
+      autoReplyHeadingEl: getValue('contact_auto_reply_heading_el', '✉️ Ευχαριστούμε για το μήνυμά σας!'),
+      autoReplyHeadingEn: getValue('contact_auto_reply_heading_en', '✉️ Thank you for your message!'),
+      autoReplyBodyEl: getValue('contact_auto_reply_body_el', 'Λάβαμε το μήνυμά σας και θα επικοινωνήσουμε μαζί σας το συντομότερο δυνατό.\n\nΣας ευχαριστούμε για το ενδιαφέρον σας!'),
+      autoReplyBodyEn: getValue('contact_auto_reply_body_en', 'We received your message and will get back to you as soon as possible.\n\nThank you for your interest!'),
+      autoReplySignatureEl: getValue('contact_auto_reply_signature_el', 'Η Ομάδα μας'),
+      autoReplySignatureEn: getValue('contact_auto_reply_signature_en', 'Our Team'),
+      autoReplyHeadingColor: getValue('contact_auto_reply_heading_color', '#FFD700'),
     });
   };
 
@@ -306,10 +316,15 @@ export default function Settings() {
     try {
       const settingsToSave = [
         { setting_key: 'contact_form_recipient_email', setting_value: contactSettings.recipientEmail },
-        { setting_key: 'contact_auto_reply_subject', setting_value: contactSettings.autoReplySubject },
-        { setting_key: 'contact_auto_reply_heading', setting_value: contactSettings.autoReplyHeading },
-        { setting_key: 'contact_auto_reply_body', setting_value: contactSettings.autoReplyBody },
-        { setting_key: 'contact_auto_reply_signature', setting_value: contactSettings.autoReplySignature },
+        { setting_key: 'contact_auto_reply_subject_el', setting_value: contactSettings.autoReplySubjectEl },
+        { setting_key: 'contact_auto_reply_subject_en', setting_value: contactSettings.autoReplySubjectEn },
+        { setting_key: 'contact_auto_reply_heading_el', setting_value: contactSettings.autoReplyHeadingEl },
+        { setting_key: 'contact_auto_reply_heading_en', setting_value: contactSettings.autoReplyHeadingEn },
+        { setting_key: 'contact_auto_reply_body_el', setting_value: contactSettings.autoReplyBodyEl },
+        { setting_key: 'contact_auto_reply_body_en', setting_value: contactSettings.autoReplyBodyEn },
+        { setting_key: 'contact_auto_reply_signature_el', setting_value: contactSettings.autoReplySignatureEl },
+        { setting_key: 'contact_auto_reply_signature_en', setting_value: contactSettings.autoReplySignatureEn },
+        { setting_key: 'contact_auto_reply_heading_color', setting_value: contactSettings.autoReplyHeadingColor },
       ];
 
       for (const setting of settingsToSave) {
