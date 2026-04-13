@@ -73,6 +73,8 @@ interface SiteSetting {
 interface PageInfo {
   key: string;
   label: string;
+  labelEn?: string;
+  labelEl?: string;
 }
 
 const DEFAULT_PAGES: PageInfo[] = [
@@ -107,7 +109,8 @@ export default function PageBuilder() {
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [pages, setPages] = useState<PageInfo[]>(DEFAULT_PAGES);
-  const [newPageName, setNewPageName] = useState('');
+  const [newPageNameEl, setNewPageNameEl] = useState('');
+  const [newPageNameEn, setNewPageNameEn] = useState('');
   const [newPageKey, setNewPageKey] = useState('');
   const [showNewPageDialog, setShowNewPageDialog] = useState(false);
   const [showDeletePageDialog, setShowDeletePageDialog] = useState(false);
@@ -153,42 +156,62 @@ export default function PageBuilder() {
   };
 
   const loadPages = async () => {
-    // Get all unique page_keys from page_sections
-    const { data, error } = await supabase
-      .from('page_sections')
-      .select('page_key');
+    // Get all unique page_keys from page_sections and page labels from site_settings
+    const [sectionsResult, labelsResult] = await Promise.all([
+      supabase.from('page_sections').select('page_key'),
+      supabase.from('site_settings').select('setting_key, setting_value').like('setting_key', 'page_%_label%'),
+    ]);
 
-    if (error) {
-      console.error('Error loading pages:', error);
-      // On error, use default pages
+    if (sectionsResult.error) {
+      console.error('Error loading pages:', sectionsResult.error);
       setPages(DEFAULT_PAGES);
       return;
     }
 
-    // Get unique page keys that have sections in the database
-    const existingPageKeys = [...new Set(data?.map(d => d.page_key) || [])];
+    // Build a map of page labels from site_settings
+    const labelMap: Record<string, { el?: string; en?: string }> = {};
+    (labelsResult.data || []).forEach(s => {
+      const matchEl = s.setting_key.match(/^page_(.+)_label_el$/);
+      const matchEn = s.setting_key.match(/^page_(.+)_label_en$/);
+      if (matchEl) {
+        const k = matchEl[1];
+        labelMap[k] = { ...labelMap[k], el: s.setting_value || undefined };
+      }
+      if (matchEn) {
+        const k = matchEn[1];
+        labelMap[k] = { ...labelMap[k], en: s.setting_value || undefined };
+      }
+    });
+
+    const existingPageKeys = [...new Set(sectionsResult.data?.map(d => d.page_key) || [])];
     
-    // Only show pages that actually have sections in the database
     const allPages: PageInfo[] = [];
     
-    // First add default pages that exist in database
     DEFAULT_PAGES.forEach(page => {
       if (existingPageKeys.includes(page.key)) {
-        allPages.push(page);
+        // Use stored label if available, otherwise default
+        const stored = labelMap[page.key];
+        allPages.push({
+          key: page.key,
+          label: stored?.el || page.label,
+          labelEn: stored?.en,
+          labelEl: stored?.el,
+        });
       }
     });
     
-    // Then add any custom pages that exist in database but not in defaults
     existingPageKeys.forEach(key => {
       if (!allPages.find(p => p.key === key)) {
+        const stored = labelMap[key];
         allPages.push({
           key,
-          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          label: stored?.el || stored?.en || key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, ' '),
+          labelEn: stored?.en,
+          labelEl: stored?.el,
         });
       }
     });
 
-    // If no pages exist yet, show default pages so user can create sections
     if (allPages.length === 0) {
       setPages(DEFAULT_PAGES);
     } else {
