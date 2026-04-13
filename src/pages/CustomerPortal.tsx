@@ -308,7 +308,7 @@ export default function CustomerPortal() {
         <div className="flex-1">
           <header className="h-16 border-b border-border flex items-center px-6">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">{t('booking.myBookings')}</h1>
+            <h1 className="ml-4 text-2xl font-bold">{language === 'el' ? 'Μαθήματα' : 'Browse Classes'}</h1>
           </header>
 
           <main className="p-6">
