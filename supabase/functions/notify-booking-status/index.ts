@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface NotifyRequest {
   bookingId: string;
-  status: 'confirmed' | 'rejected';
+  status: 'confirmed' | 'rejected' | 'cancelled';
   trainerNotes?: string;
 }
 
@@ -286,12 +286,15 @@ serve(async (req) => {
     });
 
     const isConfirmed = status === 'confirmed';
-    const statusText = isConfirmed ? 'Επιβεβαιώθηκε' : 'Απορρίφθηκε';
+    const isCancelled = status === 'cancelled';
+    const statusText = isConfirmed ? 'Επιβεβαιώθηκε' : isCancelled ? 'Ακυρώθηκε' : 'Απορρίφθηκε';
     const statusColor = isConfirmed ? '#22c55e' : '#ef4444';
     const statusIcon = isConfirmed ? '✓' : '✗';
 
     const subject = isConfirmed 
       ? `Η κράτησή σας για ${booking.class.name} επιβεβαιώθηκε!`
+      : isCancelled
+      ? `Η κράτησή σας για ${booking.class.name} ακυρώθηκε`
       : `Η κράτησή σας για ${booking.class.name} απορρίφθηκε`;
 
     const html = `
@@ -337,6 +340,8 @@ serve(async (req) => {
               <p style="margin: 0; font-size: 16px; color: #3f3f46; line-height: 1.6;">
                 ${isConfirmed 
                   ? 'Με χαρά σας ενημερώνουμε ότι η κράτησή σας έχει επιβεβαιωθεί! Σας περιμένουμε.'
+                  : isCancelled
+                  ? 'Σας ενημερώνουμε ότι η κράτησή σας έχει ακυρωθεί από τον προπονητή.'
                   : 'Λυπούμαστε, αλλά η κράτησή σας δεν μπόρεσε να επιβεβαιωθεί αυτή τη φορά.'
                 }
               </p>

@@ -12,9 +12,10 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Calendar, Users, Clock, Mail, Phone, UserCheck, UserX, AlertCircle } from 'lucide-react';
+import { Calendar, Users, Clock, Mail, Phone, UserCheck, UserX, AlertCircle, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { el } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
 
 interface ClassDetailsProps {
   classId: string;
@@ -58,6 +59,7 @@ export const TrainerClassDetails = ({
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const daysOfWeek = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
 
@@ -152,6 +154,40 @@ export const TrainerClassDetails = ({
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
   const cancelledBookings = bookings.filter(b => b.status === 'cancelled');
   const availableSpots = maxCapacity - confirmedBookings.length;
+
+  const handleCancelBooking = async (bookingId: string) => {
+    setCancellingId(bookingId);
+    try {
+      // Update booking status to cancelled
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId);
+
+      if (updateError) throw updateError;
+
+      // Send cancellation email
+      await supabase.functions.invoke('notify-booking-status', {
+        body: { bookingId, status: 'cancelled' }
+      });
+
+      toast({
+        title: 'Η κράτηση ακυρώθηκε',
+        description: 'Στάλθηκε ειδοποίηση στο μέλος.',
+      });
+
+      loadClassData();
+    } catch (error: any) {
+      console.error('Error cancelling booking:', error);
+      toast({
+        title: 'Σφάλμα',
+        description: 'Δεν ήταν δυνατή η ακύρωση της κράτησης.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <Card className="bg-gradient-card border-border">
@@ -260,6 +296,7 @@ export const TrainerClassDetails = ({
                       <TableHead>Email</TableHead>
                       <TableHead>Τηλέφωνο</TableHead>
                       <TableHead>Κατάσταση</TableHead>
+                      <TableHead className="text-right">Ενέργειες</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -296,8 +333,19 @@ export const TrainerClassDetails = ({
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-green-500/20 text-green-600 border-green-500">
-                            {booking.status === 'confirmed' ? 'Επιβεβαιωμένη' : booking.status}
+                            Επιβεβαιωμένη
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={cancellingId === booking.id}
+                            onClick={() => handleCancelBooking(booking.id)}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            {cancellingId === booking.id ? 'Ακύρωση...' : 'Ακύρωση'}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
