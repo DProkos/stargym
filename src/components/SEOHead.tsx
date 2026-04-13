@@ -26,35 +26,35 @@ export function SEOHead({
   const seoData: Record<string, { title: string; description: string }> = {
     home: {
       title: language === 'el'
-        ? 'Star Gym - Κορυφαίο Γυμναστήριο & Fitness Center'
-        : 'Star Gym - Elite Fitness Training Center',
+        ? 'Γυμναστήριο Μενίδι | Star Gym - Κορυφαίο Fitness Center'
+        : 'Star Gym Menidi | Elite Fitness Training Center',
       description: language === 'el'
-        ? 'Μεταμορφώστε το σώμα σας με κορυφαία εκπαίδευση fitness. Σύγχρονος εξοπλισμός, έμπειροι γυμναστές και κορυφαίες εγκαταστάσεις.'
-        : 'Transform your body with elite fitness training. State-of-the-art equipment, expert trainers, and world-class facilities.',
+        ? 'Γυμναστήριο στο Μενίδι Αττικής. Personal training, ομαδικά προγράμματα, σύγχρονος εξοπλισμός, έμπειροι γυμναστές και κορυφαίες εγκαταστάσεις.'
+        : 'Gym in Menidi, Attica. Personal training, group classes, state-of-the-art equipment, expert trainers, and world-class facilities.',
     },
     pricing: {
       title: language === 'el'
-        ? 'Τιμοκατάλογος - Star Gym'
-        : 'Pricing Plans - Star Gym',
+        ? 'Τιμοκατάλογος Γυμναστηρίου Μενίδι | Star Gym'
+        : 'Gym Pricing Plans Menidi | Star Gym',
       description: language === 'el'
-        ? 'Ανακαλύψτε τα πακέτα συνδρομής μας. Ευέλικτα πλάνα για κάθε ανάγκη και στόχο.'
-        : 'Discover our membership plans. Flexible packages for every need and fitness goal.',
+        ? 'Τιμές γυμναστηρίου στο Μενίδι. Ανακαλύψτε τα πακέτα συνδρομής μας. Ευέλικτα πλάνα για κάθε ανάγκη και στόχο.'
+        : 'Gym pricing in Menidi. Discover our membership plans. Flexible packages for every need and fitness goal.',
     },
     contact: {
       title: language === 'el'
-        ? 'Επικοινωνία - Star Gym'
-        : 'Contact Us - Star Gym',
+        ? 'Επικοινωνία | Star Gym Μενίδι'
+        : 'Contact Us | Star Gym Menidi',
       description: language === 'el'
-        ? 'Επικοινωνήστε μαζί μας για οποιαδήποτε ερώτηση. Βρείτε τη διεύθυνσή μας, τηλέφωνο και ωράριο λειτουργίας.'
-        : 'Get in touch with us for any questions. Find our address, phone number, and operating hours.',
+        ? 'Επικοινωνήστε με το γυμναστήριο Star Gym στο Μενίδι Αττικής. Διεύθυνση, τηλέφωνο και ωράριο λειτουργίας.'
+        : 'Contact Star Gym in Menidi, Attica. Find our address, phone number, and operating hours.',
     },
     memberships: {
       title: language === 'el'
-        ? 'Συνδρομές - Star Gym'
-        : 'Memberships - Star Gym',
+        ? 'Συνδρομές Γυμναστηρίου Μενίδι | Star Gym'
+        : 'Gym Memberships Menidi | Star Gym',
       description: language === 'el'
-        ? 'Εγγραφείτε στο Star Gym και ξεκινήστε το ταξίδι σας στο fitness σήμερα.'
-        : 'Join Star Gym and start your fitness journey today.',
+        ? 'Εγγραφείτε στο Star Gym στο Μενίδι. Personal training, ομαδικά προγράμματα και σύγχρονος εξοπλισμός.'
+        : 'Join Star Gym in Menidi. Personal training, group classes, and modern equipment.',
     },
   };
 
@@ -75,6 +75,8 @@ export function SEOHead({
     sameAs: [],
     address: {
       '@type': 'PostalAddress',
+      addressLocality: 'Μενίδι',
+      addressRegion: 'Αττική',
       addressCountry: 'GR',
     },
   };
