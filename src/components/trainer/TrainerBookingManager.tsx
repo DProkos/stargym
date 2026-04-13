@@ -408,6 +408,7 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
                         </Button>
                       )}
                     </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
