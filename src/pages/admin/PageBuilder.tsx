@@ -751,14 +751,29 @@ export default function PageBuilder() {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label>Όνομα Σελίδας</Label>
+                    <Label>🇬🇷 Όνομα Σελίδας (Ελληνικά)</Label>
                     <Input
-                      value={newPageName}
+                      value={newPageNameEl}
                       onChange={(e) => {
-                        setNewPageName(e.target.value);
-                        setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                        setNewPageNameEl(e.target.value);
+                        // Auto-generate URL key from Greek name if English is empty
+                        if (!newPageNameEn.trim()) {
+                          setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                        }
                       }}
                       placeholder="π.χ. Υπηρεσίες"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>🇬🇧 Page Name (English)</Label>
+                    <Input
+                      value={newPageNameEn}
+                      onChange={(e) => {
+                        setNewPageNameEn(e.target.value);
+                        // Auto-generate URL key from English name
+                        setNewPageKey(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''));
+                      }}
+                      placeholder="e.g. Services"
                     />
                   </div>
                   <div className="space-y-2">
