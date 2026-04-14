@@ -1,4 +1,4 @@
-import { User, LogOut, Home, Users } from "lucide-react";
+import { User, LogOut, Home, Users, Bot } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +42,7 @@ export function AppSidebarCustomer() {
   const items = [
     { title: t('nav.home'), url: "/", icon: Home },
     { title: language === 'el' ? 'Μαθήματα' : 'Browse Classes', url: "/customer/bookings", icon: Users },
+    { title: language === 'el' ? 'AI Προπονητής' : 'AI Coach', url: "/customer/ai-coach", icon: Bot },
     { title: t('nav.profile'), url: "/customer/profile", icon: User },
   ];
 
