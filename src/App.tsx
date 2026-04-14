@@ -32,6 +32,7 @@ import CronJobs from "./pages/admin/CronJobs";
 import TrainerProfile from "./pages/trainer/TrainerProfile";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import FitnessAssistant from "./pages/customer/FitnessAssistant";
+import SavedPrograms from "./pages/customer/SavedPrograms";
 import TrainerClasses from "./pages/trainer/TrainerClasses";
 import TrainerBookings from "./pages/trainer/TrainerBookings";
 import CRM from "./pages/admin/CRM";
@@ -109,6 +110,11 @@ const App = () => (
             <Route path="/customer/ai-coach" element={
               <ProtectedRoute allowedRoles={['member']}>
                 <FitnessAssistant />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/saved-programs" element={
+              <ProtectedRoute allowedRoles={['member']}>
+                <SavedPrograms />
               </ProtectedRoute>
             } />
             <Route path="/customer/*" element={
