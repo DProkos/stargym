@@ -249,8 +249,21 @@ export default function FitnessAssistant() {
                 )}
                 <Card className={`max-w-[80%] p-4 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <div>
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                      {!isLoading && msg.content.length > 100 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-3 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => printMessage(msg.content, language)}
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          {language === 'el' ? 'Εκτύπωση / PDF' : 'Print / PDF'}
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
