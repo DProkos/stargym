@@ -1132,6 +1132,33 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_programs: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          program_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          program_type?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          program_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_packages: {
         Row: {
           created_at: string
