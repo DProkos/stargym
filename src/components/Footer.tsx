@@ -80,6 +80,7 @@ export function Footer() {
         'twitter_url',
         'tiktok_url',
         'google_play_url',
+        'app_store_url',
         'footer_tagline'
       ]);
 
@@ -228,7 +229,8 @@ export function Footer() {
     }
   };
 
-  const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url || settings.tiktok_url || settings.google_play_url;
+  const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url || settings.tiktok_url;
+  const hasApps = settings.google_play_url || settings.app_store_url;
   const hasContact = settings.contact_phone || settings.contact_email || settings.contact_address;
   const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend || settings.working_hours_weekday_el || settings.working_hours_weekday_en;
 
