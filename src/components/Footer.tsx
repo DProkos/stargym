@@ -8,6 +8,7 @@ interface SiteSettings {
   site_name?: string;
   contact_email?: string;
   contact_phone?: string;
+  contact_phone_2?: string;
   contact_address?: string;
   working_hours?: string;
   working_hours_weekday?: string;
@@ -55,6 +56,7 @@ export function Footer() {
         'site_name',
         'contact_email',
         'contact_phone',
+        'contact_phone_2',
         'contact_address',
         'working_hours',
         'working_hours_weekday',
@@ -285,6 +287,17 @@ export function Footer() {
                       className="hover:text-primary transition-colors"
                     >
                       {settings.contact_phone}
+                    </a>
+                  </li>
+                )}
+                {settings.contact_phone_2 && (
+                  <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+                    <a 
+                      href={`tel:${settings.contact_phone_2}`}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {settings.contact_phone_2}
                     </a>
                   </li>
                 )}

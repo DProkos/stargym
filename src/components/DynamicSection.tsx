@@ -776,6 +776,9 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                     {language === 'el' ? 'Επικοινωνία' : 'Contact'}
                   </h3>
                   <p className="text-muted-foreground">{getSetting('contact_phone')}</p>
+                  {getSetting('contact_phone_2') && (
+                    <p className="text-muted-foreground">{getSetting('contact_phone_2')}</p>
+                  )}
                   <p className="text-muted-foreground">{getSetting('contact_email')}</p>
                 </div>
               </div>
