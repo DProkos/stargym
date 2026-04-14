@@ -203,7 +203,7 @@ export default function Contact() {
         <section className="pt-32 pb-20 px-4">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent pb-1">
                 {t('contact.title')}
               </h1>
               <p className="text-xl text-muted-foreground">{t('contact.subtitle')}</p>
