@@ -438,22 +438,43 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
               <CardTitle>Ωράριο Λειτουργίας</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <p className="text-sm font-medium text-muted-foreground">🇬🇷 Ελληνικά</p>
               <div className="space-y-2">
-                <Label>Καθημερινές</Label>
+                <Label>Καθημερινές (EL)</Label>
                 <Input
-                  value={getSetting('working_hours_weekday')}
-                  onChange={(e) => onUpdate('working_hours_weekday', e.target.value)}
+                  value={getSetting('working_hours_weekday_el')}
+                  onChange={(e) => onUpdate('working_hours_weekday_el', e.target.value)}
+                  placeholder="Δευτέρα - Παρασκευή: 06:00 - 23:00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Σαββατοκύριακο (EL)</Label>
+                <Input
+                  value={getSetting('working_hours_weekend_el')}
+                  onChange={(e) => onUpdate('working_hours_weekend_el', e.target.value)}
+                  placeholder="Σάββατο - Κυριακή: 08:00 - 21:00"
+                />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground mt-4">🇬🇧 English</p>
+              <div className="space-y-2">
+                <Label>Weekdays (EN)</Label>
+                <Input
+                  value={getSetting('working_hours_weekday_en')}
+                  onChange={(e) => onUpdate('working_hours_weekday_en', e.target.value)}
                   placeholder="Monday - Friday: 6:00 AM - 11:00 PM"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Σαββατοκύριακο</Label>
+                <Label>Weekend (EN)</Label>
                 <Input
-                  value={getSetting('working_hours_weekend')}
-                  onChange={(e) => onUpdate('working_hours_weekend', e.target.value)}
+                  value={getSetting('working_hours_weekend_en')}
+                  onChange={(e) => onUpdate('working_hours_weekend_en', e.target.value)}
                   placeholder="Saturday - Sunday: 8:00 AM - 9:00 PM"
                 />
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Αν δεν συμπληρωθούν τα πεδία μιας γλώσσας, θα χρησιμοποιηθούν τα παλιά πεδία (working_hours_weekday/weekend) ως fallback.
+              </p>
             </CardContent>
           </Card>
 

@@ -788,8 +788,12 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   <h3 className="font-semibold mb-2">
                     {language === 'el' ? 'Ωράριο' : 'Working Hours'}
                   </h3>
-                  <p className="text-muted-foreground">{getSetting('working_hours_weekday')}</p>
-                  <p className="text-muted-foreground">{getSetting('working_hours_weekend')}</p>
+                  <p className="text-muted-foreground">
+                    {(language === 'el' ? getSetting('working_hours_weekday_el') : getSetting('working_hours_weekday_en')) || getSetting('working_hours_weekday')}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {(language === 'el' ? getSetting('working_hours_weekend_el') : getSetting('working_hours_weekend_en')) || getSetting('working_hours_weekend')}
+                  </p>
                 </div>
               </div>
             </div>
