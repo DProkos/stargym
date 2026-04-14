@@ -45,6 +45,7 @@ import InvoiceDetail from "./pages/admin/InvoiceDetail";
 import PageBuilder from "./pages/admin/PageBuilder";
 import DynamicPage from "./pages/DynamicPage";
 import ResetPassword from "./pages/ResetPassword";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { DynamicFavicon } from "./components/DynamicFavicon";
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/memberships" element={<Memberships />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/virtual-tour" element={<DynamicPage pageKeyOverride="virtual-tour" />} />
           
           {/* Dynamic pages from Page Builder */}
