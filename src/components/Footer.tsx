@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
+import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
 
 interface SiteSettings {
   site_name?: string;
@@ -23,6 +24,7 @@ interface SiteSettings {
   instagram_url?: string;
   twitter_url?: string;
   tiktok_url?: string;
+  google_play_url?: string;
   footer_tagline?: string;
 }
 
@@ -75,6 +77,7 @@ export function Footer() {
         'instagram_url',
         'twitter_url',
         'tiktok_url',
+        'google_play_url',
         'footer_tagline'
       ]);
 
