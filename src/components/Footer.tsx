@@ -350,79 +350,105 @@ export function Footer() {
             </div>
           )}
 
-          {/* Social Media */}
-          {hasSocial && (
+          {/* Social Media & App Downloads */}
+          {(hasSocial || hasApps) && (
             <div>
-              <h4 className="font-semibold mb-4">
-                {language === 'el' ? 'Social Media' : 'Follow Us'}
-              </h4>
-              <div className="flex gap-3">
-                {settings.facebook_url && (
-                  <a
-                    href={ensureHttps(settings.facebook_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    onClick={handleSocialClick(settings.facebook_url)}
-                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                    aria-label="Facebook"
-                  >
-                    <Facebook className="h-5 w-5" />
-                  </a>
-                )}
-                {settings.instagram_url && (
-                  <a
-                    href={ensureHttps(settings.instagram_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    onClick={handleSocialClick(settings.instagram_url)}
-                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                    aria-label="Instagram"
-                  >
-                    <Instagram className="h-5 w-5" />
-                  </a>
-                )}
-                {settings.twitter_url && (
-                  <a
-                    href={ensureHttps(settings.twitter_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    onClick={handleSocialClick(settings.twitter_url)}
-                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                    aria-label="Twitter"
-                  >
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                )}
-                {settings.tiktok_url && (
-                  <a
-                    href={ensureHttps(settings.tiktok_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    onClick={handleSocialClick(settings.tiktok_url)}
-                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                    aria-label="TikTok"
-                  >
-                    <TikTokIcon className="h-5 w-5" />
-                  </a>
-                )}
-                {settings.google_play_url && (
-                  <a
-                    href={ensureHttps(settings.google_play_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                    onClick={handleSocialClick(settings.google_play_url)}
-                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                    aria-label="Google Play"
-                  >
-                    <GooglePlayIcon className="h-5 w-5" />
-                  </a>
-                )}
-              </div>
+              {hasSocial && (
+                <>
+                  <h4 className="font-semibold mb-4">
+                    {language === 'el' ? 'Social Media' : 'Follow Us'}
+                  </h4>
+                  <div className="flex gap-3 mb-6">
+                    {settings.facebook_url && (
+                      <a
+                        href={ensureHttps(settings.facebook_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        onClick={handleSocialClick(settings.facebook_url)}
+                        className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        aria-label="Facebook"
+                      >
+                        <Facebook className="h-5 w-5" />
+                      </a>
+                    )}
+                    {settings.instagram_url && (
+                      <a
+                        href={ensureHttps(settings.instagram_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        onClick={handleSocialClick(settings.instagram_url)}
+                        className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        aria-label="Instagram"
+                      >
+                        <Instagram className="h-5 w-5" />
+                      </a>
+                    )}
+                    {settings.twitter_url && (
+                      <a
+                        href={ensureHttps(settings.twitter_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        onClick={handleSocialClick(settings.twitter_url)}
+                        className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        aria-label="Twitter"
+                      >
+                        <Twitter className="h-5 w-5" />
+                      </a>
+                    )}
+                    {settings.tiktok_url && (
+                      <a
+                        href={ensureHttps(settings.tiktok_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        onClick={handleSocialClick(settings.tiktok_url)}
+                        className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                        aria-label="TikTok"
+                      >
+                        <TikTokIcon className="h-5 w-5" />
+                      </a>
+                    )}
+                  </div>
+                </>
+              )}
+              {hasApps && (
+                <>
+                  <h4 className="font-semibold mb-3">
+                    {language === 'el' ? 'Κατέβασε την εφαρμογή' : 'Download the App'}
+                  </h4>
+                  <div className="space-y-2">
+                    {settings.google_play_url && (
+                      <a
+                        href={ensureHttps(settings.google_play_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        onClick={handleSocialClick(settings.google_play_url)}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <GooglePlayIcon className="h-5 w-5" />
+                        <span>{language === 'el' ? 'Για Android' : 'For Android'}</span>
+                      </a>
+                    )}
+                    {settings.app_store_url && (
+                      <a
+                        href={ensureHttps(settings.app_store_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        referrerPolicy="no-referrer"
+                        onClick={handleSocialClick(settings.app_store_url)}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <AppStoreIcon className="h-5 w-5" />
+                        <span>{language === 'el' ? 'Για iOS' : 'For iOS'}</span>
+                      </a>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
