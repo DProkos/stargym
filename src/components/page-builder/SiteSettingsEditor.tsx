@@ -14,6 +14,7 @@ import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
+import { AppStoreIcon } from '@/components/icons/AppStoreIcon';
 
 interface SiteSetting {
   id: string;
@@ -587,6 +588,17 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                     value={getSetting('google_play_url')}
                     onChange={(e) => onUpdate('google_play_url', e.target.value)}
                     placeholder="https://play.google.com/store/apps/details?id=..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <AppStoreIcon className="h-4 w-4" />
+                    App Store (iOS)
+                  </Label>
+                  <Input
+                    value={getSetting('app_store_url')}
+                    onChange={(e) => onUpdate('app_store_url', e.target.value)}
+                    placeholder="https://apps.apple.com/..."
                   />
                 </div>
               </div>
