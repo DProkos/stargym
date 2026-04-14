@@ -578,8 +578,7 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                     placeholder="https://tiktok.com/@yourpage"
                   />
                 </div>
-              </div>
-              <div className="space-y-2 md:col-span-3">
+                <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <GooglePlayIcon className="h-4 w-4" />
                     Google Play App
