@@ -6,6 +6,7 @@ import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock } from 'lucide
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
 import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
+import { AppStoreIcon } from '@/components/icons/AppStoreIcon';
 
 interface SiteSettings {
   site_name?: string;
@@ -25,6 +26,7 @@ interface SiteSettings {
   twitter_url?: string;
   tiktok_url?: string;
   google_play_url?: string;
+  app_store_url?: string;
   footer_tagline?: string;
 }
 
