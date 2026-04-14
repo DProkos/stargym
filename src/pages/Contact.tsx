@@ -12,8 +12,10 @@ import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from 'lucide-react
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ChatbotWidget } from '@/components/ChatbotWidget';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { Link } from 'react-router-dom';
 
 const contactSchema = z.object({
   name: z.string()
@@ -58,6 +60,7 @@ export default function Contact() {
     message: '',
   });
   const [loading, setLoading] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const { executeRecaptcha, verifyRecaptcha } = useRecaptcha();
 
   useEffect(() => {
@@ -252,7 +255,26 @@ export default function Contact() {
                         className="bg-secondary border-border"
                       />
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <p className="text-xs text-muted-foreground">
+                      {language === 'el' 
+                        ? 'Τα δεδομένα σας χρησιμοποιούνται μόνο για επικοινωνία και δεν μοιράζονται με τρίτους.'
+                        : 'Your data is used only for communication and is not shared with third parties.'}
+                    </p>
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="privacy"
+                        checked={privacyAccepted}
+                        onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+                      />
+                      <label htmlFor="privacy" className="text-sm text-muted-foreground leading-tight cursor-pointer">
+                        {language === 'el' ? (
+                          <>Αποδέχομαι την <Link to="/privacy-policy" className="text-primary underline hover:text-primary/80" target="_blank">Πολιτική Απορρήτου</Link></>
+                        ) : (
+                          <>I accept the <Link to="/privacy-policy" className="text-primary underline hover:text-primary/80" target="_blank">Privacy Policy</Link></>
+                        )}
+                      </label>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading || !privacyAccepted}>
                       {loading ? '...' : t('contact.send')}
                     </Button>
                   </form>
