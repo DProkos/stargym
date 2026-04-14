@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Navigation } from "@/components/Navigation";
@@ -84,6 +85,7 @@ export default function Contact() {
     phone: "",
     message: "",
   });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const { executeRecaptcha, verifyRecaptcha } = useRecaptcha();
 
@@ -134,6 +136,19 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!privacyAccepted) {
+      toast({
+        title: language === "el" ? "Απαιτείται αποδοχή" : "Consent required",
+        description:
+          language === "el"
+            ? "Πρέπει να αποδεχτείτε την Πολιτική Απορρήτου για να συνεχίσετε."
+            : "You need to accept the Privacy Policy to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -303,7 +318,28 @@ export default function Contact() {
                         className="bg-secondary border-border"
                       />
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
+
+                    <div className="flex items-start gap-3 rounded-lg border border-border bg-secondary/40 p-4">
+                      <input
+                        id="privacyAccepted"
+                        type="checkbox"
+                        checked={privacyAccepted}
+                        onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-border bg-background accent-primary"
+                        required
+                      />
+                      <Label
+                        htmlFor="privacyAccepted"
+                        className="cursor-pointer text-sm leading-relaxed text-muted-foreground"
+                      >
+                        {language === "el" ? "Αποδέχομαι την " : "I accept the "}
+                        <Link to="/privacy-policy" className="text-primary hover:underline">
+                          {language === "el" ? "Πολιτική Απορρήτου" : "Privacy Policy"}
+                        </Link>
+                      </Label>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={loading || !privacyAccepted}>
                       {loading ? "..." : t("contact.send")}
                     </Button>
                   </form>
