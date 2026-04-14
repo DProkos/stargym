@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -45,6 +46,7 @@ interface SiteSettings {
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
+  tiktok_url?: string;
 }
 
 export default function Contact() {
@@ -90,7 +92,8 @@ export default function Contact() {
           'working_hours',
           'facebook_url',
           'instagram_url',
-          'twitter_url'
+          'twitter_url',
+          'tiktok_url'
         ]);
 
       if (data) {
