@@ -14,6 +14,7 @@ import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
+import { AppStoreIcon } from '@/components/icons/AppStoreIcon';
 
 interface SiteSetting {
   id: string;
