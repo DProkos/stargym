@@ -228,14 +228,16 @@ export function Footer() {
   const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend || settings.working_hours_weekday_el || settings.working_hours_weekday_en;
 
   const getWorkingHours = () => {
-    if (settings.working_hours) return settings.working_hours;
     const suffix = language === 'el' ? '_el' : '_en';
     const weekday = (settings as any)[`working_hours_weekday${suffix}`] || settings.working_hours_weekday || '';
     const weekend = (settings as any)[`working_hours_weekend${suffix}`] || settings.working_hours_weekend || '';
-    const parts = [];
-    if (weekday) parts.push(weekday);
-    if (weekend) parts.push(weekend);
-    return parts.join('\n');
+    if (weekday || weekend) {
+      const parts = [];
+      if (weekday) parts.push(weekday);
+      if (weekend) parts.push(weekend);
+      return parts.join('\n');
+    }
+    return settings.working_hours || '';
   };
 
   const defaultTagline = language === 'el' 
