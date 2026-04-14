@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock, Music } from 'lucide-react';
 
 interface SiteSettings {
   site_name?: string;
@@ -15,6 +15,7 @@ interface SiteSettings {
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
+  tiktok_url?: string;
   footer_tagline?: string;
 }
 
@@ -61,6 +62,7 @@ export function Footer() {
         'facebook_url',
         'instagram_url',
         'twitter_url',
+        'tiktok_url',
         'footer_tagline'
       ]);
 
@@ -209,7 +211,7 @@ export function Footer() {
     }
   };
 
-  const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url;
+  const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url || settings.tiktok_url;
   const hasContact = settings.contact_phone || settings.contact_email || settings.contact_address;
   const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend;
 
@@ -357,6 +359,19 @@ export function Footer() {
                     aria-label="Twitter"
                   >
                     <Twitter className="h-5 w-5" />
+                  </a>
+                )}
+                {settings.tiktok_url && (
+                  <a
+                    href={ensureHttps(settings.tiktok_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    referrerPolicy="no-referrer"
+                    onClick={handleSocialClick(settings.tiktok_url)}
+                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                    aria-label="TikTok"
+                  >
+                    <Music className="h-5 w-5" />
                   </a>
                 )}
               </div>
