@@ -14,6 +14,10 @@ interface SiteSettings {
   working_hours?: string;
   working_hours_weekday?: string;
   working_hours_weekend?: string;
+  working_hours_weekday_el?: string;
+  working_hours_weekend_el?: string;
+  working_hours_weekday_en?: string;
+  working_hours_weekend_en?: string;
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
@@ -62,6 +66,10 @@ export function Footer() {
         'working_hours',
         'working_hours_weekday',
         'working_hours_weekend',
+        'working_hours_weekday_el',
+        'working_hours_weekend_el',
+        'working_hours_weekday_en',
+        'working_hours_weekend_en',
         'facebook_url',
         'instagram_url',
         'twitter_url',
@@ -216,13 +224,16 @@ export function Footer() {
 
   const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url || settings.tiktok_url;
   const hasContact = settings.contact_phone || settings.contact_email || settings.contact_address;
-  const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend;
+  const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend || settings.working_hours_weekday_el || settings.working_hours_weekday_en;
 
   const getWorkingHours = () => {
     if (settings.working_hours) return settings.working_hours;
+    const suffix = language === 'el' ? '_el' : '_en';
+    const weekday = (settings as any)[`working_hours_weekday${suffix}`] || settings.working_hours_weekday || '';
+    const weekend = (settings as any)[`working_hours_weekend${suffix}`] || settings.working_hours_weekend || '';
     const parts = [];
-    if (settings.working_hours_weekday) parts.push(settings.working_hours_weekday);
-    if (settings.working_hours_weekend) parts.push(settings.working_hours_weekend);
+    if (weekday) parts.push(weekday);
+    if (weekend) parts.push(weekend);
     return parts.join('\n');
   };
 
