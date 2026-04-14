@@ -19,7 +19,8 @@ import {
   Check,
   Facebook,
   Instagram,
-  Twitter
+  Twitter,
+  Music
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GymGallery3D from '@/components/GymGallery3D';
@@ -875,7 +876,8 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       const facebookUrl = getSetting('facebook_url');
       const instagramUrl = getSetting('instagram_url');
       const twitterUrl = getSetting('twitter_url');
-      const hasSocial = facebookUrl || instagramUrl || twitterUrl;
+      const tiktokUrl = getSetting('tiktok_url');
+      const hasSocial = facebookUrl || instagramUrl || twitterUrl || tiktokUrl;
 
       // Helper to ensure URLs have https:// prefix
       const ensureHttps = (url: string) => {
@@ -954,6 +956,22 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   aria-label="Twitter"
                 >
                   <Twitter className="h-8 w-8" />
+                </a>
+              )}
+              {tiktokUrl && (
+                <a
+                  href={ensureHttps(tiktokUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  referrerPolicy="no-referrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(ensureHttps(tiktokUrl), '_blank', 'noopener,noreferrer');
+                  }}
+                  className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
+                  aria-label="TikTok"
+                >
+                  <Music className="h-8 w-8" />
                 </a>
               )}
             </div>

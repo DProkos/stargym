@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid } from 'lucide-react';
+import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid, Music } from 'lucide-react';
 
 interface SiteSetting {
   id: string;
@@ -485,6 +485,17 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                     value={getSetting('twitter_url')}
                     onChange={(e) => onUpdate('twitter_url', e.target.value)}
                     placeholder="https://twitter.com/yourpage"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Music className="h-4 w-4" />
+                    TikTok
+                  </Label>
+                  <Input
+                    value={getSetting('tiktok_url')}
+                    onChange={(e) => onUpdate('tiktok_url', e.target.value)}
+                    placeholder="https://tiktok.com/@yourpage"
                   />
                 </div>
               </div>
