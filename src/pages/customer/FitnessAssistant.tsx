@@ -4,7 +4,7 @@ import { AppSidebarCustomer } from '@/components/app-sidebar-customer';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Send, Bot, User, Dumbbell, Apple, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Dumbbell, Apple, Loader2, Printer } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
