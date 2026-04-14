@@ -22,6 +22,7 @@ import {
   Twitter,
 } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
+import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GymGallery3D from '@/components/GymGallery3D';
 
@@ -775,9 +776,15 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   <h3 className="font-semibold mb-2">
                     {language === 'el' ? 'Επικοινωνία' : 'Contact'}
                   </h3>
-                  <p className="text-muted-foreground">{getSetting('contact_phone')}</p>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4 text-primary" />
+                    <span>{getSetting('contact_phone')}</span>
+                  </div>
                   {getSetting('contact_phone_2') && (
-                    <p className="text-muted-foreground">{getSetting('contact_phone_2')}</p>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <LandlinePhoneIcon className="h-4 w-4 text-primary" />
+                      <span>{getSetting('contact_phone_2')}</span>
+                    </div>
                   )}
                   <p className="text-muted-foreground">{getSetting('contact_email')}</p>
                 </div>
