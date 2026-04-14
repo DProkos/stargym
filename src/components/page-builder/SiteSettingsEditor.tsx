@@ -414,6 +414,14 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                 />
               </div>
               <div className="space-y-2">
+                <Label>Δεύτερο Τηλέφωνο</Label>
+                <Input
+                  value={getSetting('contact_phone_2')}
+                  onChange={(e) => onUpdate('contact_phone_2', e.target.value)}
+                  placeholder="+30 210 765 4321"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Διεύθυνση</Label>
                 <Input
                   value={getSetting('contact_address')}
