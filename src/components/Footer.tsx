@@ -429,7 +429,7 @@ export function Footer() {
                         onClick={handleSocialClick(settings.google_play_url)}
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
-                        <GooglePlayIcon className="h-5 w-5" />
+                        <GooglePlayIcon className="h-8 w-8" />
                         <span>{language === 'el' ? 'Για Android' : 'For Android'}</span>
                       </a>
                     )}
@@ -442,7 +442,7 @@ export function Footer() {
                         onClick={handleSocialClick(settings.app_store_url)}
                         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
-                        <AppStoreIcon className="h-5 w-5" />
+                        <AppStoreIcon className="h-8 w-8" />
                         <span>{language === 'el' ? 'Για iOS' : 'For iOS'}</span>
                       </a>
                     )}
