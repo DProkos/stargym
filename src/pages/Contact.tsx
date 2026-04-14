@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from "lucide-react";
+import { MapPin, Phone, Clock, Facebook, Instagram, Twitter, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
+import { TikTokIcon } from "@/components/icons/TikTokIcon";
+import { LandlinePhoneIcon } from "@/components/icons/LandlinePhoneIcon";
 
 const contactSchema = z.object({
   name: z
@@ -37,12 +39,38 @@ const contactSchema = z.object({
 interface SiteSettings {
   contact_email?: string;
   contact_phone?: string;
+  contact_phone_2?: string;
   contact_address?: string;
   working_hours?: string;
+  working_hours_weekday?: string;
+  working_hours_weekend?: string;
+  working_hours_weekday_el?: string;
+  working_hours_weekend_el?: string;
+  working_hours_weekday_en?: string;
+  working_hours_weekend_en?: string;
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
+  tiktok_url?: string;
 }
+
+const CONTACT_SETTING_KEYS: Array<keyof SiteSettings> = [
+  "contact_email",
+  "contact_phone",
+  "contact_phone_2",
+  "contact_address",
+  "working_hours",
+  "working_hours_weekday",
+  "working_hours_weekend",
+  "working_hours_weekday_el",
+  "working_hours_weekend_el",
+  "working_hours_weekday_en",
+  "working_hours_weekend_en",
+  "facebook_url",
+  "instagram_url",
+  "twitter_url",
+  "tiktok_url",
+];
 
 export default function Contact() {
   const { t, language } = useLanguage();
@@ -81,15 +109,7 @@ export default function Contact() {
       const { data } = await supabase
         .from("site_settings")
         .select("setting_key, setting_value")
-        .in("setting_key", [
-          "contact_email",
-          "contact_phone",
-          "contact_address",
-          "working_hours",
-          "facebook_url",
-          "instagram_url",
-          "twitter_url",
-        ]);
+        .in("setting_key", CONTACT_SETTING_KEYS);
 
       if (data) {
         const settings: SiteSettings = {};
@@ -183,7 +203,35 @@ export default function Contact() {
     return `https://${url}`;
   };
 
-  const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url;
+  const handleSocialClick = (url: string | undefined) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (url) {
+      window.open(ensureHttps(url), "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const hasSocialLinks =
+    siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url || siteSettings.tiktok_url;
+
+  const hasWorkingHours =
+    siteSettings.working_hours ||
+    siteSettings.working_hours_weekday ||
+    siteSettings.working_hours_weekend ||
+    siteSettings.working_hours_weekday_el ||
+    siteSettings.working_hours_weekday_en;
+
+  const getWorkingHours = () => {
+    const localizedSettings = siteSettings as Record<string, string | undefined>;
+    const suffix = language === "el" ? "_el" : "_en";
+    const weekday = localizedSettings[`working_hours_weekday${suffix}`] || siteSettings.working_hours_weekday || "";
+    const weekend = localizedSettings[`working_hours_weekend${suffix}`] || siteSettings.working_hours_weekend || "";
+
+    if (weekday || weekend) {
+      return [weekday, weekend].filter(Boolean).join("\n");
+    }
+
+    return siteSettings.working_hours || "";
+  };
 
   const getGoogleMapsEmbedUrl = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
@@ -277,47 +325,60 @@ export default function Contact() {
                   </Card>
                 )}
 
-                {(siteSettings.contact_phone || siteSettings.contact_email) && (
+                {(siteSettings.contact_phone || siteSettings.contact_phone_2 || siteSettings.contact_email) && (
                   <Card className="bg-gradient-card border-border">
                     <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                        <div>
-                          <h3 className="font-semibold mb-2">{t("contact.phone")}</h3>
-                          {siteSettings.contact_phone && (
-                            <p className="text-muted-foreground">
-                              <a
-                                href={`tel:${siteSettings.contact_phone}`}
-                                className="hover:text-primary transition-colors"
-                              >
-                                {siteSettings.contact_phone}
-                              </a>
-                            </p>
-                          )}
-                          {siteSettings.contact_email && (
-                            <p className="text-muted-foreground">
-                              <a
-                                href={`mailto:${siteSettings.contact_email}`}
-                                className="hover:text-primary transition-colors"
-                              >
-                                {siteSettings.contact_email}
-                              </a>
-                            </p>
-                          )}
-                        </div>
+                      <div className="space-y-4">
+                        <h3 className="font-semibold">{language === "el" ? "Επικοινωνία" : "Contact"}</h3>
+
+                        {siteSettings.contact_phone && (
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            <Phone className="h-5 w-5 text-primary flex-shrink-0" />
+                            <a
+                              href={`tel:${siteSettings.contact_phone}`}
+                              className="hover:text-primary transition-colors"
+                            >
+                              {siteSettings.contact_phone}
+                            </a>
+                          </div>
+                        )}
+
+                        {siteSettings.contact_phone_2 && (
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            <LandlinePhoneIcon className="h-5 w-5 text-primary flex-shrink-0" />
+                            <a
+                              href={`tel:${siteSettings.contact_phone_2}`}
+                              className="hover:text-primary transition-colors"
+                            >
+                              {siteSettings.contact_phone_2}
+                            </a>
+                          </div>
+                        )}
+
+                        {siteSettings.contact_email && (
+                          <div className="flex items-center gap-3 text-muted-foreground">
+                            <Mail className="h-5 w-5 text-primary flex-shrink-0" />
+                            <a
+                              href={`mailto:${siteSettings.contact_email}`}
+                              className="hover:text-primary transition-colors break-all"
+                            >
+                              {siteSettings.contact_email}
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 )}
 
-                {siteSettings.working_hours && (
+                {hasWorkingHours && (
                   <Card className="bg-gradient-card border-border">
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
                         <Clock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                         <div>
                           <h3 className="font-semibold mb-2">{t("contact.hours")}</h3>
-                          <p className="text-muted-foreground whitespace-pre-line">{siteSettings.working_hours}</p>
+                          <p className="text-muted-foreground whitespace-pre-line">{getWorkingHours()}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -327,18 +388,15 @@ export default function Contact() {
                 {hasSocialLinks && (
                   <Card className="bg-gradient-card border-border">
                     <CardContent className="pt-6">
-                      <h3 className="font-semibold mb-4">Social Media</h3>
-                      <div className="flex gap-4">
+                      <h3 className="font-semibold mb-4">{language === "el" ? "Social Media" : "Follow Us"}</h3>
+                      <div className="flex flex-wrap gap-4">
                         {siteSettings.facebook_url && (
                           <a
                             href={ensureHttps(siteSettings.facebook_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             referrerPolicy="no-referrer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.open(ensureHttps(siteSettings.facebook_url), "_blank", "noopener,noreferrer");
-                            }}
+                            onClick={handleSocialClick(siteSettings.facebook_url)}
                             className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                             aria-label="Facebook"
                           >
@@ -351,10 +409,7 @@ export default function Contact() {
                             target="_blank"
                             rel="noopener noreferrer"
                             referrerPolicy="no-referrer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.open(ensureHttps(siteSettings.instagram_url), "_blank", "noopener,noreferrer");
-                            }}
+                            onClick={handleSocialClick(siteSettings.instagram_url)}
                             className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                             aria-label="Instagram"
                           >
@@ -367,14 +422,24 @@ export default function Contact() {
                             target="_blank"
                             rel="noopener noreferrer"
                             referrerPolicy="no-referrer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.open(ensureHttps(siteSettings.twitter_url), "_blank", "noopener,noreferrer");
-                            }}
+                            onClick={handleSocialClick(siteSettings.twitter_url)}
                             className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                             aria-label="Twitter"
                           >
                             <Twitter className="h-5 w-5" />
+                          </a>
+                        )}
+                        {siteSettings.tiktok_url && (
+                          <a
+                            href={ensureHttps(siteSettings.tiktok_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            referrerPolicy="no-referrer"
+                            onClick={handleSocialClick(siteSettings.tiktok_url)}
+                            className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                            aria-label="TikTok"
+                          >
+                            <TikTokIcon className="h-5 w-5" />
                           </a>
                         )}
                       </div>
@@ -385,8 +450,9 @@ export default function Contact() {
                 {/* Fallback if no settings configured */}
                 {!siteSettings.contact_address &&
                   !siteSettings.contact_phone &&
+                  !siteSettings.contact_phone_2 &&
                   !siteSettings.contact_email &&
-                  !siteSettings.working_hours && (
+                  !hasWorkingHours && (
                     <>
                       <Card className="bg-gradient-card border-border">
                         <CardContent className="pt-6">
