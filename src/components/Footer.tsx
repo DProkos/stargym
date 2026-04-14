@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
+import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
 
 interface SiteSettings {
   site_name?: string;
@@ -23,6 +24,7 @@ interface SiteSettings {
   instagram_url?: string;
   twitter_url?: string;
   tiktok_url?: string;
+  google_play_url?: string;
   footer_tagline?: string;
 }
 
@@ -75,6 +77,7 @@ export function Footer() {
         'instagram_url',
         'twitter_url',
         'tiktok_url',
+        'google_play_url',
         'footer_tagline'
       ]);
 
@@ -223,7 +226,7 @@ export function Footer() {
     }
   };
 
-  const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url || settings.tiktok_url;
+  const hasSocial = settings.facebook_url || settings.instagram_url || settings.twitter_url || settings.tiktok_url || settings.google_play_url;
   const hasContact = settings.contact_phone || settings.contact_email || settings.contact_address;
   const hasWorkingHours = settings.working_hours || settings.working_hours_weekday || settings.working_hours_weekend || settings.working_hours_weekday_el || settings.working_hours_weekday_en;
 
@@ -400,6 +403,19 @@ export function Footer() {
                     aria-label="TikTok"
                   >
                     <TikTokIcon className="h-5 w-5" />
+                  </a>
+                )}
+                {settings.google_play_url && (
+                  <a
+                    href={ensureHttps(settings.google_play_url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    referrerPolicy="no-referrer"
+                    onClick={handleSocialClick(settings.google_play_url)}
+                    className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                    aria-label="Google Play"
+                  >
+                    <GooglePlayIcon className="h-5 w-5" />
                   </a>
                 )}
               </div>

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
+import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GymGallery3D from '@/components/GymGallery3D';
 
@@ -891,7 +892,8 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
       const instagramUrl = getSetting('instagram_url');
       const twitterUrl = getSetting('twitter_url');
       const tiktokUrl = getSetting('tiktok_url');
-      const hasSocial = facebookUrl || instagramUrl || twitterUrl || tiktokUrl;
+      const googlePlayUrl = getSetting('google_play_url');
+      const hasSocial = facebookUrl || instagramUrl || twitterUrl || tiktokUrl || googlePlayUrl;
 
       // Helper to ensure URLs have https:// prefix
       const ensureHttps = (url: string) => {
@@ -986,6 +988,22 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   aria-label="TikTok"
                 >
                   <TikTokIcon className="h-8 w-8" />
+                </a>
+              )}
+              {googlePlayUrl && (
+                <a
+                  href={ensureHttps(googlePlayUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  referrerPolicy="no-referrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(ensureHttps(googlePlayUrl), '_blank', 'noopener,noreferrer');
+                  }}
+                  className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
+                  aria-label="Google Play"
+                >
+                  <GooglePlayIcon className="h-8 w-8" />
                 </a>
               )}
             </div>
