@@ -459,6 +459,11 @@ export function Footer() {
             © {new Date().getFullYear()} {settings.site_name || 'Star Gym'}. 
             {language === 'el' ? ' Με επιφύλαξη παντός δικαιώματος.' : ' All rights reserved.'}
           </p>
+          <p className="mt-2">
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">
+              {language === 'el' ? 'Πολιτική Απορρήτου' : 'Privacy Policy'}
+            </Link>
+          </p>
         </div>
       </div>
     </footer>
