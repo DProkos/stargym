@@ -589,6 +589,17 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                     placeholder="https://play.google.com/store/apps/details?id=..."
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <AppStoreIcon className="h-4 w-4" />
+                    App Store (iOS)
+                  </Label>
+                  <Input
+                    value={getSetting('app_store_url')}
+                    onChange={(e) => onUpdate('app_store_url', e.target.value)}
+                    placeholder="https://apps.apple.com/..."
+                  />
+                </div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
                 Τα social media links και η εφαρμογή θα εμφανίζονται στο footer και στη σελίδα επικοινωνίας
