@@ -4,10 +4,12 @@ import { AppSidebarCustomer } from '@/components/app-sidebar-customer';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Send, Bot, User, Dumbbell, Apple, Loader2, Printer } from 'lucide-react';
+import { Send, Bot, User, Dumbbell, Apple, Loader2, Printer, Save, BookOpen } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -139,10 +141,29 @@ const quickPrompts = [
 
 export default function FitnessAssistant() {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const saveProgram = async (content: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error(language === 'el' ? 'Πρέπει να είσαι συνδεδεμένος' : 'Must be logged in'); return; }
+    const isNutrition = /διατροφ|nutrition|θερμίδ|calori|γεύμα|meal/i.test(content);
+    const type = isNutrition ? 'nutrition' : 'workout';
+    const title = content.match(/^#+\s*(.+)$/m)?.[1]
+      || (type === 'nutrition'
+        ? (language === 'el' ? 'Πλάνο Διατροφής' : 'Nutrition Plan')
+        : (language === 'el' ? 'Πρόγραμμα Γυμναστικής' : 'Workout Plan'))
+      + ' - ' + new Date().toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US');
+
+    const { error } = await supabase.from('saved_programs').insert({
+      user_id: user.id, title, content, program_type: type,
+    });
+    if (error) { toast.error(language === 'el' ? 'Σφάλμα αποθήκευσης' : 'Save error'); return; }
+    toast.success(language === 'el' ? 'Αποθηκεύτηκε!' : 'Saved!');
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -199,12 +220,16 @@ export default function FitnessAssistant() {
           <div className="border-b">
             <div className="flex h-16 items-center px-6">
               <SidebarTrigger />
-              <div className="ml-4 flex items-center gap-2">
+              <div className="ml-4 flex items-center gap-2 flex-1">
                 <Bot className="h-6 w-6 text-primary" />
                 <h1 className="text-2xl font-bold">
                   {language === 'el' ? 'AI Προπονητής' : 'AI Coach'}
                 </h1>
               </div>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate('/customer/saved-programs')}>
+                <BookOpen className="h-4 w-4" />
+                {language === 'el' ? 'Αποθηκευμένα' : 'Saved'}
+              </Button>
             </div>
           </div>
 
@@ -254,15 +279,26 @@ export default function FitnessAssistant() {
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
                       {!isLoading && msg.content.length > 100 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-3 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                          onClick={() => printMessage(msg.content, language)}
-                        >
-                          <Printer className="h-3.5 w-3.5" />
-                          {language === 'el' ? 'Εκτύπωση / PDF' : 'Print / PDF'}
-                        </Button>
+                        <div className="flex gap-2 mt-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => printMessage(msg.content, language)}
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            {language === 'el' ? 'Εκτύπωση' : 'Print'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => saveProgram(msg.content)}
+                          >
+                            <Save className="h-3.5 w-3.5" />
+                            {language === 'el' ? 'Αποθήκευση' : 'Save'}
+                          </Button>
+                        </div>
                       )}
                     </div>
                   ) : (
