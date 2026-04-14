@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
+import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
 
 interface SiteSettings {
   site_name?: string;
@@ -304,7 +305,7 @@ export function Footer() {
                 )}
                 {settings.contact_phone_2 && (
                   <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+                    <LandlinePhoneIcon className="h-4 w-4 text-primary flex-shrink-0" />
                     <a 
                       href={`tel:${settings.contact_phone_2}`}
                       className="hover:text-primary transition-colors"
