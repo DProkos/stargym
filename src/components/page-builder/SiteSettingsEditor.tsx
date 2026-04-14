@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +8,11 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid, Languages, Loader2 } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface SiteSetting {
   id: string;
@@ -25,6 +29,39 @@ interface SiteSettingsEditorProps {
 
 export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorProps) {
   const getSetting = (key: string) => settings.find(s => s.setting_key === key)?.setting_value || '';
+  const [translating, setTranslating] = useState(false);
+
+  const autoTranslateHours = async () => {
+    const weekdayEl = getSetting('working_hours_weekday_el');
+    const weekendEl = getSetting('working_hours_weekend_el');
+    if (!weekdayEl && !weekendEl) {
+      toast.error('Συμπλήρωσε πρώτα τα Ελληνικά πεδία');
+      return;
+    }
+    setTranslating(true);
+    try {
+      const translate = async (text: string) => {
+        if (!text) return '';
+        const { data, error } = await supabase.functions.invoke('translate-content', {
+          body: { text, targetLanguage: 'en' },
+        });
+        if (error) throw error;
+        return data.translatedText || '';
+      };
+      const [weekdayEn, weekendEn] = await Promise.all([
+        weekdayEl ? translate(weekdayEl) : Promise.resolve(''),
+        weekendEl ? translate(weekendEl) : Promise.resolve(''),
+      ]);
+      if (weekdayEn) onUpdate('working_hours_weekday_en', weekdayEn);
+      if (weekendEn) onUpdate('working_hours_weekend_en', weekendEn);
+      toast.success('Μετάφραση ολοκληρώθηκε!');
+    } catch (e) {
+      console.error('Translation error:', e);
+      toast.error('Σφάλμα μετάφρασης');
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const brandingSettings = settings.filter(s => s.category === 'branding');
   const colorSettings = settings.filter(s => s.category === 'colors');
@@ -472,9 +509,21 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                   placeholder="Saturday - Sunday: 8:00 AM - 9:00 PM"
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Αν δεν συμπληρωθούν τα πεδία μιας γλώσσας, θα χρησιμοποιηθούν τα παλιά πεδία (working_hours_weekday/weekend) ως fallback.
-              </p>
+              <div className="flex items-center gap-3 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={autoTranslateHours}
+                  disabled={translating}
+                >
+                  {translating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Languages className="h-4 w-4" />}
+                  {translating ? 'Μετάφραση...' : 'Αυτόματη μετάφραση EL → EN'}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Συμπλήρωσε τα Ελληνικά και πάτα για αυτόματη μετάφραση στα Αγγλικά
+                </p>
+              </div>
             </CardContent>
           </Card>
 
