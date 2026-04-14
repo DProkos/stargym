@@ -1,41 +1,37 @@
-import { useState, useEffect } from 'react';
-import { SEOHead } from '@/components/SEOHead';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Navigation } from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
-import { TikTokIcon } from '@/components/icons/TikTokIcon';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { z } from 'zod';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ChatbotWidget } from '@/components/ChatbotWidget';
-import { useRecaptcha } from '@/hooks/useRecaptcha';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { SEOHead } from "@/components/SEOHead";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 const contactSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .trim()
-    .min(2, { message: 'Name must be at least 2 characters' })
-    .max(100, { message: 'Name must be less than 100 characters' }),
-  email: z.string()
+    .min(2, { message: "Name must be at least 2 characters" })
+    .max(100, { message: "Name must be less than 100 characters" }),
+  email: z
+    .string()
     .trim()
-    .email({ message: 'Invalid email address' })
-    .max(255, { message: 'Email must be less than 255 characters' }),
-  phone: z.string()
+    .email({ message: "Invalid email address" })
+    .max(255, { message: "Email must be less than 255 characters" }),
+  phone: z.string().trim().max(20, { message: "Phone must be less than 20 characters" }).optional().or(z.literal("")),
+  message: z
+    .string()
     .trim()
-    .max(20, { message: 'Phone must be less than 20 characters' })
-    .optional()
-    .or(z.literal('')),
-  message: z.string()
-    .trim()
-    .min(10, { message: 'Message must be at least 10 characters' })
-    .max(1000, { message: 'Message must be less than 1000 characters' }),
+    .min(10, { message: "Message must be at least 10 characters" })
+    .max(1000, { message: "Message must be less than 1000 characters" }),
 });
 
 interface SiteSettings {
@@ -46,7 +42,6 @@ interface SiteSettings {
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
-  tiktok_url?: string;
 }
 
 export default function Contact() {
@@ -56,26 +51,27 @@ export default function Contact() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({});
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
   });
   const [loading, setLoading] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const { executeRecaptcha, verifyRecaptcha } = useRecaptcha();
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setUser(session?.user || null);
 
       if (session?.user) {
         const { data } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('role', 'admin')
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "admin")
           .single();
         setIsAdmin(!!data);
       }
@@ -83,23 +79,22 @@ export default function Contact() {
 
     const fetchSiteSettings = async () => {
       const { data } = await supabase
-        .from('site_settings')
-        .select('setting_key, setting_value')
-        .in('setting_key', [
-          'contact_email',
-          'contact_phone',
-          'contact_address',
-          'working_hours',
-          'facebook_url',
-          'instagram_url',
-          'twitter_url',
-          'tiktok_url'
+        .from("site_settings")
+        .select("setting_key, setting_value")
+        .in("setting_key", [
+          "contact_email",
+          "contact_phone",
+          "contact_address",
+          "working_hours",
+          "facebook_url",
+          "instagram_url",
+          "twitter_url",
         ]);
 
       if (data) {
         const settings: SiteSettings = {};
         data.forEach((item) => {
-          settings[item.setting_key as keyof SiteSettings] = item.setting_value || '';
+          settings[item.setting_key as keyof SiteSettings] = item.setting_value || "";
         });
         setSiteSettings(settings);
       }
@@ -108,7 +103,9 @@ export default function Contact() {
     checkUser();
     fetchSiteSettings();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
 
@@ -121,15 +118,15 @@ export default function Contact() {
 
     try {
       // Execute reCAPTCHA
-      const recaptchaToken = await executeRecaptcha('contact');
-      
+      const recaptchaToken = await executeRecaptcha("contact");
+
       if (recaptchaToken) {
         const isValid = await verifyRecaptcha(recaptchaToken);
         if (!isValid) {
           toast({
-            title: 'Verification Failed',
-            description: 'Please try again',
-            variant: 'destructive',
+            title: "Verification Failed",
+            description: "Please try again",
+            variant: "destructive",
           });
           setLoading(false);
           return;
@@ -140,38 +137,38 @@ export default function Contact() {
       const validatedData = contactSchema.parse(formData);
 
       // Send contact form via edge function
-      const { error } = await supabase.functions.invoke('send-contact-form', {
+      const { error } = await supabase.functions.invoke("send-contact-form", {
         body: {
           name: validatedData.name,
           email: validatedData.email,
-          phone: validatedData.phone || '',
+          phone: validatedData.phone || "",
           message: validatedData.message,
           language: language,
         },
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to send message');
+        throw new Error(error.message || "Failed to send message");
       }
 
-      toast({ 
-        title: t('contact.success') || 'Message sent successfully!',
-        description: t('contact.successDesc') || 'We will get back to you soon.',
+      toast({
+        title: t("contact.success") || "Message sent successfully!",
+        description: t("contact.successDesc") || "We will get back to you soon.",
       });
-      setFormData({ name: '', email: '', phone: '', message: '' });
+      setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({
-          title: 'Validation Error',
+          title: "Validation Error",
           description: error.errors[0].message,
-          variant: 'destructive',
+          variant: "destructive",
         });
       } else {
-        console.error('Contact form error:', error);
+        console.error("Contact form error:", error);
         toast({
-          title: 'Error',
-          description: error.message || 'Failed to send message. Please try again.',
-          variant: 'destructive',
+          title: "Error",
+          description: error.message || "Failed to send message. Please try again.",
+          variant: "destructive",
         });
       }
     } finally {
@@ -181,12 +178,12 @@ export default function Contact() {
 
   // Helper to ensure URLs have https:// prefix
   const ensureHttps = (url: string | undefined) => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
     return `https://${url}`;
   };
 
-  const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url || siteSettings.tiktok_url;
+  const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url;
 
   const getGoogleMapsEmbedUrl = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
@@ -198,26 +195,26 @@ export default function Contact() {
       <SEOHead path="/contact" />
       <Navigation user={user} isAdmin={isAdmin} />
       <ChatbotWidget />
-      
+
       <main className="flex-grow">
-        <section className="pt-32 pb-20 px-4">
+        <section className="pt-32 pb-20 px-5">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent pb-3">
-                {t('contact.title')}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {t("contact.title")}
               </h1>
-              <p className="text-xl text-muted-foreground">{t('contact.subtitle')}</p>
+              <p className="text-xl text-muted-foreground">{t("contact.subtitle")}</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-gradient-card border-border">
                 <CardHeader>
-                  <CardTitle>{t('contact.send')}</CardTitle>
+                  <CardTitle>{t("contact.send")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">{t('contact.name')}</Label>
+                      <Label htmlFor="name">{t("contact.name")}</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -227,7 +224,7 @@ export default function Contact() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t('contact.email')}</Label>
+                      <Label htmlFor="email">{t("contact.email")}</Label>
                       <Input
                         id="email"
                         type="email"
@@ -238,7 +235,7 @@ export default function Contact() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">{t('contact.phone')}</Label>
+                      <Label htmlFor="phone">{t("contact.phone")}</Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -248,7 +245,7 @@ export default function Contact() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="message">{t('contact.message')}</Label>
+                      <Label htmlFor="message">{t("contact.message")}</Label>
                       <Textarea
                         id="message"
                         value={formData.message}
@@ -258,27 +255,8 @@ export default function Contact() {
                         className="bg-secondary border-border"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {language === 'el' 
-                        ? 'Τα δεδομένα σας χρησιμοποιούνται μόνο για επικοινωνία και δεν μοιράζονται με τρίτους.'
-                        : 'Your data is used only for communication and is not shared with third parties.'}
-                    </p>
-                    <div className="flex items-start space-x-2">
-                      <Checkbox
-                        id="privacy"
-                        checked={privacyAccepted}
-                        onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
-                      />
-                      <label htmlFor="privacy" className="text-sm text-muted-foreground leading-tight cursor-pointer">
-                        {language === 'el' ? (
-                          <>Αποδέχομαι την <Link to="/privacy-policy" className="text-primary underline hover:text-primary/80" target="_blank">Πολιτική Απορρήτου</Link></>
-                        ) : (
-                          <>I accept the <Link to="/privacy-policy" className="text-primary underline hover:text-primary/80" target="_blank">Privacy Policy</Link></>
-                        )}
-                      </label>
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading || !privacyAccepted}>
-                      {loading ? '...' : t('contact.send')}
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "..." : t("contact.send")}
                     </Button>
                   </form>
                 </CardContent>
@@ -291,10 +269,8 @@ export default function Contact() {
                       <div className="flex items-start gap-4">
                         <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                         <div>
-                          <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
-                          <p className="text-muted-foreground whitespace-pre-line">
-                            {siteSettings.contact_address}
-                          </p>
+                          <h3 className="font-semibold mb-2">{t("contact.location")}</h3>
+                          <p className="text-muted-foreground whitespace-pre-line">{siteSettings.contact_address}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -307,17 +283,23 @@ export default function Contact() {
                       <div className="flex items-start gap-4">
                         <Phone className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                         <div>
-                          <h3 className="font-semibold mb-2">{t('contact.phone')}</h3>
+                          <h3 className="font-semibold mb-2">{t("contact.phone")}</h3>
                           {siteSettings.contact_phone && (
                             <p className="text-muted-foreground">
-                              <a href={`tel:${siteSettings.contact_phone}`} className="hover:text-primary transition-colors">
+                              <a
+                                href={`tel:${siteSettings.contact_phone}`}
+                                className="hover:text-primary transition-colors"
+                              >
                                 {siteSettings.contact_phone}
                               </a>
                             </p>
                           )}
                           {siteSettings.contact_email && (
                             <p className="text-muted-foreground">
-                              <a href={`mailto:${siteSettings.contact_email}`} className="hover:text-primary transition-colors">
+                              <a
+                                href={`mailto:${siteSettings.contact_email}`}
+                                className="hover:text-primary transition-colors"
+                              >
                                 {siteSettings.contact_email}
                               </a>
                             </p>
@@ -334,10 +316,8 @@ export default function Contact() {
                       <div className="flex items-start gap-4">
                         <Clock className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                         <div>
-                          <h3 className="font-semibold mb-2">{t('contact.hours')}</h3>
-                          <p className="text-muted-foreground whitespace-pre-line">
-                            {siteSettings.working_hours}
-                          </p>
+                          <h3 className="font-semibold mb-2">{t("contact.hours")}</h3>
+                          <p className="text-muted-foreground whitespace-pre-line">{siteSettings.working_hours}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -357,7 +337,7 @@ export default function Contact() {
                             referrerPolicy="no-referrer"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.open(ensureHttps(siteSettings.facebook_url), '_blank', 'noopener,noreferrer');
+                              window.open(ensureHttps(siteSettings.facebook_url), "_blank", "noopener,noreferrer");
                             }}
                             className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                             aria-label="Facebook"
@@ -373,7 +353,7 @@ export default function Contact() {
                             referrerPolicy="no-referrer"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.open(ensureHttps(siteSettings.instagram_url), '_blank', 'noopener,noreferrer');
+                              window.open(ensureHttps(siteSettings.instagram_url), "_blank", "noopener,noreferrer");
                             }}
                             className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                             aria-label="Instagram"
@@ -389,28 +369,12 @@ export default function Contact() {
                             referrerPolicy="no-referrer"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.open(ensureHttps(siteSettings.twitter_url), '_blank', 'noopener,noreferrer');
+                              window.open(ensureHttps(siteSettings.twitter_url), "_blank", "noopener,noreferrer");
                             }}
                             className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                             aria-label="Twitter"
                           >
                             <Twitter className="h-5 w-5" />
-                          </a>
-                        )}
-                        {siteSettings.tiktok_url && (
-                          <a
-                            href={ensureHttps(siteSettings.tiktok_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            referrerPolicy="no-referrer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.open(ensureHttps(siteSettings.tiktok_url), '_blank', 'noopener,noreferrer');
-                            }}
-                            className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                            aria-label="TikTok"
-                          >
-                            <TikTokIcon className="h-5 w-5" />
                           </a>
                         )}
                       </div>
@@ -419,23 +383,26 @@ export default function Contact() {
                 )}
 
                 {/* Fallback if no settings configured */}
-                {!siteSettings.contact_address && !siteSettings.contact_phone && !siteSettings.contact_email && !siteSettings.working_hours && (
-                  <>
-                    <Card className="bg-gradient-card border-border">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-4">
-                          <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                          <div>
-                            <h3 className="font-semibold mb-2">{t('contact.location')}</h3>
-                            <p className="text-muted-foreground">
-                              Ρυθμίστε τη διεύθυνση στο Page Builder → Site Settings → Επικοινωνία
-                            </p>
+                {!siteSettings.contact_address &&
+                  !siteSettings.contact_phone &&
+                  !siteSettings.contact_email &&
+                  !siteSettings.working_hours && (
+                    <>
+                      <Card className="bg-gradient-card border-border">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start gap-4">
+                            <MapPin className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                            <div>
+                              <h3 className="font-semibold mb-2">{t("contact.location")}</h3>
+                              <p className="text-muted-foreground">
+                                Ρυθμίστε τη διεύθυνση στο Page Builder → Site Settings → Επικοινωνία
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                )}
+                        </CardContent>
+                      </Card>
+                    </>
+                  )}
               </div>
             </div>
 
@@ -446,7 +413,7 @@ export default function Contact() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MapPin className="h-5 w-5 text-primary" />
-                      {t('contact.location')}
+                      {t("contact.location")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
