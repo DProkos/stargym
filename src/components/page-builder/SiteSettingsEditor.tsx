@@ -13,6 +13,7 @@ import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGr
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { GooglePlayIcon } from '@/components/icons/GooglePlayIcon';
 
 interface SiteSetting {
   id: string;
@@ -578,8 +579,20 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                   />
                 </div>
               </div>
+              <div className="space-y-2 md:col-span-3">
+                  <Label className="flex items-center gap-2">
+                    <GooglePlayIcon className="h-4 w-4" />
+                    Google Play App
+                  </Label>
+                  <Input
+                    value={getSetting('google_play_url')}
+                    onChange={(e) => onUpdate('google_play_url', e.target.value)}
+                    placeholder="https://play.google.com/store/apps/details?id=..."
+                  />
+                </div>
+              </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Τα social media links θα εμφανίζονται στο footer και στη σελίδα επικοινωνίας
+                Τα social media links και η εφαρμογή θα εμφανίζονται στο footer και στη σελίδα επικοινωνίας
               </p>
             </CardContent>
           </Card>
