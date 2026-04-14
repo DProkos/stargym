@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock, Music } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Phone, Mail, MapPin, Clock } from 'lucide-react';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 
 interface SiteSettings {
   site_name?: string;
@@ -384,7 +385,7 @@ export function Footer() {
                     className="p-2 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
                     aria-label="TikTok"
                   >
-                    <Music className="h-5 w-5" />
+                    <TikTokIcon className="h-5 w-5" />
                   </a>
                 )}
               </div>

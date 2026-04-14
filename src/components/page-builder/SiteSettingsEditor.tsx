@@ -7,7 +7,8 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid, Music } from 'lucide-react';
+import { Palette, Building2, Phone, Star, Facebook, Instagram, Twitter, LayoutGrid } from 'lucide-react';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 
 interface SiteSetting {
   id: string;
@@ -497,7 +498,7 @@ export function SiteSettingsEditor({ settings, onUpdate }: SiteSettingsEditorPro
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <Music className="h-4 w-4" />
+                    <TikTokIcon className="h-4 w-4" />
                     TikTok
                   </Label>
                   <Input
