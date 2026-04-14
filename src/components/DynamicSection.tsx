@@ -20,8 +20,8 @@ import {
   Facebook,
   Instagram,
   Twitter,
-  Music
 } from 'lucide-react';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import GymGallery3D from '@/components/GymGallery3D';
 
@@ -974,7 +974,7 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
                   className="p-4 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-all hover:scale-110 shadow-lg"
                   aria-label="TikTok"
                 >
-                  <Music className="h-8 w-8" />
+                  <TikTokIcon className="h-8 w-8" />
                 </a>
               )}
             </div>
