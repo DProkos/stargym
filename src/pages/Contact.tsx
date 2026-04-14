@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { MapPin, Phone, Clock, Facebook, Instagram, Twitter } from 'lucide-react';
+import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -45,6 +46,7 @@ interface SiteSettings {
   facebook_url?: string;
   instagram_url?: string;
   twitter_url?: string;
+  tiktok_url?: string;
 }
 
 export default function Contact() {
@@ -90,7 +92,8 @@ export default function Contact() {
           'working_hours',
           'facebook_url',
           'instagram_url',
-          'twitter_url'
+          'twitter_url',
+          'tiktok_url'
         ]);
 
       if (data) {
@@ -183,7 +186,7 @@ export default function Contact() {
     return `https://${url}`;
   };
 
-  const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url;
+  const hasSocialLinks = siteSettings.facebook_url || siteSettings.instagram_url || siteSettings.twitter_url || siteSettings.tiktok_url;
 
   const getGoogleMapsEmbedUrl = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
@@ -392,6 +395,22 @@ export default function Contact() {
                             aria-label="Twitter"
                           >
                             <Twitter className="h-5 w-5" />
+                          </a>
+                        )}
+                        {siteSettings.tiktok_url && (
+                          <a
+                            href={ensureHttps(siteSettings.tiktok_url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            referrerPolicy="no-referrer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.open(ensureHttps(siteSettings.tiktok_url), '_blank', 'noopener,noreferrer');
+                            }}
+                            className="p-3 bg-secondary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                            aria-label="TikTok"
+                          >
+                            <TikTokIcon className="h-5 w-5" />
                           </a>
                         )}
                       </div>
