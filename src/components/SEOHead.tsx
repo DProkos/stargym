@@ -26,7 +26,7 @@ export function SEOHead({
   const seoData: Record<string, { title: string; description: string }> = {
     home: {
       title: language === 'el'
-        ? 'Γυμναστήριο Μενίδι | Star Gym - Κορυφαίο Fitness Center'
+        ? 'Star Gym - Κορυφαίο Fitness Center'
         : 'Star Gym Menidi | Elite Fitness Training Center',
       description: language === 'el'
         ? 'Γυμναστήριο στο Μενίδι Αττικής. Personal training, ομαδικά προγράμματα, σύγχρονος εξοπλισμός, έμπειροι γυμναστές και κορυφαίες εγκαταστάσεις.'
