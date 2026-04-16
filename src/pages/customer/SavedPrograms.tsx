@@ -17,6 +17,8 @@ export default function SavedPrograms() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
 
   const { data: programs = [], isLoading } = useQuery({
     queryKey: ['saved-programs'],
@@ -40,6 +42,44 @@ export default function SavedPrograms() {
       toast.success(language === 'el' ? 'Το πρόγραμμα διαγράφηκε' : 'Program deleted');
     },
   });
+
+  const renameMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const { error } = await supabase
+        .from('saved_programs')
+        .update({ title })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-programs'] });
+      setEditingId(null);
+      setEditingTitle('');
+      toast.success(language === 'el' ? 'Ο τίτλος ενημερώθηκε' : 'Title updated');
+    },
+    onError: () => {
+      toast.error(language === 'el' ? 'Σφάλμα ενημέρωσης' : 'Update error');
+    },
+  });
+
+  const startEdit = (id: string, currentTitle: string) => {
+    setEditingId(id);
+    setEditingTitle(currentTitle);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingTitle('');
+  };
+
+  const saveEdit = (id: string) => {
+    const trimmed = editingTitle.trim();
+    if (!trimmed) {
+      toast.error(language === 'el' ? 'Ο τίτλος δεν μπορεί να είναι κενός' : 'Title cannot be empty');
+      return;
+    }
+    renameMutation.mutate({ id, title: trimmed });
+  };
 
   const printProgram = (content: string) => {
     const win = window.open('', '_blank');
