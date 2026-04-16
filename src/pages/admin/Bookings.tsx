@@ -495,20 +495,19 @@ export default function AdminBookings() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
-        <main className="flex-1">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
+        <main className="flex-1 min-w-0">
+          <div className="border-b sticky top-0 bg-background z-30">
+            <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 gap-2 sm:gap-3 flex-wrap">
               <SidebarTrigger />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/admin')}
-                className="ml-4"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
-              <h1 className="text-2xl font-bold ml-4">Bookings Management</h1>
+              <h1 className="text-base sm:text-2xl font-bold truncate">Bookings</h1>
               <div className="ml-auto flex gap-2">
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'outline'}

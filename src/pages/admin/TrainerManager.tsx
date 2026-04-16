@@ -186,13 +186,13 @@ export default function TrainerManager() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
+        <div className="flex-1 min-w-0">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 sticky top-0 bg-background z-30">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">Trainer Management</h1>
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">Trainer Management</h1>
           </header>
 
-          <main className="p-6">
+          <main className="p-3 sm:p-6">
             <div className="max-w-6xl mx-auto">
     <div className="space-y-6">
       <div className="flex items-center justify-between">

@@ -317,19 +317,20 @@ export default function CronJobs() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center justify-between px-6">
-            <div className="flex items-center">
+        <div className="flex-1 min-w-0">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center justify-between px-3 sm:px-6 gap-2 sticky top-0 bg-background z-30">
+            <div className="flex items-center min-w-0 flex-1">
               <SidebarTrigger />
-              <h1 className="ml-4 text-2xl font-bold">Αυτοματισμοί & Υπενθυμίσεις</h1>
+              <h1 className="ml-2 sm:ml-4 text-base sm:text-2xl font-bold truncate">Αυτοματισμοί</h1>
             </div>
-            <Button onClick={openCreateDialog} className="flex items-center gap-2">
+            <Button onClick={openCreateDialog} size="sm" className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Plus className="h-4 w-4" />
-              Νέος Αυτοματισμός
+              <span className="hidden sm:inline">Νέος Αυτοματισμός</span>
+              <span className="sm:hidden">Νέος</span>
             </Button>
           </header>
 
-          <main className="p-6">
+          <main className="p-3 sm:p-6">
             <div className="max-w-6xl mx-auto space-y-6">
               {/* Overview Cards */}
               <div className="grid gap-4 md:grid-cols-3">

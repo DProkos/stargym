@@ -238,17 +238,18 @@ export default function ClassEditor() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center justify-between px-6">
-            <div className="flex items-center">
+        <div className="flex-1 min-w-0">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center justify-between px-3 sm:px-6 gap-2 sticky top-0 bg-background z-30">
+            <div className="flex items-center min-w-0 flex-1">
               <SidebarTrigger />
-              <h1 className="ml-4 text-2xl font-bold">Διαχείριση Μαθημάτων</h1>
+              <h1 className="ml-2 sm:ml-4 text-base sm:text-2xl font-bold truncate">Διαχείριση Μαθημάτων</h1>
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Νέο Μάθημα
+                <Button size="sm" className="shrink-0">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Νέο Μάθημα</span>
+                  <span className="sm:hidden">Νέο</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
@@ -351,7 +352,7 @@ export default function ClassEditor() {
             </Dialog>
           </header>
 
-          <main className="p-6">
+          <main className="p-3 sm:p-6">
             <div className="max-w-4xl mx-auto">
               <div className="space-y-6">
                 <div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -185,28 +185,32 @@ export default function Packages() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <Button variant="ghost" onClick={() => navigate('/admin/invoices')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Πίσω στα Τιμολόγια
-            </Button>
-          </div>
-
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Πακέτα Υπηρεσιών</h1>
-              <p className="text-muted-foreground">
-                Δημιουργήστε και διαχειριστείτε πακέτα για γρήγορη τιμολόγηση
-              </p>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 sticky top-0 bg-background z-30">
+            <SidebarTrigger />
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">Πακέτα Υπηρεσιών</h1>
+          </header>
+          <main className="flex-1 p-3 sm:p-6 overflow-auto">
+            <div className="mb-4 sm:mb-6">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/admin/invoices')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                <span className="text-xs sm:text-sm">Πίσω στα Τιμολόγια</span>
+              </Button>
             </div>
-            <Button onClick={handleNewPackage}>
-              <Plus className="h-4 w-4 mr-2" />
-              Νέο Πακέτο
-            </Button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Δημιουργήστε και διαχειριστείτε πακέτα για γρήγορη τιμολόγηση
+                </p>
+              </div>
+              <Button onClick={handleNewPackage} size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Νέο Πακέτο
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {packages.map((pkg) => (
               <Card
                 key={pkg.id}

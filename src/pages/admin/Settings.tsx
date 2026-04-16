@@ -720,17 +720,18 @@ Test Email - ${editingTemplate.name}
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
-        <main className="flex-1">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
+        <main className="flex-1 min-w-0">
+          <div className="border-b sticky top-0 bg-background z-30">
+            <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 gap-2">
               <SidebarTrigger />
-              <h1 className="text-2xl font-bold ml-4">Settings</h1>
+              <h1 className="text-lg sm:text-2xl font-bold truncate">Settings</h1>
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             <Tabs defaultValue="memberships" className="space-y-4">
-              <TabsList className="flex-wrap">
+              <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                <TabsList className="inline-flex w-auto sm:flex sm:flex-wrap">
                 <TabsTrigger value="memberships">Membership Tiers</TabsTrigger>
                 <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
                 <TabsTrigger value="stripe">Stripe Settings</TabsTrigger>
