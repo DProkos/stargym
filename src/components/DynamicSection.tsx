@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   Dumbbell, 
   Users, 
@@ -20,6 +21,12 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  Brain,
+  Sparkles,
+  Apple,
+  Smartphone,
+  Download,
+  Share,
 } from 'lucide-react';
 import { TikTokIcon } from '@/components/icons/TikTokIcon';
 import { LandlinePhoneIcon } from '@/components/icons/LandlinePhoneIcon';
@@ -1011,6 +1018,71 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
         </section>
       );
 
+    case 'ai_coach': {
+      const ctaLink = section.settings?.button_link || '/customer/fitness-assistant';
+      const ctaText = section.settings?.button_text || (language === 'el' ? 'Ξεκίνα με τον AI Coach' : 'Start with AI Coach');
+      const features = section.settings?.features || [
+        { icon: 'Brain', title_el: 'Εξατομικευμένα Προγράμματα', title_en: 'Personalized Programs', description_el: 'Σχεδιασμένα ειδικά για τους στόχους σου', description_en: 'Designed specifically for your goals' },
+        { icon: 'Dumbbell', title_el: 'Με τον Εξοπλισμό μας', title_en: 'With Our Equipment', description_el: 'Χρησιμοποιεί τα μηχανήματα του γυμναστηρίου', description_en: 'Uses the gym\'s available equipment' },
+        { icon: 'Sparkles', title_el: 'Άμεσα Αποτελέσματα', title_en: 'Instant Results', description_el: 'Πάρε το πρόγραμμά σου σε δευτερόλεπτα', description_en: 'Get your plan in seconds' },
+      ];
+      const ICONS_EXT: Record<string, any> = { ...ICONS, Brain, Sparkles };
+      return (
+        <section className={`py-16 sm:py-24 px-4 relative overflow-hidden ${bgClass}`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
+          <div className="container mx-auto relative z-10">
+            <div className="text-center mb-10 sm:mb-14">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 mb-4">
+                <Brain className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">AI Powered</span>
+              </div>
+              {title && (
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-[1.15] pb-2">
+                  {title}
+                </h2>
+              )}
+              {subtitle && (
+                <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto">{subtitle}</p>
+              )}
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-10">
+              {features.map((f: any, idx: number) => {
+                const Icon = ICONS_EXT[f.icon] || Sparkles;
+                return (
+                  <div
+                    key={idx}
+                    className="bg-gradient-card border border-border rounded-xl p-5 sm:p-6 hover:border-primary/50 hover:shadow-neon transition-all"
+                  >
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-lg mb-2">{getFeatureTitle(f)}</h3>
+                    <p className="text-sm text-muted-foreground">{getFeatureDescription(f)}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="text-center">
+              <Button size="lg" className="shadow-neon-strong gap-2" asChild>
+                <Link to={ctaLink}>
+                  <Brain className="h-5 w-5" />
+                  {ctaText}
+                </Link>
+              </Button>
+              {content && (
+                <p className="text-xs text-muted-foreground mt-3 max-w-md mx-auto">{content}</p>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    case 'pwa_install':
+      return <PWAInstallSection section={section} bgClass={bgClass} title={title} subtitle={subtitle} content={content} language={language} />;
+
     default:
       return (
         <section className={`py-16 px-4 ${bgClass}`}>
@@ -1021,6 +1093,173 @@ export function DynamicSection({ section, getSetting }: DynamicSectionProps) {
         </section>
       );
   }
+}
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+function PWAInstallSection({
+  section,
+  bgClass,
+  title,
+  subtitle,
+  content,
+  language,
+}: {
+  section: PageSection;
+  bgClass: string;
+  title: string;
+  subtitle: string;
+  content: string;
+  language: string;
+}) {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true;
+    setIsInstalled(standalone);
+
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(ios);
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+
+    const onInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+    window.addEventListener('appinstalled', onInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται!' : 'Installing the app!');
+      }
+      setDeferredPrompt(null);
+      return;
+    }
+    if (isIOS) {
+      setShowIOSInstructions(true);
+      return;
+    }
+    toast.info(
+      language === 'el'
+        ? 'Άνοιξε το μενού του browser σου και επίλεξε "Εγκατάσταση εφαρμογής" ή "Προσθήκη στην αρχική οθόνη".'
+        : 'Open your browser menu and select "Install app" or "Add to Home Screen".'
+    );
+  };
+
+  const buttonText =
+    section.settings?.button_text ||
+    (language === 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App');
+
+  return (
+    <section className={`py-16 sm:py-24 px-4 relative overflow-hidden ${bgClass}`}>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 pointer-events-none" />
+      <div className="container mx-auto max-w-3xl relative z-10">
+        <div className="bg-gradient-card border-2 border-primary/30 rounded-2xl p-6 sm:p-10 text-center shadow-neon">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 mb-5">
+            <Download className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+          </div>
+
+          {title && (
+            <h2 className="text-2xl sm:text-4xl font-bold mb-3 leading-[1.15]">{title}</h2>
+          )}
+          {subtitle && (
+            <p className="text-base sm:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
+              {subtitle}
+            </p>
+          )}
+
+          {isInstalled ? (
+            <div className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-primary/10 border border-primary/30 text-primary font-medium">
+              <Check className="h-5 w-5" />
+              {language === 'el'
+                ? 'Η εφαρμογή είναι ήδη εγκατεστημένη'
+                : 'The app is already installed'}
+            </div>
+          ) : (
+            <>
+              <Button
+                size="lg"
+                onClick={handleInstall}
+                className="shadow-neon-strong gap-2 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8"
+              >
+                <Download className="h-5 w-5" />
+                {buttonText}
+              </Button>
+
+              <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Apple className="h-4 w-4" />
+                  <span>iOS</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4" />
+                  <span>Android</span>
+                </div>
+              </div>
+
+              {(showIOSInstructions || (isIOS && !deferredPrompt)) && (
+                <div className="mt-6 p-4 sm:p-5 bg-muted/50 border border-border rounded-lg text-left max-w-md mx-auto">
+                  <p className="text-sm font-semibold mb-3 text-center">
+                    {language === 'el' ? 'Οδηγίες για iPhone / iPad:' : 'Instructions for iPhone / iPad:'}
+                  </p>
+                  <ol className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-primary">1.</span>
+                      <span className="flex items-center gap-1 flex-wrap">
+                        {language === 'el' ? 'Πάτησε το' : 'Tap the'}
+                        <Share className="h-4 w-4 inline" />
+                        {language === 'el' ? 'κουμπί κοινοποίησης στο Safari' : 'Share button in Safari'}
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-primary">2.</span>
+                      <span>
+                        {language === 'el'
+                          ? 'Επίλεξε «Προσθήκη στην οθόνη Αφετηρίας»'
+                          : 'Choose "Add to Home Screen"'}
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-bold text-primary">3.</span>
+                      <span>
+                        {language === 'el' ? 'Πάτησε «Προσθήκη». Έτοιμο!' : 'Tap "Add". Done!'}
+                      </span>
+                    </li>
+                  </ol>
+                </div>
+              )}
+            </>
+          )}
+
+          {content && (
+            <p className="text-xs text-muted-foreground mt-5 max-w-md mx-auto">{content}</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 interface DynamicPageSectionsProps {

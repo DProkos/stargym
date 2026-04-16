@@ -13,7 +13,10 @@ import {
   Star,
   Dumbbell,
   Users,
-  Clock
+  Clock,
+  Brain,
+  Download,
+  Smartphone,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -191,6 +194,49 @@ const TemplatePreview = ({ template }: { template: SectionTemplate }) => {
         </div>
       );
     
+    case 'ai_coach':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2 relative overflow-hidden`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Brain className="w-2.5 h-2.5 text-primary" />
+              <div className="text-[6px] font-bold text-primary">AI POWERED</div>
+            </div>
+            <div className="text-[8px] font-bold text-center truncate">{preview_data.title_el || preview_data.title_en}</div>
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              {[Brain, Dumbbell, Sparkles].map((Icon, i) => (
+                <div key={i} className="bg-current/10 rounded p-1 flex items-center justify-center">
+                  <Icon className="w-2 h-2 text-primary" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-1 mx-auto bg-primary text-primary-foreground rounded px-2 py-0.5 text-[5px] font-medium w-fit">
+              Start Now
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'pwa_install':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2 relative overflow-hidden flex flex-col items-center justify-center`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/10" />
+          <div className="relative z-10 text-center">
+            <div className="w-6 h-6 mx-auto rounded-md bg-primary/20 flex items-center justify-center mb-1">
+              <Download className="w-3 h-3 text-primary" />
+            </div>
+            <div className="text-[7px] font-bold truncate max-w-[90px] mx-auto">{preview_data.title_el || preview_data.title_en}</div>
+            <div className="mt-1 bg-primary text-primary-foreground rounded px-2 py-0.5 text-[5px] font-medium inline-flex items-center gap-0.5">
+              <Download className="w-1.5 h-1.5" /> Install
+            </div>
+            <div className="flex justify-center gap-2 mt-1 text-[5px] opacity-60">
+              <span>iOS</span><span>Android</span>
+            </div>
+          </div>
+        </div>
+      );
+
     default:
       return (
         <div className="w-full h-24 rounded-md bg-muted flex items-center justify-center">
@@ -468,6 +514,74 @@ const SECTION_TEMPLATES: SectionTemplate[] = [
           { src: '', alt: 'Χώρος Cardio' },
           { src: '', alt: 'Αίθουσα Group Fitness' }
         ]
+      }
+    }
+  },
+  // AI Coach Template
+  {
+    id: 'ai-coach-promo',
+    name: 'AI Coach Promo',
+    description: 'Προωθητικό section για τον AI Fitness Coach με τα οφέλη και CTA',
+    section_type: 'ai_coach',
+    icon: Brain,
+    category: 'AI & Apps',
+    preview_data: {
+      title_en: 'Meet Your Personal AI Coach',
+      title_el: 'Γνώρισε τον Προσωπικό σου AI Coach',
+      subtitle_en: 'Custom workouts and nutrition plans powered by AI, tailored to your goals and our gym equipment',
+      subtitle_el: 'Εξατομικευμένα προγράμματα προπόνησης και διατροφής με τη βοήθεια AI, σχεδιασμένα για τους στόχους σου και τον εξοπλισμό μας',
+      content_en: 'Available exclusively for our members. Sign in to your portal to start.',
+      content_el: 'Διαθέσιμο αποκλειστικά για τα μέλη μας. Συνδέσου στο portal σου για να ξεκινήσεις.',
+      background_color: 'default',
+      text_color: 'default',
+      settings: {
+        button_text: 'Δοκίμασε τον AI Coach',
+        button_link: '/customer/fitness-assistant',
+        features: [
+          {
+            icon: 'Brain',
+            title_en: 'Personalized Programs',
+            title_el: 'Εξατομικευμένα Προγράμματα',
+            description_en: 'AI-generated workout plans designed specifically for your goals and fitness level',
+            description_el: 'Προγράμματα φτιαγμένα από AI, σχεδιασμένα ειδικά για τους δικούς σου στόχους'
+          },
+          {
+            icon: 'Dumbbell',
+            title_en: 'Uses Our Equipment',
+            title_el: 'Με τον Εξοπλισμό μας',
+            description_en: 'Plans use only the equipment available at our gym',
+            description_el: 'Τα προγράμματα χρησιμοποιούν μόνο τα μηχανήματα του γυμναστηρίου μας'
+          },
+          {
+            icon: 'Sparkles',
+            title_en: 'Instant Results',
+            title_el: 'Άμεσα Αποτελέσματα',
+            description_en: 'Get a complete plan in seconds, ready to use today',
+            description_el: 'Πάρε ένα ολοκληρωμένο πρόγραμμα σε δευτερόλεπτα, έτοιμο για σήμερα'
+          }
+        ]
+      }
+    }
+  },
+  // PWA Install Template
+  {
+    id: 'pwa-install-cta',
+    name: 'Εγκατάσταση Εφαρμογής (PWA)',
+    description: 'Section με κουμπί που εγκαθιστά την εφαρμογή στο κινητό με ένα κλικ',
+    section_type: 'pwa_install',
+    icon: Download,
+    category: 'AI & Apps',
+    preview_data: {
+      title_en: 'Install Our App',
+      title_el: 'Εγκατάσταση Εφαρμογής',
+      subtitle_en: 'Get the full Star Gym experience on your phone — book classes, view your schedule and access your AI coach instantly.',
+      subtitle_el: 'Πάρε όλη την εμπειρία Star Gym στο κινητό σου — κλείσε μαθήματα, δες το πρόγραμμά σου και χρησιμοποίησε τον AI coach άμεσα.',
+      content_en: 'Works on iPhone, Android, and desktop. No App Store required.',
+      content_el: 'Λειτουργεί σε iPhone, Android και υπολογιστή. Χωρίς App Store.',
+      background_color: 'default',
+      text_color: 'default',
+      settings: {
+        button_text: 'Εγκατάσταση τώρα'
       }
     }
   }
