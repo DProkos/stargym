@@ -573,6 +573,8 @@ export default function Settings() {
       setSavingAiLimits(false);
     }
   };
+
+  const handleSaveEmailTemplate = async () => {
     if (!editingTemplate) return;
 
     try {
