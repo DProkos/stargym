@@ -1348,6 +1348,102 @@ Test Email - ${editingTemplate.name}
                 </Card>
               </TabsContent>
 
+              <TabsContent value="ai-coach" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>AI Coach Limits & Budget</CardTitle>
+                    <CardDescription>
+                      Διαμόρφωση ορίων χρήσης ανά χρήστη και του μηνιαίου budget για τον AI Fitness Coach.
+                      Όταν το συνολικό budget φτάσει 80% / 95%, αποστέλλεται ειδοποίηση στους admins μέσω SMTP.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Χρήση σήμερα</p>
+                        <p className="text-2xl font-bold">{aiUsageStats.today}</p>
+                        <p className="text-xs text-muted-foreground">συνολικά αιτήματα</p>
+                      </div>
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Χρήση τρέχοντος μήνα</p>
+                        <p className="text-2xl font-bold">{aiUsageStats.month}</p>
+                        <p className="text-xs text-muted-foreground">
+                          / {aiCoachLimits.monthlyBudgetRequests} ({aiCoachLimits.monthlyBudgetRequests > 0 ? Math.round((aiUsageStats.month / aiCoachLimits.monthlyBudgetRequests) * 100) : 0}%)
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Εκτιμώμενη υποστήριξη</p>
+                        <p className="text-2xl font-bold">
+                          ~{aiCoachLimits.monthlyLimit > 0 ? Math.floor(aiCoachLimits.monthlyBudgetRequests / aiCoachLimits.monthlyLimit) : 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground">ενεργοί χρήστες/μήνα</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-daily-limit">Ημερήσιο όριο ανά χρήστη</Label>
+                        <Input
+                          id="ai-daily-limit"
+                          type="number"
+                          min={1}
+                          value={aiCoachLimits.dailyLimit}
+                          onChange={(e) =>
+                            setAiCoachLimits({ ...aiCoachLimits, dailyLimit: parseInt(e.target.value) || 0 })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">Μέγιστα αιτήματα/ημέρα ανά χρήστη.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-monthly-limit">Μηνιαίο όριο ανά χρήστη</Label>
+                        <Input
+                          id="ai-monthly-limit"
+                          type="number"
+                          min={1}
+                          value={aiCoachLimits.monthlyLimit}
+                          onChange={(e) =>
+                            setAiCoachLimits({ ...aiCoachLimits, monthlyLimit: parseInt(e.target.value) || 0 })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">Μέγιστα αιτήματα/μήνα ανά χρήστη.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-monthly-budget">Συνολικό μηνιαίο budget (αιτήματα)</Label>
+                        <Input
+                          id="ai-monthly-budget"
+                          type="number"
+                          min={1}
+                          value={aiCoachLimits.monthlyBudgetRequests}
+                          onChange={(e) =>
+                            setAiCoachLimits({
+                              ...aiCoachLimits,
+                              monthlyBudgetRequests: parseInt(e.target.value) || 0,
+                            })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Σύνολο αιτημάτων όλων των χρηστών/μήνα. Με ~$0.0006/request στο Gemini 2.5 Flash, 1650 ≈ $1 (free balance).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-primary/20 bg-primary/5 p-4 text-sm">
+                      <p className="font-medium mb-1">💡 Συστάσεις προϋπολογισμού</p>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                        <li>Συντηρητικό: 5/ημέρα · 30/μήνα · budget 1650 (~330+ ενεργοί χρήστες)</li>
+                        <li>Μέτριο: 10/ημέρα · 50/μήνα · budget 1650 (~150–200 ενεργοί χρήστες)</li>
+                        <li>Γενναιόδωρο: 20/ημέρα · 100/μήνα · budget 1650 (~80 ενεργοί χρήστες)</li>
+                      </ul>
+                    </div>
+
+                    <Button onClick={handleSaveAiCoachLimits} disabled={savingAiLimits}>
+                      {savingAiLimits && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save AI Coach Limits
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="email-templates" className="space-y-4">
                 <Card>
                   <CardHeader>
