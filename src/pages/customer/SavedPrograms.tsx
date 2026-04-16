@@ -72,9 +72,14 @@ export default function SavedPrograms() {
           <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
             <SidebarTrigger />
             <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
-            <h1 className="text-base sm:text-2xl font-bold truncate">
+            <h1 className="text-base sm:text-2xl font-bold truncate flex-1">
               {language === 'el' ? 'Αποθηκευμένα Προγράμματα' : 'Saved Programs'}
             </h1>
+            {!isLoading && (
+              <span className={`text-xs sm:text-sm font-medium px-2 py-1 rounded-md shrink-0 ${programs.length >= 10 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                {programs.length}/10
+              </span>
+            )}
           </header>
 
           <div className="flex-1 overflow-y-auto p-3 sm:p-6">
