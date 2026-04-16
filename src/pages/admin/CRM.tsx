@@ -195,11 +195,15 @@ export default function UserManagement() {
   return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-2">Διαχείριση Χρηστών</h1>
-            <p className="text-muted-foreground">Διαχειριστείτε τους χρήστες και τα δικαιώματά τους</p>
-          </div>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 sticky top-0 bg-background z-30">
+            <SidebarTrigger />
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">Διαχείριση Χρηστών</h1>
+          </header>
+          <main className="flex-1 p-3 sm:p-6 overflow-auto">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-sm sm:text-base text-muted-foreground">Διαχειριστείτε τους χρήστες και τα δικαιώματά τους</p>
+            </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -266,19 +270,19 @@ export default function UserManagement() {
 
             <TabsContent value="customers" className="space-y-4">
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Χρήστες Προγράμματος ({filteredStaff.length})</CardTitle>
-                      <CardDescription>Διαχειριστές και Εκπαιδευτές</CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <CardTitle className="text-base sm:text-lg break-words">Χρήστες Προγράμματος ({filteredStaff.length})</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Διαχειριστές και Εκπαιδευτές</CardDescription>
                     </div>
-                    <Button onClick={() => navigate("/admin/crm/customer/new")}>
+                    <Button onClick={() => navigate("/admin/crm/customer/new")} size="sm" className="w-full sm:w-auto">
                       <Plus className="h-4 w-4 mr-2" />
                       Νέος Χρήστης
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                   <div className="flex gap-4 mb-4">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -303,18 +307,18 @@ export default function UserManagement() {
 
             <TabsContent value="members" className="space-y-4">
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        All Members ({filteredMembers.length})
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg break-words">
+                        <Users className="h-5 w-5 shrink-0" />
+                        <span className="truncate">All Members ({filteredMembers.length})</span>
                       </CardTitle>
-                      <CardDescription>Manage member roles and permissions</CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">Manage member roles and permissions</CardDescription>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto">
                           <Download className="h-4 w-4 mr-2" />
                           Export
                         </Button>
@@ -332,7 +336,7 @@ export default function UserManagement() {
                     </DropdownMenu>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                   <div className="mb-4 space-y-4">
                     <div className="flex gap-4">
                       <div className="relative flex-1">
@@ -355,7 +359,8 @@ export default function UserManagement() {
               </Card>
             </TabsContent>
           </Tabs>
-        </main>
+          </main>
+        </div>
       </div>
     </SidebarProvider>;
 }
