@@ -349,6 +349,7 @@ export default function InvoiceSettings() {
               {saving ? 'Αποθήκευση...' : 'Αποθήκευση Ρυθμίσεων'}
             </Button>
           </div>
+          </div>
         </main>
       </div>
     </SidebarProvider>

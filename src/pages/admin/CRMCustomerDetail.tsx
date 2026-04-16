@@ -914,6 +914,7 @@ export default function UserDetail() {
               </Card>
             </div>
           </div>
+          </div>
         </main>
       </div>
     </SidebarProvider>

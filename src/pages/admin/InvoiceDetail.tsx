@@ -935,6 +935,7 @@ export default function InvoiceDetail() {
             onSend={handleSendEmail}
             isSending={isSending}
           />
+          </div>
         </main>
       </div>
     </SidebarProvider>
