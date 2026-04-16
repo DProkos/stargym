@@ -288,25 +288,25 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
             {pendingBookings.map((booking) => (
               <Card key={booking.id} className="bg-gradient-card border-border border-l-4 border-l-yellow-500">
                 <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{booking.class.name}</CardTitle>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base sm:text-lg break-words">{booking.class.name}</CardTitle>
                       <CardDescription className="flex flex-col gap-1 mt-1">
-                        <span className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          {booking.profile?.full_name || booking.profile?.email || 'Άγνωστος'}
+                        <span className="flex items-center gap-2 break-all">
+                          <User className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{booking.profile?.full_name || booking.profile?.email || 'Άγνωστος'}</span>
                         </span>
                         <span className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          {format(new Date(booking.booking_date), 'EEEE, d MMMM yyyy', { locale: el })}
+                          <Calendar className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{format(new Date(booking.booking_date), 'EEEE, d MMMM yyyy', { locale: el })}</span>
                         </span>
                         <span className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
+                          <Clock className="h-4 w-4 shrink-0" />
                           {booking.class.time}
                         </span>
                       </CardDescription>
                     </div>
-                    {getStatusBadge(booking.status)}
+                    <div className="shrink-0">{getStatusBadge(booking.status)}</div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -322,7 +322,7 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
                       rows={2}
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       onClick={() => handleApprove(booking.id)}
                       disabled={processingId === booking.id}
@@ -375,20 +375,20 @@ export function TrainerBookingManager({ trainerId }: TrainerBookingManagerProps)
             {otherBookings.map((booking) => (
               <Card key={booking.id} className="bg-gradient-card border-border">
                 <CardContent className="pt-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="font-medium">{booking.class.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <p className="font-medium break-words">{booking.class.name}</p>
+                      <p className="text-sm text-muted-foreground break-words">
                         {booking.profile?.full_name || booking.profile?.email} • {' '}
                         {format(new Date(booking.booking_date), 'd/M/yyyy')} • {booking.class.time}
                       </p>
                       {booking.trainer_notes && (
-                        <p className="text-sm text-muted-foreground italic">
+                        <p className="text-sm text-muted-foreground italic break-words">
                           Σημείωση: {booking.trainer_notes}
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap shrink-0">
                       {getStatusBadge(booking.status)}
                       {booking.status === 'confirmed' && (
                         <Button

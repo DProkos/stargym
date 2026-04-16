@@ -458,19 +458,19 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold">Manage Your Classes</h3>
-          <p className="text-muted-foreground">Create and edit your training classes</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-xl sm:text-2xl font-bold">Manage Your Classes</h3>
+          <p className="text-sm text-muted-foreground">Create and edit your training classes</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add New Class
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Class</DialogTitle>
               <DialogDescription>Add a new training class to your schedule</DialogDescription>
@@ -682,13 +682,13 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
         {classes.map((classItem) => (
           <Card key={classItem.id} className="bg-gradient-card border-border">
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-3">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                <div className="space-y-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Input
                       value={classItem.name}
                       onChange={(e) => updateClassField(classItem.id, 'name', e.target.value)}
-                      className="text-xl font-bold h-auto border-0 p-0 bg-transparent focus-visible:ring-0"
+                      className="text-lg sm:text-xl font-bold h-auto border-0 p-0 bg-transparent focus-visible:ring-0 min-w-0 flex-1"
                     />
                     {classItem.status !== 'active' && (
                       <Badge 
@@ -704,19 +704,23 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                     )}
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Badge variant="outline" className="bg-primary/20 text-primary border-primary">
-                      <Calendar className="h-3 w-3 mr-1" />
+                    <Badge variant="outline" className="bg-primary/20 text-primary border-primary max-w-full break-all">
+                      <Calendar className="h-3 w-3 mr-1 shrink-0" />
+                      <span className="truncate">
                       {classItem.schedules && classItem.schedules.length > 0 
                         ? classItem.schedules.map(s => daysOfWeek[s.day_of_week]).join(', ')
                         : daysOfWeek[classItem.day_of_week]
                       }
+                      </span>
                     </Badge>
-                    <Badge variant="outline">
-                      <Clock className="h-3 w-3 mr-1" />
+                    <Badge variant="outline" className="max-w-full break-all">
+                      <Clock className="h-3 w-3 mr-1 shrink-0" />
+                      <span className="truncate">
                       {classItem.schedules && classItem.schedules.length > 0
                         ? classItem.schedules.map(s => s.time).join(', ')
                         : classItem.time
                       }
+                      </span>
                     </Badge>
                     <Badge variant="outline">
                       {classItem.duration_minutes} min
@@ -732,11 +736,12 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                       onClick={() => openEditScheduleDialog(classItem)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
-                      Επεξεργασία Προγράμματος
+                      <span className="hidden sm:inline">Επεξεργασία Προγράμματος</span>
+                      <span className="sm:hidden">Επεξεργασία</span>
                     </Button>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap lg:flex-nowrap">
                   {classItem.status === 'active' && (
                     <>
                       <Button
@@ -777,7 +782,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Day of Week</Label>
                   <Select
@@ -807,7 +812,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Duration (minutes)</Label>
                   <Input
@@ -932,7 +937,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
 
       {/* Edit Schedule Dialog */}
       <Dialog open={isEditScheduleDialogOpen} onOpenChange={setIsEditScheduleDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Επεξεργασία Προγράμματος</DialogTitle>
             <DialogDescription>
