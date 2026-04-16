@@ -166,7 +166,7 @@ export default function TrainerPortal() {
             <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">{t('trainer.schedule')}</h1>
           </header>
 
-          <main className="p-3 sm:p-6">
+          <main className="p-3 sm:p-6 pb-28 sm:pb-6">
             <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
               <Card className="bg-gradient-card border-border">
                 <CardHeader className="p-4 sm:p-6">
