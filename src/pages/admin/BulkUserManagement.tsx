@@ -542,43 +542,38 @@ export default function BulkUserManagement() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         <main className="flex-1">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
-              <SidebarTrigger />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/admin')}
-                className="ml-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              <h1 className="text-2xl font-bold ml-4">Bulk User Management</h1>
-              <div className="ml-auto">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Export
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={exportToCSV}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Export as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={exportToExcel}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Export as Excel
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/admin')}
+            >
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
+            </Button>
+            <h1 className="text-base sm:text-2xl font-bold truncate ml-2 flex-1">Bulk Users</h1>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportToCSV}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToExcel}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export as Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </header>
 
-          <div className="p-6 space-y-6">
+          <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
             {/* Bulk Actions Card */}
             <Card>
               <CardHeader>

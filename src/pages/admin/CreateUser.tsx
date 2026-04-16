@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,15 +80,18 @@ export default function CreateUser() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <Button variant="ghost" onClick={() => navigate('/admin/crm')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Πίσω στους Χρήστες
+        <main className="flex-1 overflow-auto">
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/crm')}>
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Πίσω στους Χρήστες</span>
             </Button>
-          </div>
+            <h1 className="text-base sm:text-2xl font-bold truncate ml-2">Νέος Χρήστης</h1>
+          </header>
+          <div className="p-3 sm:p-6">
 
-          <div className="max-w-2xl mx-auto">
+            <div className="max-w-2xl mx-auto">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -197,6 +200,7 @@ export default function CreateUser() {
                 </div>
               </CardContent>
             </Card>
+          </div>
           </div>
         </main>
       </div>
