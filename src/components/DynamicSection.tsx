@@ -1183,6 +1183,9 @@ function PWAInstallSection({
     section.settings?.button_text ||
     (language === 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App');
 
+  // Hide section entirely when admin disabled the install prompt
+  if (enabled === false) return null;
+
   return (
     <section className={`py-16 sm:py-24 px-4 relative overflow-hidden ${bgClass}`}>
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 pointer-events-none" />
