@@ -13,7 +13,10 @@ import {
   Star,
   Dumbbell,
   Users,
-  Clock
+  Clock,
+  Brain,
+  Download,
+  Smartphone,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -191,6 +194,49 @@ const TemplatePreview = ({ template }: { template: SectionTemplate }) => {
         </div>
       );
     
+    case 'ai_coach':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2 relative overflow-hidden`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Brain className="w-2.5 h-2.5 text-primary" />
+              <div className="text-[6px] font-bold text-primary">AI POWERED</div>
+            </div>
+            <div className="text-[8px] font-bold text-center truncate">{preview_data.title_el || preview_data.title_en}</div>
+            <div className="grid grid-cols-3 gap-1 mt-1">
+              {[Brain, Dumbbell, Sparkles].map((Icon, i) => (
+                <div key={i} className="bg-current/10 rounded p-1 flex items-center justify-center">
+                  <Icon className="w-2 h-2 text-primary" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-1 mx-auto bg-primary text-primary-foreground rounded px-2 py-0.5 text-[5px] font-medium w-fit">
+              Start Now
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'pwa_install':
+      return (
+        <div className={`w-full h-24 rounded-md ${getBgClass()} ${getTextClass()} p-2 relative overflow-hidden flex flex-col items-center justify-center`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/10" />
+          <div className="relative z-10 text-center">
+            <div className="w-6 h-6 mx-auto rounded-md bg-primary/20 flex items-center justify-center mb-1">
+              <Download className="w-3 h-3 text-primary" />
+            </div>
+            <div className="text-[7px] font-bold truncate max-w-[90px] mx-auto">{preview_data.title_el || preview_data.title_en}</div>
+            <div className="mt-1 bg-primary text-primary-foreground rounded px-2 py-0.5 text-[5px] font-medium inline-flex items-center gap-0.5">
+              <Download className="w-1.5 h-1.5" /> Install
+            </div>
+            <div className="flex justify-center gap-2 mt-1 text-[5px] opacity-60">
+              <span>iOS</span><span>Android</span>
+            </div>
+          </div>
+        </div>
+      );
+
     default:
       return (
         <div className="w-full h-24 rounded-md bg-muted flex items-center justify-center">
