@@ -172,8 +172,8 @@ export default function SavedPrograms() {
                             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => startEdit(p.id, p.title)} title={language === 'el' ? 'Μετονομασία' : 'Rename'}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => printProgram(p.content)}>
-                              <Printer className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => downloadPDF(p.title, p.content)} title={language === 'el' ? 'Λήψη PDF' : 'Download PDF'}>
+                              <Download className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => deleteMutation.mutate(p.id)}>
                               <Trash2 className="h-4 w-4 text-destructive" />
