@@ -937,7 +937,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
 
       {/* Edit Schedule Dialog */}
       <Dialog open={isEditScheduleDialogOpen} onOpenChange={setIsEditScheduleDialogOpen}>
-        <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg w-[calc(100vw-1.5rem)] max-h-[90dvh] overflow-y-auto overscroll-contain">
           <DialogHeader>
             <DialogTitle>Επεξεργασία Προγράμματος</DialogTitle>
             <DialogDescription>
