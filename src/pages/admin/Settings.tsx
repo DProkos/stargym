@@ -74,6 +74,13 @@ export default function Settings() {
     signupEnabled: true,
   });
   const [pwaPromptEnabled, setPwaPromptEnabled] = useState(true);
+  const [aiCoachLimits, setAiCoachLimits] = useState({
+    dailyLimit: 5,
+    monthlyLimit: 30,
+    monthlyBudgetRequests: 1650,
+  });
+  const [savingAiLimits, setSavingAiLimits] = useState(false);
+  const [aiUsageStats, setAiUsageStats] = useState({ today: 0, month: 0 });
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
     autoReplySubjectEl: 'Λάβαμε το μήνυμά σας!',
@@ -120,6 +127,7 @@ export default function Settings() {
       loadRecaptchaSettings();
       loadSmtpSettings();
       loadAuthSettings();
+      loadAiCoachLimits();
       loadContactSettings();
       loadNewsletterSubscribers();
       loadCampaigns();
@@ -758,6 +766,7 @@ Test Email - ${editingTemplate.name}
                 <TabsTrigger value="smtp">SMTP Settings</TabsTrigger>
                 <TabsTrigger value="contact">Φόρμα Επικοινωνίας</TabsTrigger>
                 <TabsTrigger value="auth">Authentication</TabsTrigger>
+                <TabsTrigger value="ai-coach">AI Coach Limits</TabsTrigger>
                 <TabsTrigger value="email-templates">Email Templates</TabsTrigger>
                 <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
               </TabsList>
