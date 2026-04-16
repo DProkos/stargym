@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { CustomerBottomNav } from "@/components/CustomerBottomNav";
 import { useState, useEffect } from "react";
 
 import {
@@ -48,6 +49,7 @@ export function AppSidebarCustomer() {
   ];
 
   return (
+    <>
     <Sidebar collapsible="icon">
       <SidebarContent>
         {userId && state === "expanded" && (
@@ -85,5 +87,7 @@ export function AppSidebarCustomer() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+    <CustomerBottomNav />
+    </>
   );
 }
