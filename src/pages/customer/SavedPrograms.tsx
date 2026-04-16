@@ -68,20 +68,16 @@ export default function SavedPrograms() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarCustomer />
-        <main className="flex-1 flex flex-col">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
-              <SidebarTrigger />
-              <div className="ml-4 flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">
-                  {language === 'el' ? 'Αποθηκευμένα Προγράμματα' : 'Saved Programs'}
-                </h1>
-              </div>
-            </div>
-          </div>
+        <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+            <h1 className="text-base sm:text-2xl font-bold truncate">
+              {language === 'el' ? 'Αποθηκευμένα Προγράμματα' : 'Saved Programs'}
+            </h1>
+          </header>
 
-          <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6">
             {isLoading ? (
               <p className="text-muted-foreground text-center py-12">
                 {language === 'el' ? 'Φόρτωση...' : 'Loading...'}
@@ -97,37 +93,37 @@ export default function SavedPrograms() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4 max-w-4xl mx-auto">
+              <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
                 {programs.map((p) => (
-                  <Card key={p.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Card key={p.id} className="p-3 sm:p-4 overflow-hidden">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         {p.program_type === 'nutrition' ? (
                           <Apple className="h-5 w-5 text-green-500 shrink-0" />
                         ) : (
                           <Dumbbell className="h-5 w-5 text-primary shrink-0" />
                         )}
-                        <div className="min-w-0">
-                          <h3 className="font-semibold truncate">{p.title}</h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold truncate text-sm sm:text-base">{p.title}</h3>
                           <p className="text-xs text-muted-foreground">
                             {new Date(p.created_at).toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US')}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => printProgram(p.content)}>
+                      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => printProgram(p.content)}>
                           <Printer className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => deleteMutation.mutate(p.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => deleteMutation.mutate(p.id)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                           {expandedId === p.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </Button>
                       </div>
                     </div>
                     {expandedId === p.id && (
-                      <div className="mt-4 pt-4 border-t prose prose-sm dark:prose-invert max-w-none">
+                      <div className="mt-4 pt-4 border-t prose prose-sm dark:prose-invert max-w-none overflow-x-auto prose-table:block prose-table:overflow-x-auto prose-pre:whitespace-pre-wrap prose-pre:break-words prose-img:max-w-full prose-headings:break-words break-words">
                         <ReactMarkdown>{p.content}</ReactMarkdown>
                       </div>
                     )}
