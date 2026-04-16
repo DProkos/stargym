@@ -74,6 +74,13 @@ export default function Settings() {
     signupEnabled: true,
   });
   const [pwaPromptEnabled, setPwaPromptEnabled] = useState(true);
+  const [aiCoachLimits, setAiCoachLimits] = useState({
+    dailyLimit: 5,
+    monthlyLimit: 30,
+    monthlyBudgetRequests: 1650,
+  });
+  const [savingAiLimits, setSavingAiLimits] = useState(false);
+  const [aiUsageStats, setAiUsageStats] = useState({ today: 0, month: 0 });
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
     autoReplySubjectEl: 'Λάβαμε το μήνυμά σας!',
@@ -120,6 +127,7 @@ export default function Settings() {
       loadRecaptchaSettings();
       loadSmtpSettings();
       loadAuthSettings();
+      loadAiCoachLimits();
       loadContactSettings();
       loadNewsletterSubscribers();
       loadCampaigns();
@@ -494,6 +502,78 @@ export default function Settings() {
     }
   };
 
+  const loadAiCoachLimits = async () => {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'ai_coach_daily_limit',
+        'ai_coach_monthly_limit',
+        'ai_coach_monthly_budget_requests',
+      ]);
+
+    if (!error && data) {
+      const getNum = (key: string, fallback: number) => {
+        const v = data.find((s) => s.setting_key === key)?.setting_value;
+        const n = v ? parseInt(v, 10) : NaN;
+        return Number.isFinite(n) ? n : fallback;
+      };
+      setAiCoachLimits({
+        dailyLimit: getNum('ai_coach_daily_limit', 5),
+        monthlyLimit: getNum('ai_coach_monthly_limit', 30),
+        monthlyBudgetRequests: getNum('ai_coach_monthly_budget_requests', 1650),
+      });
+    }
+
+    // Live usage stats (current month + today)
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const [{ count: monthCount }, { count: todayCount }] = await Promise.all([
+      supabase.from('ai_coach_usage').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
+      supabase.from('ai_coach_usage').select('*', { count: 'exact', head: true }).gte('created_at', startOfDay),
+    ]);
+    setAiUsageStats({ today: todayCount ?? 0, month: monthCount ?? 0 });
+  };
+
+  const handleSaveAiCoachLimits = async () => {
+    if (
+      aiCoachLimits.dailyLimit < 1 ||
+      aiCoachLimits.monthlyLimit < 1 ||
+      aiCoachLimits.monthlyBudgetRequests < 1
+    ) {
+      toast.error('Όλες οι τιμές πρέπει να είναι μεγαλύτερες από 0');
+      return;
+    }
+    if (aiCoachLimits.dailyLimit > aiCoachLimits.monthlyLimit) {
+      toast.error('Το ημερήσιο όριο δεν μπορεί να είναι μεγαλύτερο από το μηνιαίο');
+      return;
+    }
+    setSavingAiLimits(true);
+    try {
+      const rows = [
+        { setting_key: 'ai_coach_daily_limit', setting_value: aiCoachLimits.dailyLimit.toString() },
+        { setting_key: 'ai_coach_monthly_limit', setting_value: aiCoachLimits.monthlyLimit.toString() },
+        { setting_key: 'ai_coach_monthly_budget_requests', setting_value: aiCoachLimits.monthlyBudgetRequests.toString() },
+      ];
+      for (const row of rows) {
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert(
+            { ...row, setting_type: 'number', is_sensitive: false, updated_at: new Date().toISOString() },
+            { onConflict: 'setting_key' }
+          );
+        if (error) throw error;
+      }
+      toast.success('AI Coach limits saved successfully');
+    } catch (error) {
+      console.error('Failed to save AI coach limits:', error);
+      toast.error('Failed to save AI Coach limits');
+    } finally {
+      setSavingAiLimits(false);
+    }
+  };
+
   const handleSaveEmailTemplate = async () => {
     if (!editingTemplate) return;
 
@@ -758,6 +838,7 @@ Test Email - ${editingTemplate.name}
                 <TabsTrigger value="smtp">SMTP Settings</TabsTrigger>
                 <TabsTrigger value="contact">Φόρμα Επικοινωνίας</TabsTrigger>
                 <TabsTrigger value="auth">Authentication</TabsTrigger>
+                <TabsTrigger value="ai-coach">AI Coach Limits</TabsTrigger>
                 <TabsTrigger value="email-templates">Email Templates</TabsTrigger>
                 <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
               </TabsList>
@@ -1263,6 +1344,102 @@ Test Email - ${editingTemplate.name}
                       />
                     </div>
                     <Button onClick={handleSaveAuthSettings}>Save Authentication Settings</Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="ai-coach" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>AI Coach Limits & Budget</CardTitle>
+                    <CardDescription>
+                      Διαμόρφωση ορίων χρήσης ανά χρήστη και του μηνιαίου budget για τον AI Fitness Coach.
+                      Όταν το συνολικό budget φτάσει 80% / 95%, αποστέλλεται ειδοποίηση στους admins μέσω SMTP.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Χρήση σήμερα</p>
+                        <p className="text-2xl font-bold">{aiUsageStats.today}</p>
+                        <p className="text-xs text-muted-foreground">συνολικά αιτήματα</p>
+                      </div>
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Χρήση τρέχοντος μήνα</p>
+                        <p className="text-2xl font-bold">{aiUsageStats.month}</p>
+                        <p className="text-xs text-muted-foreground">
+                          / {aiCoachLimits.monthlyBudgetRequests} ({aiCoachLimits.monthlyBudgetRequests > 0 ? Math.round((aiUsageStats.month / aiCoachLimits.monthlyBudgetRequests) * 100) : 0}%)
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Εκτιμώμενη υποστήριξη</p>
+                        <p className="text-2xl font-bold">
+                          ~{aiCoachLimits.monthlyLimit > 0 ? Math.floor(aiCoachLimits.monthlyBudgetRequests / aiCoachLimits.monthlyLimit) : 0}
+                        </p>
+                        <p className="text-xs text-muted-foreground">ενεργοί χρήστες/μήνα</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-daily-limit">Ημερήσιο όριο ανά χρήστη</Label>
+                        <Input
+                          id="ai-daily-limit"
+                          type="number"
+                          min={1}
+                          value={aiCoachLimits.dailyLimit}
+                          onChange={(e) =>
+                            setAiCoachLimits({ ...aiCoachLimits, dailyLimit: parseInt(e.target.value) || 0 })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">Μέγιστα αιτήματα/ημέρα ανά χρήστη.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-monthly-limit">Μηνιαίο όριο ανά χρήστη</Label>
+                        <Input
+                          id="ai-monthly-limit"
+                          type="number"
+                          min={1}
+                          value={aiCoachLimits.monthlyLimit}
+                          onChange={(e) =>
+                            setAiCoachLimits({ ...aiCoachLimits, monthlyLimit: parseInt(e.target.value) || 0 })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">Μέγιστα αιτήματα/μήνα ανά χρήστη.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ai-monthly-budget">Συνολικό μηνιαίο budget (αιτήματα)</Label>
+                        <Input
+                          id="ai-monthly-budget"
+                          type="number"
+                          min={1}
+                          value={aiCoachLimits.monthlyBudgetRequests}
+                          onChange={(e) =>
+                            setAiCoachLimits({
+                              ...aiCoachLimits,
+                              monthlyBudgetRequests: parseInt(e.target.value) || 0,
+                            })
+                          }
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Σύνολο αιτημάτων όλων των χρηστών/μήνα. Με ~$0.0006/request στο Gemini 2.5 Flash, 1650 ≈ $1 (free balance).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-primary/20 bg-primary/5 p-4 text-sm">
+                      <p className="font-medium mb-1">💡 Συστάσεις προϋπολογισμού</p>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                        <li>Συντηρητικό: 5/ημέρα · 30/μήνα · budget 1650 (~330+ ενεργοί χρήστες)</li>
+                        <li>Μέτριο: 10/ημέρα · 50/μήνα · budget 1650 (~150–200 ενεργοί χρήστες)</li>
+                        <li>Γενναιόδωρο: 20/ημέρα · 100/μήνα · budget 1650 (~80 ενεργοί χρήστες)</li>
+                      </ul>
+                    </div>
+
+                    <Button onClick={handleSaveAiCoachLimits} disabled={savingAiLimits}>
+                      {savingAiLimits && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save AI Coach Limits
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
