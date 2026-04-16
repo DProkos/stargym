@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Calendar, BookOpen, CalendarDays } from 'lucide-react';
+import { Users, Calendar, BookOpen } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
-import BookingCalendar from '@/components/BookingCalendar';
+
 import { MemberRow } from '@/components/MemberRow';
 import { RecentActivityWidget } from '@/components/admin/RecentActivityWidget';
 
@@ -87,25 +87,6 @@ export default function Admin() {
     }
   };
 
-  // Calendar events from bookings
-  const calendarEvents = bookings.map(booking => {
-    const bookingDate = new Date(booking.booking_date);
-    const classTime = booking.class?.time || '09:00';
-    const [hours, minutes] = classTime.split(':').map(Number);
-    const startTime = new Date(bookingDate);
-    startTime.setHours(hours, minutes, 0);
-    const endTime = new Date(startTime);
-    endTime.setMinutes(endTime.getMinutes() + 60); // Default 60 min if no duration
-
-    return {
-      id: booking.id,
-      title: `${booking.class?.name || 'Class'} - ${booking.user?.full_name || 'User'}`,
-      start: startTime,
-      end: endTime,
-      resource: booking,
-      status: booking.status,
-    };
-  });
 
   if (!isAdmin) {
     return null;
@@ -167,23 +148,12 @@ export default function Admin() {
 
           <Tabs defaultValue="members" className="w-full">
             <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
-              <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-4 h-auto p-1">
-                <TabsTrigger value="calendar" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
-                  <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span>Calendar</span>
-                </TabsTrigger>
+              <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-3 h-auto p-1">
                 <TabsTrigger value="members" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">{t('dashboard.members')}</TabsTrigger>
                 <TabsTrigger value="classes" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">{t('dashboard.classes')}</TabsTrigger>
                 <TabsTrigger value="bookings" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">{t('dashboard.bookings')}</TabsTrigger>
               </TabsList>
             </div>
-
-            <TabsContent value="calendar" className="mt-6">
-              <BookingCalendar 
-                events={calendarEvents}
-                defaultView="month"
-              />
-            </TabsContent>
 
             <TabsContent value="members" className="mt-6">
               <Card className="bg-gradient-card border-border">
