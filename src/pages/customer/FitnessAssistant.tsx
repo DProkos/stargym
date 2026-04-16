@@ -76,13 +76,16 @@ async function streamChat({
   onDone();
 }
 
-function downloadAsPDF(content: string, language: 'el' | 'en') {
+async function downloadAsPDF(content: string, language: 'el' | 'en') {
+  const loadingId = toast.loading(language === 'el' ? 'Δημιουργία PDF…' : 'Generating PDF…');
   try {
     const titleMatch = content.match(/^#+\s*(.+)$/m);
     const title = titleMatch?.[1] || (language === 'el' ? 'Πρόγραμμα' : 'Program');
-    generateProgramPDF({ content, title, language });
+    await generateProgramPDF({ content, title, language });
+    toast.dismiss(loadingId);
   } catch (e) {
     console.error(e);
+    toast.dismiss(loadingId);
     toast.error(language === 'el' ? 'Σφάλμα δημιουργίας PDF' : 'PDF generation error');
   }
 }
