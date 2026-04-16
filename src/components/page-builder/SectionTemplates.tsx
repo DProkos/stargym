@@ -484,24 +484,24 @@ export function SectionTemplates({ activePage, onApplyTemplate }: SectionTemplat
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Section Templates
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Sparkles className="h-5 w-5 text-primary flex-shrink-0" />
+            <span className="truncate">Section Templates</span>
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground break-words">
             Επιλέξτε ένα έτοιμο template για να το προσθέσετε στη σελίδα "{activePage}"
           </p>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[600px] pr-4">
-            <div className="space-y-8">
+        <CardContent className="p-3 sm:p-6">
+          <ScrollArea className="h-[600px] pr-2 sm:pr-4">
+            <div className="space-y-6 sm:space-y-8">
               {CATEGORIES.map(category => (
                 <div key={category}>
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
                     <Badge variant="outline">{category}</Badge>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                     {SECTION_TEMPLATES.filter(t => t.category === category).map(template => (
                       <Card key={template.id} className="hover:border-primary/50 transition-colors group">
                         <CardContent className="p-3">
