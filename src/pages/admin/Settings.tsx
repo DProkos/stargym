@@ -73,6 +73,7 @@ export default function Settings() {
   const [authSettings, setAuthSettings] = useState({
     signupEnabled: true,
   });
+  const [pwaPromptEnabled, setPwaPromptEnabled] = useState(true);
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
     autoReplySubjectEl: 'Λάβαμε το μήνυμά σας!',
