@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Dumbbell, Menu, X } from 'lucide-react';
+import { Dumbbell, Menu, X, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -362,9 +362,9 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
           <div className="hidden md:flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 transition-all hover:scale-105">
-                  <span className="text-lg">{language === 'en' ? '🇬🇧' : '🇬🇷'}</span>
-                  <span className="font-medium">{language === 'en' ? 'English' : 'Ελληνικά'}</span>
+                <Button variant="ghost" size="sm" className="gap-1.5 px-2 transition-all hover:scale-105">
+                  <span className="text-lg leading-none">{language === 'en' ? '🇬🇧' : '🇬🇷'}</span>
+                  <span className="font-semibold text-sm">{language === 'en' ? 'EN' : 'GR'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -392,7 +392,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
               </>
             ) : (
               <Button asChild>
-                <Link to="/auth">{t('nav.login')}</Link>
+                <Link to="/auth" className="inline-flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {t('nav.login')}
+                </Link>
               </Button>
             )}
           </div>
@@ -424,7 +427,8 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="justify-start gap-2 w-full transition-all hover:scale-105">
-                  <span className="font-medium">{language === 'en' ? '🇬🇧 English' : '🇬🇷 Ελληνικά'}</span>
+                  <span className="text-lg leading-none">{language === 'en' ? '🇬🇧' : '🇬🇷'}</span>
+                  <span className="font-semibold text-sm">{language === 'en' ? 'EN' : 'GR'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
@@ -451,7 +455,10 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
               </>
             ) : (
               <Button asChild onClick={() => setMobileMenuOpen(false)}>
-                <Link to="/auth">{t('nav.login')}</Link>
+                <Link to="/auth" className="inline-flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {t('nav.login')}
+                </Link>
               </Button>
             )}
           </div>
