@@ -73,6 +73,7 @@ export default function Settings() {
   const [authSettings, setAuthSettings] = useState({
     signupEnabled: true,
   });
+  const [pwaPromptEnabled, setPwaPromptEnabled] = useState(true);
   const [contactSettings, setContactSettings] = useState({
     recipientEmail: '',
     autoReplySubjectEl: 'Λάβαμε το μήνυμά σας!',
@@ -261,17 +262,20 @@ export default function Settings() {
     const { data, error } = await supabase
       .from('app_settings')
       .select('setting_key, setting_value')
-      .eq('setting_key', 'signup_enabled')
-      .maybeSingle();
+      .in('setting_key', ['signup_enabled', 'pwa_install_prompt_enabled']);
 
     if (error) {
       console.error('Failed to load auth settings:', error);
       return;
     }
 
+    const signup = data?.find((s) => s.setting_key === 'signup_enabled');
+    const pwa = data?.find((s) => s.setting_key === 'pwa_install_prompt_enabled');
+
     setAuthSettings({
-      signupEnabled: data?.setting_value !== 'false',
+      signupEnabled: signup?.setting_value !== 'false',
     });
+    setPwaPromptEnabled(pwa?.setting_value !== 'false');
   };
 
   const loadContactSettings = async () => {
@@ -467,6 +471,21 @@ export default function Settings() {
         .eq('setting_key', 'signup_enabled');
 
       if (error) throw error;
+
+      // Save PWA prompt toggle
+      const { error: pwaError } = await supabase
+        .from('app_settings')
+        .upsert(
+          {
+            setting_key: 'pwa_install_prompt_enabled',
+            setting_value: pwaPromptEnabled.toString(),
+            setting_type: 'boolean',
+            is_sensitive: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'setting_key' }
+        );
+      if (pwaError) throw pwaError;
 
       toast.success('Authentication settings saved successfully');
     } catch (error) {
@@ -1229,6 +1248,18 @@ Test Email - ${editingTemplate.name}
                         onCheckedChange={(checked) => 
                           setAuthSettings({ ...authSettings, signupEnabled: checked })
                         }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between space-x-4 p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">PWA Install Prompt</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Εμφάνιση banner "Add to Home Screen" σε mobile χρήστες (Android &amp; iOS).
+                        </p>
+                      </div>
+                      <Switch
+                        checked={pwaPromptEnabled}
+                        onCheckedChange={setPwaPromptEnabled}
                       />
                     </div>
                     <Button onClick={handleSaveAuthSettings}>Save Authentication Settings</Button>

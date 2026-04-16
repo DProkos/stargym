@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, Share, Plus, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "stargym_install_prompt_dismissed_v1";
 
@@ -15,49 +16,65 @@ export function InstallPromptBanner() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Skip if already dismissed
-    if (localStorage.getItem(STORAGE_KEY)) return;
+    let cleanup: (() => void) | undefined;
 
-    // Skip if already installed (running in standalone)
-    const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
-    if (isStandalone) return;
+    (async () => {
+      // Skip if already dismissed
+      if (localStorage.getItem(STORAGE_KEY)) return;
 
-    // Skip if not mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    );
-    if (!isMobile) return;
+      // Skip if already installed (running in standalone)
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true;
+      if (isStandalone) return;
 
-    // Skip inside iframe (Lovable preview)
-    try {
-      if (window.self !== window.top) return;
-    } catch {
-      return;
-    }
+      // Skip if not mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      if (!isMobile) return;
 
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(ios);
+      // Skip inside iframe (Lovable preview)
+      try {
+        if (window.self !== window.top) return;
+      } catch {
+        return;
+      }
 
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setVisible(true);
-    };
+      // Check admin toggle
+      const { data } = await supabase
+        .from("app_settings")
+        .select("setting_value")
+        .eq("setting_key", "pwa_install_prompt_enabled")
+        .maybeSingle();
+      if (data?.setting_value === "false") return;
 
-    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+      const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      setIsIOS(ios);
 
-    // For iOS (no beforeinstallprompt support), show after small delay
-    if (ios) {
-      const t = setTimeout(() => setVisible(true), 1500);
-      return () => {
-        clearTimeout(t);
-        window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      const onBeforeInstall = (e: Event) => {
+        e.preventDefault();
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
+        setVisible(true);
       };
-    }
 
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.addEventListener("beforeinstallprompt", onBeforeInstall);
+
+      // For iOS (no beforeinstallprompt support), show after small delay
+      if (ios) {
+        const t = setTimeout(() => setVisible(true), 1500);
+        cleanup = () => {
+          clearTimeout(t);
+          window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+        };
+      } else {
+        cleanup = () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      }
+    })();
+
+    return () => {
+      cleanup?.();
+    };
   }, []);
 
   const dismiss = () => {
