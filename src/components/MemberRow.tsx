@@ -316,22 +316,22 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors">
         <div 
-          className="flex-1 cursor-pointer"
+          className="flex-1 min-w-0 cursor-pointer"
           onClick={() => navigate(`/admin/crm/customer/${member.id}`)}
         >
-          <p className="font-semibold">{member.full_name || 'No name'}</p>
-          <p className="text-sm text-muted-foreground">{member.email}</p>
+          <p className="font-semibold truncate">{member.full_name || 'No name'}</p>
+          <p className="text-sm text-muted-foreground truncate">{member.email}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
+        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+          <div className="flex flex-wrap gap-1">
             {roles.map((role) => (
               <Badge
                 key={role}
                 variant="outline"
-                className={`${getRoleBadgeColor(role)} flex items-center gap-1`}
+                className={`${getRoleBadgeColor(role)} flex items-center gap-1 text-xs`}
               >
                 {getRoleIcon(role)}
                 {role}
@@ -339,84 +339,90 @@ export function MemberRow({ member, onRoleUpdate }: MemberRowProps) {
             ))}
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSendWelcomeEmail}
-            disabled={sendingWelcome}
-            title="Αποστολή Welcome Email"
-          >
-            {sendingWelcome ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-1 ml-auto sm:ml-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleSendWelcomeEmail}
+              disabled={sendingWelcome}
+              title="Αποστολή Welcome Email"
+            >
+              {sendingWelcome ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSendResetLink}
-            disabled={sendingResetLink}
-            title="Αποστολή Link Επαναφοράς (10 λεπτά)"
-          >
-            {sendingResetLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleSendResetLink}
+              disabled={sendingResetLink}
+              title="Αποστολή Link Επαναφοράς (10 λεπτά)"
+            >
+              {sendingResetLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setPasswordDialogOpen(true)}
-            title="Χειροκίνητη Αλλαγή Κωδικού"
-          >
-            <KeyRound className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setPasswordDialogOpen(true)}
+              title="Χειροκίνητη Αλλαγή Κωδικού"
+            >
+              <KeyRound className="h-4 w-4" />
+            </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/admin/crm/customer/${member.id}`)}
-            title="Προβολή Λεπτομερειών"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => navigate(`/admin/crm/customer/${member.id}`)}
+              title="Προβολή Λεπτομερειών"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" disabled={loading}>
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-card border-border z-50">
-              <DropdownMenuLabel>Manage Roles</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={roles.includes('admin')}
-                onCheckedChange={(checked) => handleRoleToggle('admin', checked)}
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Admin
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={roles.includes('trainer')}
-                onCheckedChange={(checked) => handleRoleToggle('trainer', checked)}
-              >
-                <Dumbbell className="h-4 w-4 mr-2" />
-                Trainer
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={roles.includes('member')}
-                onCheckedChange={(checked) => handleRoleToggle('member', checked)}
-              >
-                <User2 className="h-4 w-4 mr-2" />
-                Member
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Διαγραφή Χρήστη
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={loading}>
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-card border-border z-50">
+                <DropdownMenuLabel>Manage Roles</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={roles.includes('admin')}
+                  onCheckedChange={(checked) => handleRoleToggle('admin', checked)}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={roles.includes('trainer')}
+                  onCheckedChange={(checked) => handleRoleToggle('trainer', checked)}
+                >
+                  <Dumbbell className="h-4 w-4 mr-2" />
+                  Trainer
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={roles.includes('member')}
+                  onCheckedChange={(checked) => handleRoleToggle('member', checked)}
+                >
+                  <User2 className="h-4 w-4 mr-2" />
+                  Member
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Διαγραφή Χρήστη
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
