@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { AdminBottomNav } from "@/components/AdminBottomNav";
 import { useState, useEffect } from "react";
 
 import {
@@ -54,6 +55,7 @@ export function AppSidebarAdmin() {
   ];
 
   return (
+    <>
     <Sidebar collapsible="icon">
       <SidebarContent>
         {userId && state === "expanded" && (
@@ -91,5 +93,7 @@ export function AppSidebarAdmin() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
+    <AdminBottomNav />
+    </>
   );
 }
