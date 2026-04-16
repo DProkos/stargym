@@ -255,10 +255,10 @@ export default function FitnessAssistant() {
                             variant="ghost"
                             size="sm"
                             className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                            onClick={() => printMessage(msg.content, language)}
+                            onClick={() => downloadAsPDF(msg.content, language)}
                           >
-                            <Printer className="h-3.5 w-3.5" />
-                            {language === 'el' ? 'Εκτύπωση' : 'Print'}
+                            <Download className="h-3.5 w-3.5" />
+                            {language === 'el' ? 'Λήψη PDF' : 'Download PDF'}
                           </Button>
                           <Button
                             variant="ghost"
