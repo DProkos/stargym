@@ -192,10 +192,15 @@ export default function FitnessAssistant() {
         messages: newMessages,
         onDelta: upsert,
         onDone: () => setIsLoading(false),
-        onError: (msg) => {
-          toast.error(msg);
+        onError: (msg, isLimit) => {
+          if (isLimit) {
+            toast.error(msg, { duration: 8000 });
+          } else {
+            toast.error(msg);
+          }
           setIsLoading(false);
         },
+        language,
       });
     } catch {
       toast.error(language === 'el' ? 'Σφάλμα σύνδεσης' : 'Connection error');
