@@ -150,22 +150,52 @@ export default function SavedPrograms() {
                           <Dumbbell className="h-5 w-5 text-primary shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold truncate text-sm sm:text-base">{p.title}</h3>
+                          {editingId === p.id ? (
+                            <Input
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveEdit(p.id);
+                                if (e.key === 'Escape') cancelEdit();
+                              }}
+                              autoFocus
+                              maxLength={120}
+                              className="h-8 text-sm sm:text-base"
+                            />
+                          ) : (
+                            <h3 className="font-semibold truncate text-sm sm:text-base">{p.title}</h3>
+                          )}
                           <p className="text-xs text-muted-foreground">
                             {new Date(p.created_at).toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US')}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => printProgram(p.content)}>
-                          <Printer className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => deleteMutation.mutate(p.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
-                          {expandedId === p.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
+                        {editingId === p.id ? (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => saveEdit(p.id)} disabled={renameMutation.isPending}>
+                              <Check className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={cancelEdit}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => startEdit(p.id, p.title)} title={language === 'el' ? 'Μετονομασία' : 'Rename'}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => printProgram(p.content)}>
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => deleteMutation.mutate(p.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
+                              {expandedId === p.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                     {expandedId === p.id && (
