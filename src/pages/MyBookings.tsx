@@ -159,16 +159,16 @@ export default function MyBookings() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation user={user} isAdmin={isAdmin} />
-      
-      <section className="pt-32 pb-20 px-4">
+
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-3 sm:px-4">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <div className="text-center mb-8 sm:mb-16">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent leading-[1.15] pb-2">
               {language === 'el' ? 'Μαθήματα' : 'Browse Classes'}
             </h1>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {bookings.length === 0 ? (
               <Card className="bg-gradient-card border-border">
                 <CardContent className="pt-6">
@@ -180,12 +180,12 @@ export default function MyBookings() {
             ) : (
               bookings.map((booking) => (
                 <Card key={booking.id} className="bg-gradient-card border-border">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>{booking.class.name}</span>
-                      <span className={`text-sm px-3 py-1 rounded-full ${
-                        booking.status === 'confirmed' 
-                          ? 'bg-primary/20 text-primary' 
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-base sm:text-lg">
+                      <span className="truncate">{booking.class.name}</span>
+                      <span className={`text-xs sm:text-sm px-3 py-1 rounded-full self-start sm:self-auto ${
+                        booking.status === 'confirmed'
+                          ? 'bg-primary/20 text-primary'
                           : 'bg-destructive/20 text-destructive'
                       }`}>
                         {booking.status}
@@ -193,27 +193,27 @@ export default function MyBookings() {
                     </CardTitle>
                     <CardDescription>
                       <div className="flex flex-col gap-2 mt-2">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="h-4 w-4 text-primary shrink-0" />
                           <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="h-4 w-4 text-primary shrink-0" />
                           <span>{booking.class.time} ({booking.class.duration_minutes} min)</span>
                         </div>
                       </div>
                     </CardDescription>
                   </CardHeader>
                   {booking.status === 'confirmed' && (
-                    <CardContent>
+                    <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
                       <div className="flex flex-col gap-2">
                         {!canCancelBooking(booking) && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             ⚠️ {language === 'el' ? 'Η ακύρωση δεν είναι δυνατή (λιγότερο από 24 ώρες πριν το μάθημα)' : 'Cancellation not possible (less than 24 hours before class)'}
                           </p>
                         )}
-                        <Button 
-                          variant="destructive" 
+                        <Button
+                          variant="destructive"
                           onClick={() => handleCancelBooking(booking.id)}
                           disabled={!canCancelBooking(booking)}
                         >

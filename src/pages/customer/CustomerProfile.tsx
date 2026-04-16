@@ -101,25 +101,25 @@ export default function CustomerProfile() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarCustomer />
-        
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
+
+        <div className="flex-1 min-w-0 overflow-x-hidden">
+          <header className="h-14 sm:h-16 border-b border-border sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">My Profile</h1>
+            <h1 className="text-base sm:text-2xl font-bold truncate ml-2">My Profile</h1>
           </header>
 
-          <main className="p-6">
-            <div className="max-w-2xl mx-auto space-y-6">
+          <main className="p-3 sm:p-6">
+            <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
               {/* Profile Information */}
               <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <UserIcon className="h-5 w-5" />
                     Profile Information
                   </CardTitle>
-                  <CardDescription>Update your personal information</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">Update your personal information</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
                   <div className="space-y-2">
                     <Label htmlFor="full_name">Full Name</Label>
                     <Input
@@ -133,13 +133,13 @@ export default function CustomerProfile() {
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Input
                         id="email"
                         type="email"
                         value={profile.email}
                         disabled
-                        className="bg-muted"
+                        className="bg-muted min-w-0"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">Email cannot be changed</p>
@@ -148,13 +148,14 @@ export default function CustomerProfile() {
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Input
                         id="phone"
                         type="tel"
                         value={profile.phone}
                         onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                         placeholder="Your phone number"
+                        className="min-w-0"
                       />
                     </div>
                   </div>

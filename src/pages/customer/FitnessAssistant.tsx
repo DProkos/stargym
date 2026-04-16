@@ -216,34 +216,30 @@ export default function FitnessAssistant() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarCustomer />
-        <main className="flex-1 flex flex-col">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
-              <SidebarTrigger />
-              <div className="ml-4 flex items-center gap-2 flex-1">
-                <Bot className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">
-                  {language === 'el' ? 'AI Προπονητής' : 'AI Coach'}
-                </h1>
-              </div>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate('/customer/saved-programs')}>
-                <BookOpen className="h-4 w-4" />
-                {language === 'el' ? 'Αποθηκευμένα' : 'Saved'}
-              </Button>
-            </div>
-          </div>
+        <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <Bot className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+            <h1 className="text-base sm:text-2xl font-bold truncate flex-1">
+              {language === 'el' ? 'AI Προπονητής' : 'AI Coach'}
+            </h1>
+            <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => navigate('/customer/saved-programs')}>
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">{language === 'el' ? 'Αποθηκευμένα' : 'Saved'}</span>
+            </Button>
+          </header>
 
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-6 text-center">
                 <div className="bg-primary/10 rounded-full p-6">
                   <Bot className="h-12 w-12 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2">
                     {language === 'el' ? 'Γεια σου! Είμαι ο AI Coach σου 💪' : 'Hey! I\'m your AI Coach 💪'}
                   </h2>
-                  <p className="text-muted-foreground max-w-md">
+                  <p className="text-sm sm:text-base text-muted-foreground max-w-md">
                     {language === 'el'
                       ? 'Μπορώ να σου φτιάξω εξατομικευμένο πρόγραμμα γυμναστικής και διατροφής. Ξεκίνα με μια ερώτηση ή επέλεξε παρακάτω!'
                       : 'I can create personalized workout and nutrition plans for you. Start with a question or pick below!'}
@@ -266,20 +262,20 @@ export default function FitnessAssistant() {
             )}
 
             {messages.map((msg, i) => (
-              <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={i} className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
                 )}
-                <Card className={`max-w-[80%] p-4 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                <Card className={`max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 overflow-hidden ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                   {msg.role === 'assistant' ? (
-                    <div>
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div className="min-w-0">
+                      <div className="prose prose-sm dark:prose-invert max-w-none break-words prose-table:block prose-table:overflow-x-auto prose-pre:whitespace-pre-wrap prose-pre:break-words prose-img:max-w-full prose-headings:break-words">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
                       {!isLoading && msg.content.length > 100 && (
-                        <div className="flex gap-2 mt-3">
+                        <div className="flex flex-wrap gap-2 mt-3">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -302,7 +298,7 @@ export default function FitnessAssistant() {
                       )}
                     </div>
                   ) : (
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   )}
                 </Card>
                 {msg.role === 'user' && (
@@ -326,7 +322,7 @@ export default function FitnessAssistant() {
             <div ref={bottomRef} />
           </div>
 
-          <div className="border-t p-4">
+          <div className="border-t p-3 sm:p-4 sticky bottom-0 bg-background">
             <div className="flex gap-2 max-w-4xl mx-auto">
               <Textarea
                 value={input}
