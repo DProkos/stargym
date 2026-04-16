@@ -4,12 +4,13 @@ import { AppSidebarCustomer } from '@/components/app-sidebar-customer';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Send, Bot, User, Dumbbell, Apple, Loader2, Printer, Save, BookOpen } from 'lucide-react';
+import { Send, Bot, User, Dumbbell, Apple, Loader2, Download, Save, BookOpen } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { generateProgramPDF } from '@/utils/programPDFGenerator';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
