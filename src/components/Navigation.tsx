@@ -364,7 +364,7 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-1.5 px-2 transition-all hover:scale-105">
-                  <span className="text-lg leading-none">{language === 'en' ? '🇬🇧' : '🇬🇷'}</span>
+                  {language === 'en' ? <FlagGB className="h-4 w-6 rounded-sm" /> : <FlagGR className="h-4 w-6 rounded-sm" />}
                   <span className="font-semibold text-sm">{language === 'en' ? 'EN' : 'GR'}</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -373,13 +373,13 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
                   onClick={() => setLanguage('en')} 
                   className="gap-2 cursor-pointer transition-colors"
                 >
-                  🇬🇧 English
+                  <FlagGB className="h-4 w-6 rounded-sm" /> English
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setLanguage('el')} 
                   className="gap-2 cursor-pointer transition-colors"
                 >
-                  🇬🇷 Ελληνικά
+                  <FlagGR className="h-4 w-6 rounded-sm" /> Ελληνικά
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
