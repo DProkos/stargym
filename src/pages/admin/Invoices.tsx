@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -138,13 +138,17 @@ export default function Invoices() {
   return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-2">Τιμολόγηση & Πακέτα</h1>
-            <p className="text-muted-foreground">
-              Διαχειριστείτε τιμολόγια, πακέτα υπηρεσιών και ρυθμίσεις PDF
-            </p>
-          </div>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 sticky top-0 bg-background z-30">
+            <SidebarTrigger />
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">Τιμολόγηση & Πακέτα</h1>
+          </header>
+          <main className="flex-1 p-3 sm:p-6 overflow-auto">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Διαχειριστείτε τιμολόγια, πακέτα υπηρεσιών και ρυθμίσεις PDF
+              </p>
+            </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -290,7 +294,8 @@ export default function Invoices() {
               </div>
             </CardContent>
           </Card>
-        </main>
+          </main>
+        </div>
       </div>
     </SidebarProvider>;
 }

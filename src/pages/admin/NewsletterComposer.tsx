@@ -206,32 +206,33 @@ export default function NewsletterComposer() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
-        <main className="flex-1">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
+        <main className="flex-1 min-w-0">
+          <div className="border-b sticky top-0 bg-background z-30">
+            <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 gap-2 flex-wrap">
               <SidebarTrigger />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate('/admin/settings?tab=newsletter')}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
+                  <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Back</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigate('/admin/email-templates')}
+                  className="text-xs sm:text-sm"
                 >
-                  Browse Templates
+                  Templates
                 </Button>
               </div>
-              <h1 className="text-2xl font-bold ml-4">Newsletter Composer</h1>
+              <h1 className="text-base sm:text-2xl font-bold truncate">Newsletter</h1>
             </div>
           </div>
 
-          <div className="p-6 max-w-6xl mx-auto">
+          <div className="p-3 sm:p-6 max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <Card>
