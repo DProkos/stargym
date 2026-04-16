@@ -59,3 +59,9 @@ verify_jwt = false
 
 [functions.send-password-change-code]
 verify_jwt = true
+
+[functions.fitness-assistant]
+verify_jwt = false
+
+[functions.ai-coach-budget-check]
+verify_jwt = false

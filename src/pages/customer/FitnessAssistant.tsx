@@ -21,23 +21,43 @@ async function streamChat({
   onDelta,
   onDone,
   onError,
+  language,
 }: {
   messages: Msg[];
   onDelta: (text: string) => void;
   onDone: () => void;
-  onError: (msg: string) => void;
+  onError: (msg: string, isLimit?: boolean) => void;
+  language: 'el' | 'en';
 }) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ messages }),
   });
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ error: 'Unknown error' }));
+    // Rate limit response from our function
+    if (resp.status === 429 && (err.error === 'daily_limit_reached' || err.error === 'monthly_limit_reached')) {
+      const msg = language === 'el' ? err.message_el : err.message_en;
+      const reset = err.reset_at ? new Date(err.reset_at) : null;
+      const resetStr = reset
+        ? (err.period === 'day'
+            ? reset.toLocaleString(language === 'el' ? 'el-GR' : 'en-US', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })
+            : reset.toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US', { day: '2-digit', month: 'long' }))
+        : '';
+      const fullMsg = resetStr
+        ? `${msg} (${language === 'el' ? 'Επόμενη επαναφορά' : 'Next reset'}: ${resetStr})`
+        : msg;
+      onError(fullMsg, true);
+      return;
+    }
     onError(err.error || `Error ${resp.status}`);
     return;
   }
