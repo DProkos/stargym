@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Dumbbell, Apple, Trash2, Printer, ChevronDown, ChevronUp, BookOpen, Pencil, Check, X } from 'lucide-react';
+import { Dumbbell, Apple, Trash2, Download, ChevronDown, ChevronUp, BookOpen, Pencil, Check, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { generateProgramPDF } from '@/utils/programPDFGenerator';
 
 export default function SavedPrograms() {
   const { language } = useLanguage();
