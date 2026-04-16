@@ -360,7 +360,8 @@ export default function Packages() {
               )}
             </DialogContent>
           </Dialog>
-        </main>
+          </main>
+        </div>
       </div>
     </SidebarProvider>
   );

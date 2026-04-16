@@ -294,7 +294,8 @@ export default function Invoices() {
               </div>
             </CardContent>
           </Card>
-        </main>
+          </main>
+        </div>
       </div>
     </SidebarProvider>;
 }

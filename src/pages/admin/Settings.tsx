@@ -742,6 +742,7 @@ Test Email - ${editingTemplate.name}
                 <TabsTrigger value="email-templates">Email Templates</TabsTrigger>
                 <TabsTrigger value="newsletter">Newsletter</TabsTrigger>
               </TabsList>
+              </div>
 
               <TabsContent value="memberships" className="space-y-4">
                 <Card>
