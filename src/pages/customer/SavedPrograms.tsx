@@ -82,12 +82,15 @@ export default function SavedPrograms() {
     renameMutation.mutate({ id, title: trimmed });
   };
 
-  const downloadPDF = (title: string, content: string) => {
+  const downloadPDF = async (title: string, content: string) => {
+    const loadingId = toast.loading(language === 'el' ? 'Δημιουργία PDF…' : 'Generating PDF…');
     try {
-      generateProgramPDF({ content, title, language });
+      await generateProgramPDF({ content, title, language });
+      toast.dismiss(loadingId);
       toast.success(language === 'el' ? 'Το PDF κατέβηκε' : 'PDF downloaded');
     } catch (e) {
       console.error(e);
+      toast.dismiss(loadingId);
       toast.error(language === 'el' ? 'Σφάλμα δημιουργίας PDF' : 'PDF generation error');
     }
   };
