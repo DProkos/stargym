@@ -82,28 +82,14 @@ export default function SavedPrograms() {
     renameMutation.mutate({ id, title: trimmed });
   };
 
-  const printProgram = (content: string) => {
-    const win = window.open('', '_blank');
-    if (!win) return;
-    const html = content
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^\|(.+)\|$/gm, (match) => {
-        const cells = match.split('|').filter(c => c.trim());
-        return '<tr>' + cells.map(c => `<td style="border:1px solid #ddd;padding:8px">${c.trim()}</td>`).join('') + '</tr>';
-      })
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
-      .replace(/\n{2,}/g, '<br/><br/>')
-      .replace(/\n/g, '<br/>');
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Star Gym</title>
-      <style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:40px 20px;line-height:1.6}
-      h2,h3{color:#7c3aed}table{border-collapse:collapse;width:100%;margin:12px 0}
-      td{border:1px solid #ddd;padding:8px}tr:first-child{background:#7c3aed;color:white;font-weight:bold}
-      .header{text-align:center;border-bottom:2px solid #7c3aed;padding-bottom:16px;margin-bottom:24px}
-      </style></head><body><div class="header"><h1>⭐ Star Gym</h1></div>${html}</body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 300);
+  const downloadPDF = (title: string, content: string) => {
+    try {
+      generateProgramPDF({ content, title, language });
+      toast.success(language === 'el' ? 'Το PDF κατέβηκε' : 'PDF downloaded');
+    } catch (e) {
+      console.error(e);
+      toast.error(language === 'el' ? 'Σφάλμα δημιουργίας PDF' : 'PDF generation error');
+    }
   };
 
   return (
