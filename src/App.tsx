@@ -48,6 +48,7 @@ import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Install from "./pages/Install";
 import { DynamicFavicon } from "./components/DynamicFavicon";
+import { InstallPromptBanner } from "./components/InstallPromptBanner";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -59,6 +60,7 @@ const App = () => (
         <BrowserRouter>
           <Toaster />
           <Sonner />
+          <InstallPromptBanner />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
