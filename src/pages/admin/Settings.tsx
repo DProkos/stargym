@@ -502,7 +502,77 @@ export default function Settings() {
     }
   };
 
-  const handleSaveEmailTemplate = async () => {
+  const loadAiCoachLimits = async () => {
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', [
+        'ai_coach_daily_limit',
+        'ai_coach_monthly_limit',
+        'ai_coach_monthly_budget_requests',
+      ]);
+
+    if (!error && data) {
+      const getNum = (key: string, fallback: number) => {
+        const v = data.find((s) => s.setting_key === key)?.setting_value;
+        const n = v ? parseInt(v, 10) : NaN;
+        return Number.isFinite(n) ? n : fallback;
+      };
+      setAiCoachLimits({
+        dailyLimit: getNum('ai_coach_daily_limit', 5),
+        monthlyLimit: getNum('ai_coach_monthly_limit', 30),
+        monthlyBudgetRequests: getNum('ai_coach_monthly_budget_requests', 1650),
+      });
+    }
+
+    // Live usage stats (current month + today)
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const [{ count: monthCount }, { count: todayCount }] = await Promise.all([
+      supabase.from('ai_coach_usage').select('*', { count: 'exact', head: true }).gte('created_at', startOfMonth),
+      supabase.from('ai_coach_usage').select('*', { count: 'exact', head: true }).gte('created_at', startOfDay),
+    ]);
+    setAiUsageStats({ today: todayCount ?? 0, month: monthCount ?? 0 });
+  };
+
+  const handleSaveAiCoachLimits = async () => {
+    if (
+      aiCoachLimits.dailyLimit < 1 ||
+      aiCoachLimits.monthlyLimit < 1 ||
+      aiCoachLimits.monthlyBudgetRequests < 1
+    ) {
+      toast.error('Όλες οι τιμές πρέπει να είναι μεγαλύτερες από 0');
+      return;
+    }
+    if (aiCoachLimits.dailyLimit > aiCoachLimits.monthlyLimit) {
+      toast.error('Το ημερήσιο όριο δεν μπορεί να είναι μεγαλύτερο από το μηνιαίο');
+      return;
+    }
+    setSavingAiLimits(true);
+    try {
+      const rows = [
+        { setting_key: 'ai_coach_daily_limit', setting_value: aiCoachLimits.dailyLimit.toString() },
+        { setting_key: 'ai_coach_monthly_limit', setting_value: aiCoachLimits.monthlyLimit.toString() },
+        { setting_key: 'ai_coach_monthly_budget_requests', setting_value: aiCoachLimits.monthlyBudgetRequests.toString() },
+      ];
+      for (const row of rows) {
+        const { error } = await supabase
+          .from('app_settings')
+          .upsert(
+            { ...row, setting_type: 'number', is_sensitive: false, updated_at: new Date().toISOString() },
+            { onConflict: 'setting_key' }
+          );
+        if (error) throw error;
+      }
+      toast.success('AI Coach limits saved successfully');
+    } catch (error) {
+      console.error('Failed to save AI coach limits:', error);
+      toast.error('Failed to save AI Coach limits');
+    } finally {
+      setSavingAiLimits(false);
+    }
+  };
     if (!editingTemplate) return;
 
     try {
