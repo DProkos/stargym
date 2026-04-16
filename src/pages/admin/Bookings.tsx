@@ -497,38 +497,42 @@ export default function AdminBookings() {
         <AppSidebarAdmin />
         <main className="flex-1 min-w-0">
           <div className="border-b sticky top-0 bg-background z-30">
-            <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 gap-2 sm:gap-3 flex-wrap">
+            <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 gap-2">
               <SidebarTrigger />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/admin')}
+                className="px-2 sm:px-3"
               >
                 <ArrowLeft className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Back</span>
               </Button>
-              <h1 className="text-base sm:text-2xl font-bold truncate">Bookings</h1>
-              <div className="ml-auto flex gap-2">
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  List View
-                </Button>
-                <Button
-                  variant={viewMode === 'calendar' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('calendar')}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Calendar View
-                </Button>
-              </div>
+              <h1 className="text-base sm:text-2xl font-bold truncate flex-1 min-w-0">Bookings</h1>
+            </div>
+            <div className="flex gap-2 px-3 sm:px-6 pb-3 sm:pb-0 sm:absolute sm:top-3 sm:right-6">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="flex-1 sm:flex-none"
+              >
+                List View
+              </Button>
+              <Button
+                variant={viewMode === 'calendar' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('calendar')}
+                className="flex-1 sm:flex-none"
+              >
+                <Calendar className="h-4 w-4 sm:mr-2" />
+                <span className="hidden xs:inline sm:inline">Calendar View</span>
+                <span className="xs:hidden sm:hidden">Calendar</span>
+              </Button>
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
             {/* Statistics Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
