@@ -93,10 +93,10 @@ export default function SavedPrograms() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+              <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto w-full min-w-0">
                 {programs.map((p) => (
-                  <Card key={p.id} className="p-3 sm:p-4 overflow-hidden">
-                    <div className="flex items-center justify-between gap-2">
+                  <Card key={p.id} className="p-3 sm:p-4 overflow-hidden w-full min-w-0">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
                       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         {p.program_type === 'nutrition' ? (
                           <Apple className="h-5 w-5 text-green-500 shrink-0" />
@@ -123,8 +123,27 @@ export default function SavedPrograms() {
                       </div>
                     </div>
                     {expandedId === p.id && (
-                      <div className="mt-4 pt-4 border-t prose prose-sm dark:prose-invert max-w-none overflow-x-auto prose-table:block prose-table:overflow-x-auto prose-pre:whitespace-pre-wrap prose-pre:break-words prose-img:max-w-full prose-headings:break-words break-words">
-                        <ReactMarkdown>{p.content}</ReactMarkdown>
+                      <div className="mt-4 pt-4 border-t w-full min-w-0 max-w-full overflow-hidden">
+                        <div
+                          className="prose prose-sm dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] prose-headings:break-words prose-p:break-words prose-li:break-words prose-pre:whitespace-pre-wrap prose-pre:break-words prose-pre:overflow-x-auto prose-pre:max-w-full prose-img:max-w-full prose-img:h-auto prose-a:break-all"
+                        >
+                          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 prose-table:min-w-0">
+                            <ReactMarkdown
+                              components={{
+                                table: ({ node, ...props }) => (
+                                  <div className="overflow-x-auto">
+                                    <table {...props} className="min-w-full" />
+                                  </div>
+                                ),
+                                pre: ({ node, ...props }) => (
+                                  <pre {...props} className="overflow-x-auto whitespace-pre-wrap break-words" />
+                                ),
+                              }}
+                            >
+                              {p.content}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </Card>
