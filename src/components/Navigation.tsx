@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, Menu, X, User } from 'lucide-react';
+import { FlagGB, FlagGR } from '@/components/icons/FlagIcons';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
