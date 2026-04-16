@@ -200,12 +200,15 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check for internal service call (from other edge functions using service role key)
+    // Check for internal service call by verifying the bearer token equals the service role key.
+    // The previous "X-Internal-Call" header was client-controllable and could be spoofed by anyone.
     const authHeader = req.headers.get('Authorization');
-    const internalCall = req.headers.get('X-Internal-Call') === 'true';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const internalCall = !!bearerToken && !!serviceRoleKey && bearerToken === serviceRoleKey;
     console.log('Auth header present:', !!authHeader, 'Internal call:', internalCall);
-    
-    // If internal call, skip user authentication (called from other edge functions)
+
+    // If internal call (verified service role key), skip user authentication
     if (!internalCall) {
       if (!authHeader) {
         console.error('No authorization header provided');
