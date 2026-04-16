@@ -147,9 +147,31 @@ export default function FitnessAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const SAVE_LIMIT = 10;
+
   const saveProgram = async (content: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error(language === 'el' ? 'Πρέπει να είσαι συνδεδεμένος' : 'Must be logged in'); return; }
+
+    // Check current count against limit
+    const { count, error: countError } = await supabase
+      .from('saved_programs')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    if (countError) {
+      toast.error(language === 'el' ? 'Σφάλμα ελέγχου ορίου' : 'Limit check error');
+      return;
+    }
+    if ((count ?? 0) >= SAVE_LIMIT) {
+      toast.error(
+        language === 'el'
+          ? `Έφτασες το όριο των ${SAVE_LIMIT} αποθηκευμένων προγραμμάτων. Διέγραψε κάποιο παλιό για να σώσεις νέο.`
+          : `You reached the limit of ${SAVE_LIMIT} saved programs. Delete an old one to save a new program.`,
+        { duration: 6000 }
+      );
+      return;
+    }
+
     const isNutrition = /διατροφ|nutrition|θερμίδ|calori|γεύμα|meal/i.test(content);
     const type = isNutrition ? 'nutrition' : 'workout';
     const title = content.match(/^#+\s*(.+)$/m)?.[1]
