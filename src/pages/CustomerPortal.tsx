@@ -305,23 +305,23 @@ export default function CustomerPortal() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarCustomer />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
+        <div className="flex-1 min-w-0 overflow-x-hidden">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 sticky top-0 bg-background z-30">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">{language === 'el' ? 'Μαθήματα' : 'Browse Classes'}</h1>
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">{language === 'el' ? 'Μαθήματα' : 'Browse Classes'}</h1>
           </header>
 
-          <main className="p-6">
+          <main className="p-3 sm:p-6">
             <div className="max-w-6xl mx-auto">
-              <Card className="bg-gradient-card border-border mb-6">
-                <CardHeader>
-                  <CardTitle>Welcome, {user?.user_metadata?.full_name || user?.email}</CardTitle>
-                  <CardDescription>Manage your bookings and profile</CardDescription>
+              <Card className="bg-gradient-card border-border mb-4 sm:mb-6">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-xl break-words">Welcome, {user?.user_metadata?.full_name || user?.email}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Manage your bookings and profile</CardDescription>
                 </CardHeader>
               </Card>
 
               <div className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {classes.length === 0 ? (
                       <Card className="bg-gradient-card border-border col-span-full">
                         <CardContent className="pt-6">

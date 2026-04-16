@@ -166,15 +166,17 @@ export default function Admin() {
           </div>
 
           <Tabs defaultValue="members" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-              <TabsTrigger value="calendar" className="flex items-center gap-1 text-xs sm:text-sm px-1 sm:px-3 py-2">
-                <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Calendar</span>
-              </TabsTrigger>
-              <TabsTrigger value="members" className="text-xs sm:text-sm px-1 sm:px-3 py-2">{t('dashboard.members')}</TabsTrigger>
-              <TabsTrigger value="classes" className="text-xs sm:text-sm px-1 sm:px-3 py-2">{t('dashboard.classes')}</TabsTrigger>
-              <TabsTrigger value="bookings" className="text-xs sm:text-sm px-1 sm:px-3 py-2">{t('dashboard.bookings')}</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+              <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:grid-cols-4 h-auto p-1">
+                <TabsTrigger value="calendar" className="flex items-center gap-1 text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">
+                  <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Calendar</span>
+                </TabsTrigger>
+                <TabsTrigger value="members" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">{t('dashboard.members')}</TabsTrigger>
+                <TabsTrigger value="classes" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">{t('dashboard.classes')}</TabsTrigger>
+                <TabsTrigger value="bookings" className="text-xs sm:text-sm px-2 sm:px-3 py-2 whitespace-nowrap">{t('dashboard.bookings')}</TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="calendar" className="mt-6">
               <BookingCalendar 

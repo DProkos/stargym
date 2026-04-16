@@ -160,22 +160,22 @@ export default function TrainerPortal() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarTrainer />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
+        <div className="flex-1 min-w-0 overflow-x-hidden">
+          <header className="h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 sticky top-0 bg-background z-30">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">{t('trainer.schedule')}</h1>
+            <h1 className="ml-2 sm:ml-4 text-lg sm:text-2xl font-bold truncate">{t('trainer.schedule')}</h1>
           </header>
 
-          <main className="p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
+          <main className="p-3 sm:p-6">
+            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
               <Card className="bg-gradient-card border-border">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Welcome, {user?.user_metadata?.full_name || user?.email}</CardTitle>
-                      <CardDescription>Your training dashboard - updates in real-time</CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="min-w-0">
+                      <CardTitle className="text-base sm:text-xl break-words">Welcome, {user?.user_metadata?.full_name || user?.email}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Your training dashboard - updates in real-time</CardDescription>
                     </div>
-                    <Badge variant="outline" className="bg-success/20 text-success border-success">
+                    <Badge variant="outline" className="bg-success/20 text-success border-success self-start sm:self-auto">
                       <span className="relative flex h-2 w-2 mr-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
@@ -190,28 +190,30 @@ export default function TrainerPortal() {
               {user && <TrainerStats trainerId={user.id} />}
 
               <Tabs defaultValue="overview" className="space-y-4">
-                <TabsList className="grid w-full max-w-4xl grid-cols-5">
-                  <TabsTrigger value="overview" className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger value="manage" className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Manage
-                  </TabsTrigger>
-                  <TabsTrigger value="details" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Details
-                  </TabsTrigger>
-                  <TabsTrigger value="messaging" className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Messaging
-                  </TabsTrigger>
-                  <TabsTrigger value="list" className="flex items-center gap-2">
-                    <List className="h-4 w-4" />
-                    Classes
-                  </TabsTrigger>
-                </TabsList>
+                <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                  <TabsList className="inline-flex w-auto sm:grid sm:w-full sm:max-w-4xl sm:grid-cols-5">
+                    <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                      <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      Overview
+                    </TabsTrigger>
+                    <TabsTrigger value="manage" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                      Manage
+                    </TabsTrigger>
+                    <TabsTrigger value="details" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                      <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                      Details
+                    </TabsTrigger>
+                    <TabsTrigger value="messaging" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                      <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                      Messaging
+                    </TabsTrigger>
+                    <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                      <List className="h-3 w-3 sm:h-4 sm:w-4" />
+                      Classes
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
                 <TabsContent value="overview" className="space-y-4">
                   <div className="grid gap-6">
@@ -323,7 +325,7 @@ export default function TrainerPortal() {
 
 
                 <TabsContent value="list" className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {classes.length === 0 ? (
                   <Card className="bg-gradient-card border-border col-span-full">
                     <CardContent className="pt-6">
