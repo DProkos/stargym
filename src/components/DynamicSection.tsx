@@ -1119,8 +1119,19 @@ function PWAInstallSection({
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Check admin toggle — if disabled, hide the entire section
+    (async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('setting_value')
+        .eq('setting_key', 'pwa_install_prompt_enabled')
+        .maybeSingle();
+      setEnabled(data?.setting_value !== 'false');
+    })();
+
     const standalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true;
@@ -1171,6 +1182,9 @@ function PWAInstallSection({
   const buttonText =
     section.settings?.button_text ||
     (language === 'el' ? 'Εγκατάσταση Εφαρμογής' : 'Install App');
+
+  // Hide section entirely when admin disabled the install prompt
+  if (enabled === false) return null;
 
   return (
     <section className={`py-16 sm:py-24 px-4 relative overflow-hidden ${bgClass}`}>
