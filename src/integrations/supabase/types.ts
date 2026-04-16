@@ -41,6 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_coach_alerts_sent: {
+        Row: {
+          id: string
+          sent_at: string
+          threshold: number
+          year_month: string
+        }
+        Insert: {
+          id?: string
+          sent_at?: string
+          threshold: number
+          year_month: string
+        }
+        Update: {
+          id?: string
+          sent_at?: string
+          threshold?: number
+          year_month?: string
+        }
+        Relationships: []
+      }
+      ai_coach_usage: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           created_at: string | null
