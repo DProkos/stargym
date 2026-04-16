@@ -6,10 +6,10 @@ export function CustomerBottomNav() {
     <PortalBottomNav
       ariaLabel="Customer quick navigation"
       items={[
-        { label: "Bookings", to: "/bookings", icon: Calendar, matchPaths: ["/customer", "/bookings"], exact: false },
-        { label: "AI Coach", to: "/customer/ai-coach", icon: Bot },
-        { label: "Programs", to: "/customer/saved-programs", icon: BookOpen },
-        { label: "Profile", to: "/customer/profile", icon: User },
+        { label: "Bookings", to: "/bookings", icon: Calendar, exact: true },
+        { label: "AI Coach", to: "/customer/ai-coach", icon: Bot, exact: true },
+        { label: "Programs", to: "/customer/saved-programs", icon: BookOpen, exact: true },
+        { label: "Profile", to: "/customer/profile", icon: User, exact: true },
       ]}
     />
   );

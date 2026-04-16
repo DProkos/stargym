@@ -2,13 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Navigation } from '@/components/Navigation';
+import { CustomerBottomNav } from '@/components/CustomerBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, CalendarDays, List } from 'lucide-react';
-import BookingCalendar from '@/components/BookingCalendar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, Clock } from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -228,6 +227,7 @@ export default function MyBookings() {
           </div>
         </div>
       </section>
+      <CustomerBottomNav />
     </div>
   );
 }
