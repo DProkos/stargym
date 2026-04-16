@@ -1250,6 +1250,18 @@ Test Email - ${editingTemplate.name}
                         }
                       />
                     </div>
+                    <div className="flex items-center justify-between space-x-4 p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <Label className="text-base">PWA Install Prompt</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Εμφάνιση banner "Add to Home Screen" σε mobile χρήστες (Android &amp; iOS).
+                        </p>
+                      </div>
+                      <Switch
+                        checked={pwaPromptEnabled}
+                        onCheckedChange={setPwaPromptEnabled}
+                      />
+                    </div>
                     <Button onClick={handleSaveAuthSettings}>Save Authentication Settings</Button>
                   </CardContent>
                 </Card>
