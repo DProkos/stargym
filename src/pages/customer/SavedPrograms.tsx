@@ -3,10 +3,11 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebarCustomer } from '@/components/app-sidebar-customer';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Dumbbell, Apple, Trash2, Printer, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { Dumbbell, Apple, Trash2, Printer, ChevronDown, ChevronUp, BookOpen, Pencil, Check, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +17,8 @@ export default function SavedPrograms() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
 
   const { data: programs = [], isLoading } = useQuery({
     queryKey: ['saved-programs'],
@@ -39,6 +42,44 @@ export default function SavedPrograms() {
       toast.success(language === 'el' ? 'Το πρόγραμμα διαγράφηκε' : 'Program deleted');
     },
   });
+
+  const renameMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const { error } = await supabase
+        .from('saved_programs')
+        .update({ title })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-programs'] });
+      setEditingId(null);
+      setEditingTitle('');
+      toast.success(language === 'el' ? 'Ο τίτλος ενημερώθηκε' : 'Title updated');
+    },
+    onError: () => {
+      toast.error(language === 'el' ? 'Σφάλμα ενημέρωσης' : 'Update error');
+    },
+  });
+
+  const startEdit = (id: string, currentTitle: string) => {
+    setEditingId(id);
+    setEditingTitle(currentTitle);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingTitle('');
+  };
+
+  const saveEdit = (id: string) => {
+    const trimmed = editingTitle.trim();
+    if (!trimmed) {
+      toast.error(language === 'el' ? 'Ο τίτλος δεν μπορεί να είναι κενός' : 'Title cannot be empty');
+      return;
+    }
+    renameMutation.mutate({ id, title: trimmed });
+  };
 
   const printProgram = (content: string) => {
     const win = window.open('', '_blank');
@@ -109,22 +150,52 @@ export default function SavedPrograms() {
                           <Dumbbell className="h-5 w-5 text-primary shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold truncate text-sm sm:text-base">{p.title}</h3>
+                          {editingId === p.id ? (
+                            <Input
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveEdit(p.id);
+                                if (e.key === 'Escape') cancelEdit();
+                              }}
+                              autoFocus
+                              maxLength={120}
+                              className="h-8 text-sm sm:text-base"
+                            />
+                          ) : (
+                            <h3 className="font-semibold truncate text-sm sm:text-base">{p.title}</h3>
+                          )}
                           <p className="text-xs text-muted-foreground">
                             {new Date(p.created_at).toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US')}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => printProgram(p.content)}>
-                          <Printer className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => deleteMutation.mutate(p.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
-                          {expandedId === p.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
+                        {editingId === p.id ? (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => saveEdit(p.id)} disabled={renameMutation.isPending}>
+                              <Check className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={cancelEdit}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => startEdit(p.id, p.title)} title={language === 'el' ? 'Μετονομασία' : 'Rename'}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => printProgram(p.content)}>
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => deleteMutation.mutate(p.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
+                              {expandedId === p.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                     {expandedId === p.id && (
