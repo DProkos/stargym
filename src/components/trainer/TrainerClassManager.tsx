@@ -470,7 +470,7 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
               Add New Class
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl w-[calc(100vw-1.5rem)] max-h-[90dvh] overflow-y-auto overscroll-contain">
             <DialogHeader>
               <DialogTitle>Create New Class</DialogTitle>
               <DialogDescription>Add a new training class to your schedule</DialogDescription>
@@ -504,31 +504,31 @@ export function TrainerClassManager({ trainerId, onClassesChange }: TrainerClass
                   <Button
                     type="button"
                     variant={classType === 'recurring' ? 'default' : 'outline'}
-                    className="w-full justify-start"
+                    className="w-full justify-start h-auto min-h-[3.5rem] py-2 px-3 whitespace-normal"
                     onClick={() => {
                       setClassType('recurring');
                       setNewClass({ ...newClass, specific_date: '' });
                     }}
                   >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <div className="text-left">
-                      <div className="font-medium">Επαναλαμβανόμενο</div>
-                      <div className="text-xs opacity-70">Κάθε εβδομάδα</div>
+                    <Calendar className="h-4 w-4 mr-2 shrink-0" />
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="font-medium text-sm leading-tight break-words">Επαναλαμβανόμενο</div>
+                      <div className="text-xs opacity-70 leading-tight">Κάθε εβδομάδα</div>
                     </div>
                   </Button>
                   <Button
                     type="button"
                     variant={classType === 'onetime' ? 'default' : 'outline'}
-                    className="w-full justify-start"
+                    className="w-full justify-start h-auto min-h-[3.5rem] py-2 px-3 whitespace-normal"
                     onClick={() => {
                       setClassType('onetime');
                       setNewClass({ ...newClass, schedules: [{ day_of_week: 1, time: '' }] });
                     }}
                   >
-                    <Clock className="h-4 w-4 mr-2" />
-                    <div className="text-left">
-                      <div className="font-medium">Μοναδική Ημερομηνία</div>
-                      <div className="text-xs opacity-70">Μία φορά μόνο</div>
+                    <Clock className="h-4 w-4 mr-2 shrink-0" />
+                    <div className="text-left min-w-0 flex-1">
+                      <div className="font-medium text-sm leading-tight break-words">Μοναδική Ημερομηνία</div>
+                      <div className="text-xs opacity-70 leading-tight">Μία φορά μόνο</div>
                     </div>
                   </Button>
                 </div>
