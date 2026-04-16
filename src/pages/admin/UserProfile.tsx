@@ -251,23 +251,20 @@ export default function UserProfile() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         <main className="flex-1">
-          <div className="border-b">
-            <div className="flex h-16 items-center px-6">
-              <SidebarTrigger />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/admin')}
-                className="ml-4"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
-              </Button>
-              <h1 className="text-2xl font-bold ml-4">User Profile</h1>
-            </div>
-          </div>
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/admin')}
+            >
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
+            </Button>
+            <h1 className="text-base sm:text-2xl font-bold truncate ml-2">User Profile</h1>
+          </header>
 
-          <div className="p-6 space-y-6">
+          <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
             {/* User Info Card */}
             <Card>
               <CardHeader>

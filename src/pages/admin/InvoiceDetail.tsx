@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -644,29 +644,32 @@ export default function InvoiceDetail() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6 flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate('/admin/invoices')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Πίσω στα Τιμολόγια
+        <main className="flex-1 overflow-auto">
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/invoices')}>
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Πίσω</span>
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleDownloadPDF} disabled={isNew}>
-                <Download className="h-4 w-4 mr-2" />
-                Λήψη PDF
-              </Button>
-              <Button variant="outline" onClick={generateEmailPreview} disabled={isNew}>
-                <Eye className="h-4 w-4 mr-2" />
-                Προεπισκόπηση Email
-              </Button>
-              <Button onClick={handleSave} disabled={saving}>
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Αποθήκευση...' : 'Αποθήκευση'}
-              </Button>
-            </div>
+            <h1 className="text-base sm:text-2xl font-bold truncate ml-2 flex-1">Τιμολόγιο</h1>
+          </header>
+          <div className="p-3 sm:p-6">
+          <div className="mb-4 sm:mb-6 flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={isNew}>
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Λήψη PDF</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={generateEmailPreview} disabled={isNew}>
+              <Eye className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Προεπισκόπηση Email</span>
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4 sm:mr-2" />
+              {saving ? 'Αποθήκευση...' : 'Αποθήκευση'}
+            </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-6">
               {/* Invoice Details */}
               <Card>

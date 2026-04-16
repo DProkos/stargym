@@ -176,39 +176,36 @@ export default function TemplateBuilder() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarAdmin />
         <main className="flex-1">
-          <div className="border-b">
-            <div className="flex h-16 items-center justify-between px-6">
-              <div className="flex items-center">
-                <SidebarTrigger />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/admin/email-templates')}
-                  className="ml-4"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                <h1 className="text-2xl font-bold ml-4">Template Builder</h1>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handlePreview}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </Button>
-                <Button onClick={() => setSaveDialogOpen(true)}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Template
-                </Button>
-              </div>
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center justify-between px-3 sm:px-6 gap-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <SidebarTrigger />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/admin/email-templates')}
+              >
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
+              </Button>
+              <h1 className="text-base sm:text-2xl font-bold truncate">Template Builder</h1>
             </div>
-          </div>
+            <div className="flex gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={handlePreview}>
+                <Eye className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Preview</span>
+              </Button>
+              <Button size="sm" onClick={() => setSaveDialogOpen(true)}>
+                <Save className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Save Template</span>
+              </Button>
+            </div>
+          </header>
 
-          <div className="p-6 grid grid-cols-12 gap-6 h-[calc(100vh-88px)]">
-            <div className="col-span-2">
+          <div className="p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:h-[calc(100vh-88px)]">
+            <div className="lg:col-span-2">
               <ComponentPalette onAddComponent={handleAddComponent} />
             </div>
-            <div className="col-span-7">
+            <div className="lg:col-span-7">
               <BuilderCanvas
                 components={components}
                 onReorder={handleReorderComponents}

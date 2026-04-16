@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppSidebarAdmin } from '@/components/app-sidebar-admin';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -511,15 +511,17 @@ export default function UserDetail() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebarAdmin />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6">
-            <Button variant="ghost" onClick={() => navigate('/admin/crm')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Πίσω στους Χρήστες
+        <main className="flex-1 overflow-auto">
+          <header className="h-14 sm:h-16 border-b sticky top-0 bg-background z-30 flex items-center px-3 sm:px-6 gap-2">
+            <SidebarTrigger />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin/crm')}>
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Πίσω</span>
             </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <h1 className="text-base sm:text-2xl font-bold truncate ml-2">Στοιχεία Πελάτη</h1>
+          </header>
+          <div className="p-3 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Customer Info Card */}
             <div className="lg:col-span-2 space-y-6">
               <Card>
