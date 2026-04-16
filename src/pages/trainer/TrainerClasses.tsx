@@ -47,13 +47,13 @@ export default function TrainerClasses() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebarTrainer />
         
-        <div className="flex-1">
-          <header className="h-16 border-b border-border flex items-center px-6">
+        <div className="flex-1 min-w-0 overflow-x-hidden">
+          <header className="sticky top-0 z-30 h-14 sm:h-16 border-b border-border flex items-center px-3 sm:px-6 bg-background/95 backdrop-blur">
             <SidebarTrigger />
-            <h1 className="ml-4 text-2xl font-bold">My Classes</h1>
+            <h1 className="ml-3 sm:ml-4 text-lg sm:text-2xl font-bold truncate">My Classes</h1>
           </header>
 
-          <main className="p-6">
+          <main className="p-3 sm:p-6">
             <TrainerClassManager trainerId={trainerId} />
           </main>
         </div>
