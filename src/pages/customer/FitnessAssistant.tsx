@@ -300,7 +300,7 @@ export default function FitnessAssistant() {
             <div ref={bottomRef} />
           </div>
 
-          <div className="border-t p-3 sm:p-4 sticky bottom-0 bg-background">
+          <div className="border-t p-3 sm:p-4 sticky bottom-16 md:bottom-0 bg-background pb-[env(safe-area-inset-bottom)]">
             <div className="flex gap-2 max-w-4xl mx-auto">
               <Textarea
                 value={input}
