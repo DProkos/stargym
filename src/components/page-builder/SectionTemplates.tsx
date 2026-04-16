@@ -516,6 +516,74 @@ const SECTION_TEMPLATES: SectionTemplate[] = [
         ]
       }
     }
+  },
+  // AI Coach Template
+  {
+    id: 'ai-coach-promo',
+    name: 'AI Coach Promo',
+    description: 'Προωθητικό section για τον AI Fitness Coach με τα οφέλη και CTA',
+    section_type: 'ai_coach',
+    icon: Brain,
+    category: 'AI & Apps',
+    preview_data: {
+      title_en: 'Meet Your Personal AI Coach',
+      title_el: 'Γνώρισε τον Προσωπικό σου AI Coach',
+      subtitle_en: 'Custom workouts and nutrition plans powered by AI, tailored to your goals and our gym equipment',
+      subtitle_el: 'Εξατομικευμένα προγράμματα προπόνησης και διατροφής με τη βοήθεια AI, σχεδιασμένα για τους στόχους σου και τον εξοπλισμό μας',
+      content_en: 'Available exclusively for our members. Sign in to your portal to start.',
+      content_el: 'Διαθέσιμο αποκλειστικά για τα μέλη μας. Συνδέσου στο portal σου για να ξεκινήσεις.',
+      background_color: 'default',
+      text_color: 'default',
+      settings: {
+        button_text: 'Δοκίμασε τον AI Coach',
+        button_link: '/customer/fitness-assistant',
+        features: [
+          {
+            icon: 'Brain',
+            title_en: 'Personalized Programs',
+            title_el: 'Εξατομικευμένα Προγράμματα',
+            description_en: 'AI-generated workout plans designed specifically for your goals and fitness level',
+            description_el: 'Προγράμματα φτιαγμένα από AI, σχεδιασμένα ειδικά για τους δικούς σου στόχους'
+          },
+          {
+            icon: 'Dumbbell',
+            title_en: 'Uses Our Equipment',
+            title_el: 'Με τον Εξοπλισμό μας',
+            description_en: 'Plans use only the equipment available at our gym',
+            description_el: 'Τα προγράμματα χρησιμοποιούν μόνο τα μηχανήματα του γυμναστηρίου μας'
+          },
+          {
+            icon: 'Sparkles',
+            title_en: 'Instant Results',
+            title_el: 'Άμεσα Αποτελέσματα',
+            description_en: 'Get a complete plan in seconds, ready to use today',
+            description_el: 'Πάρε ένα ολοκληρωμένο πρόγραμμα σε δευτερόλεπτα, έτοιμο για σήμερα'
+          }
+        ]
+      }
+    }
+  },
+  // PWA Install Template
+  {
+    id: 'pwa-install-cta',
+    name: 'Εγκατάσταση Εφαρμογής (PWA)',
+    description: 'Section με κουμπί που εγκαθιστά την εφαρμογή στο κινητό με ένα κλικ',
+    section_type: 'pwa_install',
+    icon: Download,
+    category: 'AI & Apps',
+    preview_data: {
+      title_en: 'Install Our App',
+      title_el: 'Εγκατάσταση Εφαρμογής',
+      subtitle_en: 'Get the full Star Gym experience on your phone — book classes, view your schedule and access your AI coach instantly.',
+      subtitle_el: 'Πάρε όλη την εμπειρία Star Gym στο κινητό σου — κλείσε μαθήματα, δες το πρόγραμμά σου και χρησιμοποίησε τον AI coach άμεσα.',
+      content_en: 'Works on iPhone, Android, and desktop. No App Store required.',
+      content_el: 'Λειτουργεί σε iPhone, Android και υπολογιστή. Χωρίς App Store.',
+      background_color: 'default',
+      text_color: 'default',
+      settings: {
+        button_text: 'Εγκατάσταση τώρα'
+      }
+    }
   }
 ];
 
