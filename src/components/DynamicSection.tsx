@@ -1146,6 +1146,7 @@ function PWAInstallSection({
 
     const handler = (e: Event) => {
       e.preventDefault();
+      console.log('[PWA] beforeinstallprompt captured — install button is active');
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener('beforeinstallprompt', handler);
@@ -1157,6 +1158,18 @@ function PWAInstallSection({
     };
     window.addEventListener('appinstalled', onInstalled);
 
+    // Diagnostic info — helps explain why prompt may not appear
+    let inIframe = false;
+    try { inIframe = window.self !== window.top; } catch { inIframe = true; }
+    console.log('[PWA] Install section mounted', {
+      isStandalone: standalone,
+      isIOS: ios,
+      isAndroid: android,
+      inIframe,
+      protocol: window.location.protocol,
+      hasServiceWorker: 'serviceWorker' in navigator,
+    });
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', onInstalled);
@@ -1164,7 +1177,7 @@ function PWAInstallSection({
   }, [language]);
 
   const handleInstall = async () => {
-    // Best case: browser supports programmatic install — fire it immediately
+    // Best case: browser fired beforeinstallprompt — show native dialog now
     if (deferredPrompt) {
       try {
         await deferredPrompt.prompt();
@@ -1173,12 +1186,32 @@ function PWAInstallSection({
           toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται...' : 'Installing the app...');
         }
         setDeferredPrompt(null);
-      } catch {
+      } catch (err) {
+        console.warn('[PWA] prompt() failed', err);
         setShowManualInstructions(true);
       }
       return;
     }
-    // Fallback: show platform-specific manual instructions inline
+
+    // No native prompt available — diagnose why
+    let inIframe = false;
+    try { inIframe = window.self !== window.top; } catch { inIframe = true; }
+
+    if (inIframe) {
+      toast.info(
+        language === 'el'
+          ? 'Το install prompt δεν εμφανίζεται μέσα στο preview. Άνοιξε το site σε νέα καρτέλα.'
+          : 'Install prompt does not work inside preview. Open the site in a new tab.'
+      );
+      return;
+    }
+    if (isInstalled) {
+      toast.info(
+        language === 'el' ? 'Η εφαρμογή είναι ήδη εγκατεστημένη.' : 'App is already installed.'
+      );
+      return;
+    }
+    // iOS Safari + desktop browsers without prompt support → show manual steps
     setShowManualInstructions(true);
   };
 
