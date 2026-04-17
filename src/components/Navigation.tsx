@@ -279,8 +279,22 @@ export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) console.warn('signOut error, forcing local cleanup:', error);
+    } catch (err) {
+      console.warn('signOut threw, forcing local cleanup:', err);
+    }
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('sb-') || k.includes('supabase'))
+        .forEach((k) => localStorage.removeItem(k));
+      Object.keys(sessionStorage)
+        .filter((k) => k.startsWith('sb-') || k.includes('supabase'))
+        .forEach((k) => sessionStorage.removeItem(k));
+    } catch {}
     navigate('/');
+    setTimeout(() => window.location.reload(), 50);
   };
   const getPageLabel = (page: NavPage) => {
     if (language === 'el' && page.labelEl) return page.labelEl;
