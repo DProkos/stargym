@@ -1118,7 +1118,8 @@ function PWAInstallSection({
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
   const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -1137,8 +1138,11 @@ function PWAInstallSection({
       (window.navigator as any).standalone === true;
     setIsInstalled(standalone);
 
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const ua = navigator.userAgent;
+    const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const android = /Android/i.test(ua);
     setIsIOS(ios);
+    setIsAndroid(android);
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -1149,6 +1153,7 @@ function PWAInstallSection({
     const onInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
+      toast.success(language === 'el' ? 'Η εφαρμογή εγκαταστάθηκε!' : 'App installed!');
     };
     window.addEventListener('appinstalled', onInstalled);
 
@@ -1156,27 +1161,25 @@ function PWAInstallSection({
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', onInstalled);
     };
-  }, []);
+  }, [language]);
 
   const handleInstall = async () => {
+    // Best case: browser supports programmatic install — fire it immediately
     if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται!' : 'Installing the app!');
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται...' : 'Installing the app...');
+        }
+        setDeferredPrompt(null);
+      } catch {
+        setShowManualInstructions(true);
       }
-      setDeferredPrompt(null);
       return;
     }
-    if (isIOS) {
-      setShowIOSInstructions(true);
-      return;
-    }
-    toast.info(
-      language === 'el'
-        ? 'Άνοιξε το μενού του browser σου και επίλεξε "Εγκατάσταση εφαρμογής" ή "Προσθήκη στην αρχική οθόνη".'
-        : 'Open your browser menu and select "Install app" or "Add to Home Screen".'
-    );
+    // Fallback: show platform-specific manual instructions inline
+    setShowManualInstructions(true);
   };
 
   const buttonText =
@@ -1233,34 +1236,92 @@ function PWAInstallSection({
                 </div>
               </div>
 
-              {(showIOSInstructions || (isIOS && !deferredPrompt)) && (
+              {(showManualInstructions || (isIOS && !deferredPrompt)) && (
                 <div className="mt-6 p-4 sm:p-5 bg-muted/50 border border-border rounded-lg text-left max-w-md mx-auto">
                   <p className="text-sm font-semibold mb-3 text-center">
-                    {language === 'el' ? 'Οδηγίες για iPhone / iPad:' : 'Instructions for iPhone / iPad:'}
+                    {isIOS
+                      ? (language === 'el' ? 'Οδηγίες για iPhone / iPad:' : 'Instructions for iPhone / iPad:')
+                      : isAndroid
+                      ? (language === 'el' ? 'Οδηγίες για Android:' : 'Instructions for Android:')
+                      : (language === 'el' ? 'Οδηγίες εγκατάστασης:' : 'Install instructions:')}
                   </p>
                   <ol className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-primary">1.</span>
-                      <span className="flex items-center gap-1 flex-wrap">
-                        {language === 'el' ? 'Πάτησε το' : 'Tap the'}
-                        <Share className="h-4 w-4 inline" />
-                        {language === 'el' ? 'κουμπί κοινοποίησης στο Safari' : 'Share button in Safari'}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-primary">2.</span>
-                      <span>
-                        {language === 'el'
-                          ? 'Επίλεξε «Προσθήκη στην οθόνη Αφετηρίας»'
-                          : 'Choose "Add to Home Screen"'}
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="font-bold text-primary">3.</span>
-                      <span>
-                        {language === 'el' ? 'Πάτησε «Προσθήκη». Έτοιμο!' : 'Tap "Add". Done!'}
-                      </span>
-                    </li>
+                    {isIOS ? (
+                      <>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">1.</span>
+                          <span className="flex items-center gap-1 flex-wrap">
+                            {language === 'el' ? 'Πάτησε το' : 'Tap the'}
+                            <Share className="h-4 w-4 inline" />
+                            {language === 'el' ? 'κουμπί κοινοποίησης στο Safari' : 'Share button in Safari'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">2.</span>
+                          <span>
+                            {language === 'el'
+                              ? 'Επίλεξε «Προσθήκη στην οθόνη Αφετηρίας»'
+                              : 'Choose "Add to Home Screen"'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">3.</span>
+                          <span>
+                            {language === 'el' ? 'Πάτησε «Προσθήκη». Έτοιμο!' : 'Tap "Add". Done!'}
+                          </span>
+                        </li>
+                      </>
+                    ) : isAndroid ? (
+                      <>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">1.</span>
+                          <span>
+                            {language === 'el'
+                              ? 'Άνοιξε το μενού του Chrome (⋮ πάνω δεξιά)'
+                              : 'Open the Chrome menu (⋮ top right)'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">2.</span>
+                          <span>
+                            {language === 'el'
+                              ? 'Επίλεξε «Εγκατάσταση εφαρμογής» ή «Προσθήκη στην αρχική οθόνη»'
+                              : 'Select "Install app" or "Add to Home Screen"'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">3.</span>
+                          <span>
+                            {language === 'el' ? 'Πάτησε «Εγκατάσταση». Έτοιμο!' : 'Tap "Install". Done!'}
+                          </span>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">1.</span>
+                          <span>
+                            {language === 'el'
+                              ? 'Πάτησε το εικονίδιο εγκατάστασης (⊕) στη γραμμή διευθύνσεων'
+                              : 'Click the install icon (⊕) in the address bar'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">2.</span>
+                          <span>
+                            {language === 'el'
+                              ? 'Ή άνοιξε το μενού του browser → «Εγκατάσταση Star Gym»'
+                              : 'Or open the browser menu → "Install Star Gym"'}
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold text-primary">3.</span>
+                          <span>
+                            {language === 'el' ? 'Επιβεβαίωσε και η εφαρμογή θα εγκατασταθεί.' : 'Confirm and the app will install.'}
+                          </span>
+                        </li>
+                      </>
+                    )}
                   </ol>
                 </div>
               )}
