@@ -1144,10 +1144,33 @@ function PWAInstallSection({
     setIsIOS(ios);
     setIsAndroid(android);
 
+    const AUTO_PROMPT_KEY = 'stargym_pwa_auto_prompt_shown_v1';
+    const isAiCoachPage = window.location.pathname === '/page/ai-coach';
+
     const handler = (e: Event) => {
       e.preventDefault();
       console.log('[PWA] beforeinstallprompt captured — install button is active');
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(promptEvent);
+
+      // Auto-trigger the native install dialog ONLY on the AI Coach page,
+      // and only once per browser (until user installs or clears storage).
+      if (isAiCoachPage && !standalone && !sessionStorage.getItem(AUTO_PROMPT_KEY)) {
+        sessionStorage.setItem(AUTO_PROMPT_KEY, '1');
+        // Small delay so the page has time to render before the dialog opens
+        setTimeout(async () => {
+          try {
+            await promptEvent.prompt();
+            const { outcome } = await promptEvent.userChoice;
+            if (outcome === 'accepted') {
+              toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται...' : 'Installing the app...');
+            }
+            setDeferredPrompt(null);
+          } catch (err) {
+            console.warn('[PWA] auto prompt failed', err);
+          }
+        }, 800);
+      }
     };
     window.addEventListener('beforeinstallprompt', handler);
 

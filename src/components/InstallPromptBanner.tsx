@@ -19,6 +19,9 @@ export function InstallPromptBanner() {
     let cleanup: (() => void) | undefined;
 
     (async () => {
+      // Only show on the AI Coach page
+      if (window.location.pathname !== "/page/ai-coach") return;
+
       // Skip if already dismissed
       if (localStorage.getItem(STORAGE_KEY)) return;
 
