@@ -63,7 +63,8 @@ export default function Auth() {
       .eq('setting_key', 'signup_enabled')
       .maybeSingle();
 
-    setSignupEnabled(data?.setting_value !== 'false');
+    // Default to DISABLED if setting doesn't exist or isn't explicitly 'true'
+    setSignupEnabled(data?.setting_value === 'true');
   };
 
   useEffect(() => {
