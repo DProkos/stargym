@@ -21,7 +21,7 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [signupEnabled, setSignupEnabled] = useState(true);
+  const [signupEnabled, setSignupEnabled] = useState<boolean | null>(null);
   const [unverifiedUser, setUnverifiedUser] = useState<{ email: string; userId: string } | null>(null);
   const [resendingCode, setResendingCode] = useState(false);
   const { t } = useLanguage();
@@ -454,7 +454,7 @@ export default function Auth() {
             </Button>
           </form>
           )}
-          {!isForgotPassword && signupEnabled && isLogin && (
+          {!isForgotPassword && signupEnabled === true && isLogin && (
             <div className="mt-4 text-center">
               <button
                 type="button"
@@ -465,7 +465,7 @@ export default function Auth() {
               </button>
             </div>
           )}
-          {!isForgotPassword && signupEnabled && !isLogin && (
+          {!isForgotPassword && signupEnabled === true && !isLogin && (
             <div className="mt-4 text-center">
               <button
                 type="button"
