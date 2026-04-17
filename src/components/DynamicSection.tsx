@@ -1118,7 +1118,8 @@ function PWAInstallSection({
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
   const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -1137,8 +1138,11 @@ function PWAInstallSection({
       (window.navigator as any).standalone === true;
     setIsInstalled(standalone);
 
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const ua = navigator.userAgent;
+    const ios = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const android = /Android/i.test(ua);
     setIsIOS(ios);
+    setIsAndroid(android);
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -1149,6 +1153,7 @@ function PWAInstallSection({
     const onInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
+      toast.success(language === 'el' ? 'Η εφαρμογή εγκαταστάθηκε!' : 'App installed!');
     };
     window.addEventListener('appinstalled', onInstalled);
 
@@ -1156,27 +1161,25 @@ function PWAInstallSection({
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', onInstalled);
     };
-  }, []);
+  }, [language]);
 
   const handleInstall = async () => {
+    // Best case: browser supports programmatic install — fire it immediately
     if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται!' : 'Installing the app!');
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          toast.success(language === 'el' ? 'Η εφαρμογή εγκαθίσταται...' : 'Installing the app...');
+        }
+        setDeferredPrompt(null);
+      } catch {
+        setShowManualInstructions(true);
       }
-      setDeferredPrompt(null);
       return;
     }
-    if (isIOS) {
-      setShowIOSInstructions(true);
-      return;
-    }
-    toast.info(
-      language === 'el'
-        ? 'Άνοιξε το μενού του browser σου και επίλεξε "Εγκατάσταση εφαρμογής" ή "Προσθήκη στην αρχική οθόνη".'
-        : 'Open your browser menu and select "Install app" or "Add to Home Screen".'
-    );
+    // Fallback: show platform-specific manual instructions inline
+    setShowManualInstructions(true);
   };
 
   const buttonText =
