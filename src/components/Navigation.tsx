@@ -44,7 +44,7 @@ const DEFAULT_NAV_PAGES: NavPage[] = [
 ];
 
 // Pages that should always appear in nav (React routes, not page builder pages)
-const ALWAYS_SHOW_PAGES = ['home'];
+const ALWAYS_SHOW_PAGES = ['home', 'shop'];
 
 export const Navigation = ({ user, isAdmin }: NavigationProps) => {
   const { t, language, setLanguage } = useLanguage();
