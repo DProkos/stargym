@@ -47,8 +47,13 @@ import DynamicPage from "./pages/DynamicPage";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Install from "./pages/Install";
+import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
 import { DynamicFavicon } from "./components/DynamicFavicon";
 import { InstallPromptBanner } from "./components/InstallPromptBanner";
+import { useCartSync } from "./hooks/useCartSync";
+
+const CartSyncBoundary = () => { useCartSync(); return null; };
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -58,6 +63,7 @@ const App = () => (
       <LanguageProvider>
         <DynamicFavicon />
         <BrowserRouter>
+          <CartSyncBoundary />
           <Toaster />
           <Sonner />
           <InstallPromptBanner />
@@ -72,6 +78,8 @@ const App = () => (
           <Route path="/memberships" element={<Memberships />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/install" element={<Install />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/product/:handle" element={<ProductDetail />} />
           <Route path="/virtual-tour" element={<DynamicPage pageKeyOverride="virtual-tour" />} />
           
           {/* Dynamic pages from Page Builder */}
